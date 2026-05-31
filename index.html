@@ -595,6 +595,30 @@
     html.light .node[data-level="3"]:hover:not(:has(.node-nav-btn:hover)) { background: #a3d997; }
     html.light .node[data-level="4"]:hover:not(:has(.node-nav-btn:hover)) { background: #CEEBC3; }
     html.light .node[data-level="5"]:hover:not(:has(.node-nav-btn:hover)) { background: #E2F6D6; }
+
+    /* ── EXECUTION TYPE ICON ─────────────────────────────────────────────── */
+    .node-type-icon {
+      position: absolute;
+      top: -34px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--nav);
+      border: 1px solid var(--bdr);
+      border-radius: 50%;
+      color: var(--txt3);
+      pointer-events: none;
+    }
+    .node-type-icon svg { width: 14px; height: 14px; }
+    .node-type-icon.type-human    { color: var(--acc); border-color: var(--acc); }
+    .node-type-icon.type-system   { color: #7b5ea7; border-color: #7b5ea7; }
+    .node-type-icon.type-meeting  { color: #e07b3a; border-color: #e07b3a; }
+    .node-type-icon.type-approval { color: #3aaa6e; border-color: #3aaa6e; }
+    .node[data-level="4"] { overflow: visible; }
     html.light .node[data-level="1"] .node-nav-btn,
     html.light .node[data-level="1"]:hover .node-nav-btn { background: #619A60; border-color: #4d7a4c; color: #f0f8f0; }
     html.light .node[data-level="2"] .node-nav-btn,
@@ -1966,12 +1990,7 @@
         </div>
         <div id="searchDropdown" class="search-dropdown hidden"></div>
       </div>
-      <button id="btnImage" title="View image" onclick="document.getElementById('imageModal').style.display='flex'">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-        </svg>Image
-      </button>
-      <button id="btnControls" title="Controls &amp; settings">
+<button id="btnControls" title="Controls &amp; settings">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -2979,8 +2998,29 @@
       nameSpan.textContent = isAlt ? altLabel(key) : key;
       el.appendChild(nameSpan);
 
-      // ── Prev/next navigation circles (first/last node, L1–L5) ──
+      // ── Execution type icon (L4 only) ──
       const absLevel = levelOffset + level;
+      if (absLevel === 4 && nodeObj._meta) {
+        const rawType = String(nodeObj._meta.Type || '').trim().toLowerCase();
+        const typeMap = {
+          'human':           { cls: 'type-human',    svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>' },
+          'human activity':  { cls: 'type-human',    svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>' },
+          'system':          { cls: 'type-system',   svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>' },
+          'system activity': { cls: 'type-system',   svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>' },
+          'meeting':         { cls: 'type-meeting',  svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
+          'approval':        { cls: 'type-approval', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' },
+        };
+        const typeEntry = typeMap[rawType];
+        if (typeEntry) {
+          const icon = document.createElement('div');
+          icon.className = 'node-type-icon ' + typeEntry.cls;
+          icon.title = rawType.charAt(0).toUpperCase() + rawType.slice(1);
+          icon.innerHTML = typeEntry.svg;
+          el.appendChild(icon);
+        }
+      }
+
+      // ── Prev/next navigation circles (first/last node, L1–L5) ──
       if ((absLevel === 1 || absLevel === 2 || absLevel === 3 || absLevel === 4 || absLevel === 5) && siblings && currentPath.length > 0) {
         const isFirst = index === 0;
         const isLast  = index === siblings.length - 1;
@@ -7280,8 +7320,5 @@
     init();
   })();
   </script>
-  <div id="imageModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;align-items:center;justify-content:center;" onclick="this.style.display='none'">
-    <img src="images/test.jpg" style="max-width:90vw;max-height:90vh;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.6);" onclick="event.stopPropagation()">
-  </div>
 </body>
 </html>
