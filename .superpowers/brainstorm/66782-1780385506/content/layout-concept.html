@@ -1,0 +1,53 @@
+<h2>System Overview — Layout Concept</h2>
+<p class="subtitle">Each column is a system. L4 process nodes stack top-to-bottom. Lines connect related processes across systems.</p>
+
+<div class="mockup" style="overflow-x:auto;">
+  <div class="mockup-header">System Overview (read-only mockup)</div>
+  <div class="mockup-body" style="padding:1.5rem 1rem;">
+    <div style="display:flex;gap:0;align-items:flex-start;min-width:700px;position:relative;">
+
+      <!-- SVG for connections -->
+      <svg style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;" xmlns="http://www.w3.org/2000/svg">
+        <!-- SAP node 1 → Salesforce node 1 -->
+        <path d="M 172 66 C 220 66, 220 66, 268 66" stroke="#4a90d9" stroke-width="2" fill="none" stroke-dasharray="none" stroke-linejoin="round"/>
+        <!-- Salesforce node 2 → Excel node 1 -->
+        <path d="M 452 186 C 500 186, 500 106, 548 106" stroke="#4a90d9" stroke-width="2" fill="none" stroke-linejoin="round"/>
+        <!-- SAP node 3 → Excel node 2 -->
+        <path d="M 172 306 C 360 306, 360 226, 548 226" stroke="#4a90d9" stroke-width="2" fill="none" stroke-linejoin="round"/>
+        <!-- SAP node 2 → Salesforce node 2 -->
+        <path d="M 172 186 C 220 186, 220 186, 268 186" stroke="#7b5ea7" stroke-width="2" fill="none" stroke-linejoin="round"/>
+      </svg>
+
+      <!-- Column: SAP -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0;min-width:170px;">
+        <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#2e9e7a;margin-bottom:.75rem;padding:.2rem .6rem;border:1px solid #2e9e7a40;border-radius:4px;background:#2e9e7a12;">SAP S/4HANA</div>
+        <div style="width:150px;min-height:60px;background:#2e9e7a12;border:1.5px solid #2e9e7a80;border-radius:8px;padding:.5rem .65rem;font-size:.78rem;font-weight:600;color:var(--txt,#f0f0f4);margin-bottom:28px;text-align:center;">Create Purchase Order</div>
+        <div style="width:150px;min-height:60px;background:#2e9e7a12;border:1.5px solid #2e9e7a80;border-radius:8px;padding:.5rem .65rem;font-size:.78rem;font-weight:600;color:var(--txt,#f0f0f4);margin-bottom:28px;text-align:center;">Approve Invoice</div>
+        <div style="width:150px;min-height:60px;background:#2e9e7a12;border:1.5px solid #2e9e7a80;border-radius:8px;padding:.5rem .65rem;font-size:.78rem;font-weight:600;color:var(--txt,#f0f0f4);margin-bottom:28px;text-align:center;">Post Payment</div>
+      </div>
+
+      <!-- Gap -->
+      <div style="min-width:120px;"></div>
+
+      <!-- Column: Salesforce -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0;min-width:170px;">
+        <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e07b3a;margin-bottom:.75rem;padding:.2rem .6rem;border:1px solid #e07b3a40;border-radius:4px;background:#e07b3a12;">Salesforce</div>
+        <div style="width:150px;min-height:60px;background:#e07b3a12;border:1.5px solid #e07b3a80;border-radius:8px;padding:.5rem .65rem;font-size:.78rem;font-weight:600;color:var(--txt,#f0f0f4);margin-bottom:28px;text-align:center;">Qualify Lead</div>
+        <div style="width:150px;min-height:60px;background:#e07b3a12;border:1.5px solid #e07b3a80;border-radius:8px;padding:.5rem .65rem;font-size:.78rem;font-weight:600;color:var(--txt,#f0f0f4);margin-bottom:28px;text-align:center;">Create Opportunity</div>
+      </div>
+
+      <!-- Gap -->
+      <div style="min-width:120px;"></div>
+
+      <!-- Column: Excel -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0;min-width:170px;">
+        <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#7b5ea7;margin-bottom:.75rem;padding:.2rem .6rem;border:1px solid #7b5ea740;border-radius:4px;background:#7b5ea712;">Excel</div>
+        <div style="width:150px;min-height:60px;background:#7b5ea712;border:1.5px solid #7b5ea780;border-radius:8px;padding:.5rem .65rem;font-size:.78rem;font-weight:600;color:var(--txt,#f0f0f4);margin-bottom:28px;text-align:center;">Reconcile Report</div>
+        <div style="width:150px;min-height:60px;background:#7b5ea712;border:1.5px solid #7b5ea780;border-radius:8px;padding:.5rem .65rem;font-size:.78rem;font-weight:600;color:var(--txt,#f0f0f4);margin-bottom:28px;text-align:center;">Budget Forecast</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:1.5rem;">Does this overall layout match what you had in mind? What's different?</p>

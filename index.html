@@ -1876,6 +1876,90 @@
       min-width: max-content;
     }
 
+    /* ── SYSTEM OVERVIEW SCREEN ────────────────────────────────────────── */
+    #sysoverviewScreen {
+      position: fixed; top: 56px; left: 0; right: 0; bottom: 0;
+      background: var(--bg); z-index: 95;
+      display: flex; flex-direction: column;
+      transition: background .2s;
+    }
+    #sysoverviewScreen.hidden { display: none; }
+
+    .sysov-toolbar {
+      background: var(--nav); border-bottom: 1px solid var(--bdr-s);
+      padding: .55rem 1rem; display: flex; align-items: center; gap: .75rem;
+      flex-shrink: 0; flex-wrap: wrap;
+      transition: background .2s, border-color .2s;
+    }
+    .sysov-toolbar-title {
+      font-size: .78rem; font-weight: 600; color: var(--txt2);
+      display: flex; align-items: center; gap: .4rem; white-space: nowrap;
+    }
+    .sysov-l1-tabs {
+      display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; flex: 1;
+    }
+    .sysov-l1-tab {
+      background: var(--surf); border: 1px solid var(--bdr); border-radius: 6px;
+      color: var(--txt3); font-size: .72rem; padding: .25rem .65rem; cursor: pointer;
+      transition: background .15s, border-color .15s, color .15s; white-space: nowrap;
+    }
+    .sysov-l1-tab:hover { background: var(--bdr); color: var(--txt); }
+    .sysov-l1-tab.active {
+      background: var(--acc-15); border-color: var(--acc); color: var(--acc-t); font-weight: 600;
+    }
+    .sysov-close-btn {
+      background: var(--surf); border: 1px solid var(--bdr); border-radius: 6px;
+      color: var(--txt3); font-size: .78rem; padding: .3rem .75rem; cursor: pointer;
+      transition: background .15s, border-color .15s, color .15s;
+      display: flex; align-items: center; gap: .35rem; white-space: nowrap; flex-shrink: 0;
+    }
+    .sysov-close-btn:hover { background: var(--bdr); border-color: var(--acc); color: var(--txt); }
+
+    .sysov-body {
+      display: flex; flex-direction: row; flex: 1; overflow: hidden;
+    }
+    #sysovScroll {
+      flex: 1; overflow: auto; position: relative; background: var(--bg);
+    }
+    #sysovContent {
+      position: relative; display: block;
+      width: 100%; padding-bottom: 4rem;
+    }
+    .sysov-sticky-header {
+      position: sticky; top: 0; z-index: 5;
+      background: var(--bg); padding: 1.5rem 0 .75rem;
+      border-bottom: 1px solid var(--bdr-s);
+      transition: background .2s, border-color .2s;
+    }
+    #sysovSvg {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; overflow: visible;
+    }
+
+    .sysov-column {
+      display: flex; flex-direction: column; align-items: center;
+      min-width: 180px; width: 180px; flex-shrink: 0;
+    }
+    .sysov-col-header {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .07em; padding: .25rem .65rem; border-radius: 5px;
+      border: 1px solid; margin-bottom: 1.25rem; white-space: nowrap;
+      max-width: 164px; overflow: hidden; text-overflow: ellipsis; text-align: center;
+    }
+    .sysov-node {
+      width: 156px; min-height: 54px; border-radius: 8px;
+      border: 1.5px solid; padding: .5rem .7rem;
+      font-size: .76rem; font-weight: 600; text-align: center;
+      display: flex; align-items: center; justify-content: center;
+      line-height: 1.35; word-break: break-word;
+    }
+    .sysov-row {
+      display: flex; flex-direction: row; width: 100%; justify-content: center;
+      margin-bottom: 48px;
+    }
+    /* Column gap spacers between .sysov-column elements */
+    .sysov-col-gap { width: 60px; flex-shrink: 0; }
+
     /* ── OVERVIEW TREE (export-style nested flex) ─────────────────────── */
     .ov-wrap {
       padding: 1.2rem 1.5rem 2rem;
@@ -1964,6 +2048,7 @@
         <div class="nav-drop-menu hidden" id="navViewsMenu">
           <button id="btnViewsOverview">Overview</button>
           <button id="btnViewsTimeline">Timeline</button>
+          <button id="btnViewsSysOverview">System Overview</button>
         </div>
       </div>
       <div class="nav-dropdown" id="navLookupDrop">
@@ -2126,6 +2211,30 @@
     </div>
     <div id="overviewCanvas">
       <div id="overviewContent"></div>
+    </div>
+  </div>
+
+  <!-- System Overview Screen -->
+  <div id="sysoverviewScreen" class="hidden">
+    <div class="sysov-toolbar">
+      <span class="sysov-toolbar-title">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="18" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/>
+        </svg>System Overview
+      </span>
+      <div class="sysov-l1-tabs" id="sysovL1Tabs"></div>
+      <button id="btnSysOvClose" class="sysov-close-btn">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>Close
+      </button>
+    </div>
+    <div class="sysov-body">
+      <div id="sysovScroll">
+        <div id="sysovContent">
+          <svg id="sysovSvg"></svg>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -3173,6 +3282,7 @@
       closeRolePanel();
       closeToolPanel();
       closeOverviewScreen();
+      closeSysOverviewScreen();
       $('yearScreen').classList.add('hidden');
       $('ganttScreen').classList.add('hidden');
       if (currentPath.length) {
@@ -3723,6 +3833,7 @@
       closeToolPanel();
       $('yearScreen').classList.add('hidden');
       closeOverviewScreen();
+      closeSysOverviewScreen();
       $('ganttScreen').classList.remove('hidden');
 
       // L0 level no longer in use — always hide the L0 dropdown
@@ -4191,6 +4302,7 @@
       closeToolPanel();
       $('ganttScreen').classList.add('hidden');
       closeOverviewScreen();
+      closeSysOverviewScreen();
       yearExpandedPaths.clear();
       yearView = 'year';
       yearViewIndex = 0;
@@ -4371,6 +4483,7 @@
     function openOverviewScreen() {
       $('ganttScreen').classList.add('hidden');
       $('yearScreen').classList.add('hidden');
+      closeSysOverviewScreen();
       $('rolePanel').classList.remove('open');
       $('toolPanel').classList.remove('open');
       clearInfoPanel();
@@ -4407,6 +4520,212 @@
       $('overviewScreen').classList.add('hidden');
     }
 
+    // ── SYSTEM OVERVIEW ────────────────────────────────────────────────────
+    const SYSOV_COLORS = [
+      { acc: '#4a90d9', bg: 'rgba(74,144,217,.10)',  border: 'rgba(74,144,217,.55)',  txt: 'var(--txt)' },
+      { acc: '#2e9e7a', bg: 'rgba(46,158,122,.10)',  border: 'rgba(46,158,122,.55)',  txt: 'var(--txt)' },
+      { acc: '#e07b3a', bg: 'rgba(224,123,58,.10)',   border: 'rgba(224,123,58,.55)',  txt: 'var(--txt)' },
+      { acc: '#7b5ea7', bg: 'rgba(123,94,167,.10)',   border: 'rgba(123,94,167,.55)',  txt: 'var(--txt)' },
+      { acc: '#c0485a', bg: 'rgba(192,72,90,.10)',    border: 'rgba(192,72,90,.55)',   txt: 'var(--txt)' },
+      { acc: '#b08b2a', bg: 'rgba(176,139,42,.10)',   border: 'rgba(176,139,42,.55)',  txt: 'var(--txt)' },
+    ];
+    let sysovActiveL1 = null;
+    let _sysovResizeRaf = null;
+
+    function openSysOverviewScreen() {
+      ctrlPanel.classList.add('hidden');
+      closeRolePanel();
+      closeToolPanel();
+      $('ganttScreen').classList.add('hidden');
+      $('yearScreen').classList.add('hidden');
+      closeOverviewScreen();
+      $('sysoverviewScreen').classList.remove('hidden');
+
+      const l1Keys = Object.keys(tree);
+      buildSysOvL1Tabs(l1Keys);
+      const first = l1Keys[0] || null;
+      sysovActiveL1 = first;
+      renderSysOverview(first);
+    }
+
+    function closeSysOverviewScreen() {
+      $('sysoverviewScreen').classList.add('hidden');
+    }
+
+    function buildSysOvL1Tabs(l1Keys) {
+      const container = $('sysovL1Tabs');
+      container.innerHTML = '';
+      l1Keys.forEach(function (k) {
+        const btn = document.createElement('button');
+        btn.className = 'sysov-l1-tab' + (k === sysovActiveL1 ? ' active' : '');
+        btn.textContent = k;
+        btn.addEventListener('click', function () {
+          sysovActiveL1 = k;
+          container.querySelectorAll('.sysov-l1-tab').forEach(function (b) {
+            b.classList.toggle('active', b.textContent === k);
+          });
+          renderSysOverview(k);
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    function renderSysOverview(l1Key) {
+      const content = $('sysovContent');
+      // Remove everything except the SVG layer
+      Array.from(content.children).forEach(function (c) {
+        if (c.id !== 'sysovSvg') c.remove();
+      });
+      const svg = $('sysovSvg');
+      svg.innerHTML = '';
+      if (!l1Key || !tree[l1Key]) return;
+
+      // DFS-walk to collect L4 leaf nodes in order
+      const orderedNodes = [];
+      function dfsCollect(children) {
+        for (const [key, node] of Object.entries(children)) {
+          if (node._meta) {
+            orderedNodes.push({ name: key, meta: node._meta });
+          } else {
+            dfsCollect(node._children);
+          }
+        }
+      }
+      dfsCollect(tree[l1Key]._children);
+
+      if (!orderedNodes.length) return;
+
+      // Assign each node its column key (preserving first-seen order)
+      const colKeys = [];
+      orderedNodes.forEach(function (n) {
+        const tool = (n.meta.Tool || '').trim();
+        const key = (!tool || tool.toLowerCase() === 'n/a') ? 'Manual / Other' : tool;
+        n.colKey = key;
+        if (!colKeys.includes(key)) colKeys.push(key);
+      });
+
+      // Color map: colKey → color
+      const colColor = {};
+      colKeys.forEach(function (k, i) { colColor[k] = SYSOV_COLORS[i % SYSOV_COLORS.length]; });
+
+      // Shared grid template: "180px 60px 180px 60px 180px …"
+      const colW = 180, gapW = 60;
+      const gtc = colKeys.map(function () { return colW + 'px'; }).join(' ' + gapW + 'px ');
+
+      // ── Sticky header row ──
+      const stickyHdr = document.createElement('div');
+      stickyHdr.className = 'sysov-sticky-header';
+
+      const hdrGrid = document.createElement('div');
+      hdrGrid.style.cssText = 'display:grid;grid-template-columns:' + gtc + ';width:fit-content;margin:0 auto;padding:0 2.5rem;';
+      colKeys.forEach(function (k, ci) {
+        const color = colColor[k];
+        const hdr = document.createElement('div');
+        hdr.className = 'sysov-col-header';
+        hdr.textContent = k;
+        hdr.style.color       = color.acc;
+        hdr.style.borderColor = color.border;
+        hdr.style.background  = color.bg;
+        hdr.style.margin      = '0 12px 0';
+        hdrGrid.appendChild(hdr);
+        if (ci < colKeys.length - 1) hdrGrid.appendChild(document.createElement('div'));
+      });
+      stickyHdr.appendChild(hdrGrid);
+      content.appendChild(stickyHdr);
+
+      // ── Single grid for all nodes ──
+      const grid = document.createElement('div');
+      grid.style.cssText = 'display:grid;grid-template-columns:' + gtc
+        + ';align-items:start;width:fit-content;margin:0 auto;padding:1.5rem 2.5rem 0;';
+      content.appendChild(grid);
+
+      orderedNodes.forEach(function (n, seqIdx) {
+        const color = colColor[n.colKey];
+
+        colKeys.forEach(function (k, ci) {
+          const cell = document.createElement('div');
+          cell.style.cssText = 'display:flex;justify-content:center;padding-bottom:48px;';
+
+          if (k === n.colKey) {
+            const nodeEl = document.createElement('div');
+            nodeEl.className = 'sysov-node';
+            nodeEl.dataset.seqIdx = seqIdx;
+            nodeEl.style.background  = color.bg;
+            nodeEl.style.borderColor = color.border;
+            nodeEl.style.color       = 'var(--txt)';
+            nodeEl.textContent       = n.name;
+            cell.appendChild(nodeEl);
+          }
+
+          grid.appendChild(cell);
+          if (ci < colKeys.length - 1) {
+            const gapCell = document.createElement('div');
+            gapCell.style.paddingBottom = '48px';
+            grid.appendChild(gapCell);
+          }
+        });
+      });
+
+      // Draw connectors after layout settles
+      requestAnimationFrame(function () { requestAnimationFrame(function () {
+        drawSysOverviewConnectors();
+      }); });
+    }
+
+    function drawSysOverviewConnectors() {
+      const svg = $('sysovSvg');
+      if (!svg) return;
+      svg.innerHTML = '';
+
+      const scroll = $('sysovScroll');
+      const content = $('sysovContent');
+      const contentRect = content.getBoundingClientRect();
+
+      // Collect all nodes in seq order
+      const nodeEls = Array.from(content.querySelectorAll('.sysov-node'));
+      nodeEls.sort(function (a, b) { return Number(a.dataset.seqIdx) - Number(b.dataset.seqIdx); });
+
+      if (nodeEls.length < 2) return;
+
+      // Size SVG to content
+      svg.setAttribute('width', content.scrollWidth);
+      svg.setAttribute('height', content.scrollHeight);
+      svg.style.width  = content.scrollWidth + 'px';
+      svg.style.height = content.scrollHeight + 'px';
+
+      for (let i = 0; i < nodeEls.length - 1; i++) {
+        const a = nodeEls[i];
+        const b = nodeEls[i + 1];
+        const ra = a.getBoundingClientRect();
+        const rb = b.getBoundingClientRect();
+
+        // Convert to content-local coords
+        const ax = ra.left - contentRect.left + ra.width  / 2;
+        const ay = ra.top  - contentRect.top  + ra.height;
+        const bx = rb.left - contentRect.left + rb.width  / 2;
+        const by = rb.top  - contentRect.top;
+
+        const dy = by - ay;
+        const cp = Math.min(dy * 0.55, 80);
+
+        let d;
+        if (Math.abs(ax - bx) < 4) {
+          d = `M ${ax} ${ay} L ${bx} ${by}`;
+        } else {
+          d = `M ${ax} ${ay} C ${ax} ${ay + cp}, ${bx} ${by - cp}, ${bx} ${by}`;
+        }
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', 'var(--acc)');
+        path.setAttribute('stroke-width', '1.8');
+        path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('opacity', '0.6');
+        svg.appendChild(path);
+      }
+    }
+
     // Zoom controls
     function updateOverviewZoomLabel() {
       const lbl = $('overviewZoomLabel');
@@ -4426,6 +4745,16 @@
     });
 
     $('btnOverviewClose').addEventListener('click', closeOverviewScreen);
+    $('btnSysOvClose').addEventListener('click', closeSysOverviewScreen);
+
+    window.addEventListener('resize', function () {
+      if (!$('sysoverviewScreen').classList.contains('hidden')) {
+        if (_sysovResizeRaf) cancelAnimationFrame(_sysovResizeRaf);
+        _sysovResizeRaf = requestAnimationFrame(function () {
+          drawSysOverviewConnectors();
+        });
+      }
+    });
 
     // ── PAN & WHEEL on overview canvas ────────────────────────────────────
     (function () {
@@ -4550,10 +4879,12 @@
       const btnViews = $('btnViews');
       const btnOv    = $('btnViewsOverview');
       const btnTl    = $('btnViewsTimeline');
+      const btnSysOv = $('btnViewsSysOverview');
 
       function updateViewsActive() {
         btnOv.classList.toggle('views-active', !$('overviewScreen').classList.contains('hidden'));
         btnTl.classList.toggle('views-active', !$('yearScreen').classList.contains('hidden'));
+        btnSysOv.classList.toggle('views-active', !$('sysoverviewScreen').classList.contains('hidden'));
       }
 
       btnViews.addEventListener('click', function (e) {
@@ -4576,6 +4907,12 @@
         closeViewsMenu();
         if ($('yearScreen').classList.contains('hidden')) openYearScreen();
         else closeYearScreen();
+      });
+
+      btnSysOv.addEventListener('click', function () {
+        closeViewsMenu();
+        if ($('sysoverviewScreen').classList.contains('hidden')) openSysOverviewScreen();
+        else closeSysOverviewScreen();
       });
 
       // ── Lookup ──
