@@ -1,0 +1,88 @@
+<h2>System Overview — Layout v2</h2>
+<p class="subtitle">One node per row. Process flows top-to-bottom across system columns.</p>
+
+<div class="mockup" style="overflow-x:auto;">
+  <div class="mockup-header">System Overview</div>
+  <div class="mockup-body" style="padding:1.5rem 2rem;">
+
+    <div style="position:relative;min-width:620px;">
+
+      <!-- Column headers -->
+      <div style="display:grid;grid-template-columns:180px 180px 180px;gap:0;margin-bottom:1rem;padding-left:8px;">
+        <div style="text-align:center;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#2e9e7a;padding:.25rem .6rem;border:1px solid #2e9e7a40;border-radius:4px;background:#2e9e7a12;margin:0 16px;">SAP S/4HANA</div>
+        <div style="text-align:center;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#e07b3a;padding:.25rem .6rem;border:1px solid #e07b3a40;border-radius:4px;background:#e07b3a12;margin:0 16px;">Salesforce</div>
+        <div style="text-align:center;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#7b5ea7;padding:.25rem .6rem;border:1px solid #7b5ea740;border-radius:4px;background:#7b5ea712;margin:0 16px;">Excel</div>
+      </div>
+
+      <!-- SVG connector layer -->
+      <svg style="position:absolute;top:56px;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;" xmlns="http://www.w3.org/2000/svg">
+        <!-- Row 1 (SAP col=0, x≈90) → Row 2 (SF col=1, x≈270): down-right curve -->
+        <path d="M 90 62 C 90 96, 270 76, 270 110" stroke="#4a90d9" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <!-- Row 2 (SF col=1, x≈270) → Row 3 (SAP col=0, x≈90): down-left curve -->
+        <path d="M 270 174 C 270 208, 90 188, 90 222" stroke="#4a90d9" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <!-- Row 3 (SAP col=0, x≈90) → Row 4 (Excel col=2, x≈450): down-right long curve -->
+        <path d="M 90 286 C 90 320, 450 300, 450 334" stroke="#4a90d9" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <!-- Row 4 (Excel col=2, x≈450) → Row 5 (SF col=1, x≈270): down-left curve -->
+        <path d="M 450 398 C 450 432, 270 412, 270 446" stroke="#4a90d9" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      </svg>
+
+      <!-- Rows: each row has one node in one column, rest empty -->
+      <!-- Row 1: SAP -->
+      <div style="display:grid;grid-template-columns:180px 180px 180px;gap:0;margin-bottom:0;">
+        <div style="padding:0 16px;">
+          <div style="background:#2e9e7a12;border:1.5px solid #2e9e7a80;border-radius:8px;padding:.55rem .75rem;font-size:.78rem;font-weight:600;text-align:center;min-height:52px;display:flex;align-items:center;justify-content:center;">Create Purchase Order</div>
+        </div>
+        <div style="padding:0 16px;"></div>
+        <div style="padding:0 16px;"></div>
+      </div>
+
+      <!-- Spacer row -->
+      <div style="height:48px;"></div>
+
+      <!-- Row 2: Salesforce -->
+      <div style="display:grid;grid-template-columns:180px 180px 180px;gap:0;margin-bottom:0;">
+        <div style="padding:0 16px;"></div>
+        <div style="padding:0 16px;">
+          <div style="background:#e07b3a12;border:1.5px solid #e07b3a80;border-radius:8px;padding:.55rem .75rem;font-size:.78rem;font-weight:600;text-align:center;min-height:52px;display:flex;align-items:center;justify-content:center;">Qualify Lead</div>
+        </div>
+        <div style="padding:0 16px;"></div>
+      </div>
+
+      <div style="height:48px;"></div>
+
+      <!-- Row 3: SAP -->
+      <div style="display:grid;grid-template-columns:180px 180px 180px;gap:0;margin-bottom:0;">
+        <div style="padding:0 16px;">
+          <div style="background:#2e9e7a12;border:1.5px solid #2e9e7a80;border-radius:8px;padding:.55rem .75rem;font-size:.78rem;font-weight:600;text-align:center;min-height:52px;display:flex;align-items:center;justify-content:center;">Approve Invoice</div>
+        </div>
+        <div style="padding:0 16px;"></div>
+        <div style="padding:0 16px;"></div>
+      </div>
+
+      <div style="height:48px;"></div>
+
+      <!-- Row 4: Excel -->
+      <div style="display:grid;grid-template-columns:180px 180px 180px;gap:0;margin-bottom:0;">
+        <div style="padding:0 16px;"></div>
+        <div style="padding:0 16px;"></div>
+        <div style="padding:0 16px;">
+          <div style="background:#7b5ea712;border:1.5px solid #7b5ea780;border-radius:8px;padding:.55rem .75rem;font-size:.78rem;font-weight:600;text-align:center;min-height:52px;display:flex;align-items:center;justify-content:center;">Reconcile Report</div>
+        </div>
+      </div>
+
+      <div style="height:48px;"></div>
+
+      <!-- Row 5: Salesforce -->
+      <div style="display:grid;grid-template-columns:180px 180px 180px;gap:0;margin-bottom:0;">
+        <div style="padding:0 16px;"></div>
+        <div style="padding:0 16px;">
+          <div style="background:#e07b3a12;border:1.5px solid #e07b3a80;border-radius:8px;padding:.55rem .75rem;font-size:.78rem;font-weight:600;text-align:center;min-height:52px;display:flex;align-items:center;justify-content:center;">Create Opportunity</div>
+        </div>
+        <div style="padding:0 16px;"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:1.5rem;">Does this match the layout you had in mind?</p>
