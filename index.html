@@ -1885,6 +1885,140 @@
     }
     #sysoverviewScreen.hidden { display: none; }
 
+    /* ── PROCESS DETAIL SCREEN ──────────────────────────────────────────── */
+    #detailScreen {
+      position: fixed; top: 56px; left: 0; right: 0; bottom: 0;
+      background: var(--bg); z-index: 95; overflow-y: auto;
+      transition: background .2s;
+    }
+    #detailScreen.hidden { display: none; }
+    #detailScreen .detail-toolbar {
+      position: sticky; top: 0; z-index: 10; display: flex; align-items: center;
+      gap: .75rem; height: 52px; padding: 0 1rem;
+      background: var(--nav); border-bottom: 1px solid var(--bdr-s);
+      transition: background .2s, border-color .2s;
+    }
+    #detailScreen .dt-btn {
+      background: var(--surf); border: 1px solid var(--bdr); border-radius: 6px;
+      color: var(--txt3); font-size: .78rem; padding: .3rem .75rem; cursor: pointer;
+      font-family: inherit; transition: border-color .15s, background .15s, color .15s;
+      display: flex; align-items: center; gap: .35rem; flex-shrink: 0; white-space: nowrap;
+    }
+    #detailScreen .dt-btn:hover { background: var(--bdr); border-color: var(--acc); color: var(--txt); }
+    #detailScreen .dt-btn-back { font-weight: 600; }
+    #detailScreen .dt-title {
+      font-size: .75rem; color: var(--txt4); overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap; flex: 1;
+    }
+    #detailScreen .dt-title b { color: var(--txt2); font-weight: 600; }
+    #detailScreen .ds-wrap {
+      max-width: 960px; margin: 0 auto; padding: 1rem 1.5rem 4rem;
+    }
+    #detailScreen .ds-hero {
+      padding: 0 0 1rem; border-bottom: 1px solid var(--bdr-s); margin-bottom: 1.1rem;
+    }
+    #detailScreen .ds-crumbs { font-size: .7rem; color: var(--txt5); margin-bottom: .5rem; }
+    #detailScreen .ds-crumbs span { color: var(--txt4); }
+    #detailScreen .ds-crumbs .ds-sep { color: var(--bdr); padding: 0 .3rem; }
+    #detailScreen .ds-hero-main { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+    #detailScreen .ds-code {
+      font-family: ui-monospace, Menlo, monospace; font-size: .68rem; font-weight: 600;
+      color: var(--acc-t); background: var(--acc-10); border: 1px solid var(--acc-25);
+      border-radius: 4px; padding: .15rem .4rem;
+    }
+    #detailScreen .ds-hero h1 {
+      font-size: 1.3rem; font-weight: 600; letter-spacing: -.01em; color: var(--txt);
+    }
+    #detailScreen .ds-type-badge {
+      font-size: .61rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+      padding: .15rem .45rem; border-radius: 4px; color: var(--acc-t);
+      background: var(--acc-15); border: 1px solid var(--acc-25);
+    }
+    #detailScreen .ds-desc {
+      margin-top: .6rem; color: var(--txt3); font-size: .84rem; line-height: 1.55; max-width: 80ch;
+    }
+    #detailScreen .ds-pillar { margin-bottom: 2rem; }
+    #detailScreen .ds-pillar-head {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .1em; color: var(--bg); background: var(--acc-t);
+      border-left: 3px solid var(--acc); padding: .38rem .75rem;
+      margin-bottom: .75rem; border-radius: 0 4px 4px 0;
+    }
+    #detailScreen .ds-pillar-cards { display: flex; flex-direction: column; gap: .75rem; }
+    #detailScreen .ds-card {
+      background: var(--surf); border: 1px solid var(--bdr-s); border-radius: 10px;
+      overflow: hidden;
+    }
+    #detailScreen .ds-card-head {
+      display: flex; align-items: center; gap: .5rem; padding: .22rem .75rem;
+      border-bottom: 1px solid var(--acc-25); background: var(--acc-15);
+    }
+    #detailScreen .ds-card-head h2 {
+      font-size: .62rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--acc-t); margin: 0;
+    }
+    #detailScreen .ds-card-body { padding: .6rem .75rem; }
+    #detailScreen .ds-grid { display: grid; gap: .5rem; }
+    #detailScreen .ds-grid.r5 { grid-template-columns: repeat(5, 1fr); }
+    #detailScreen .ds-grid.r4 { grid-template-columns: repeat(4, 1fr); }
+    #detailScreen .ds-col-head {
+      font-size: .62rem; font-weight: 700; color: var(--txt2);
+      text-transform: uppercase; letter-spacing: .07em; margin-bottom: .3rem;
+      text-align: center; background: var(--surf2); padding: .2rem .4rem;
+      border-radius: 4px 4px 0 0;
+    }
+    #detailScreen .ds-cell {
+      background: var(--acc-10); border: 1px solid var(--acc-20); border-radius: 4px;
+      padding: .15rem .4rem; font-size: .78rem; color: var(--txt3);
+      text-align: center; margin-bottom: .3rem;
+    }
+    #detailScreen .ds-cell-muted { color: var(--txt5); font-style: italic; border-color: var(--bdr-xs); background: transparent; }
+    #detailScreen .ds-cell-link { cursor: pointer; }
+    #detailScreen .ds-cell-link:hover { border-color: var(--acc); color: var(--acc-t); background: var(--acc-15); }
+    #detailScreen .ds-meta { display: flex; flex-direction: column; gap: 0; }
+    #detailScreen .ds-mrow {
+      display: flex; align-items: flex-start; gap: .5rem;
+      padding: .32rem .75rem; border-bottom: 1px solid var(--bdr-xs);
+    }
+    #detailScreen .ds-mrow:last-child { border-bottom: none; }
+    #detailScreen .ds-mlabel {
+      font-size: .61rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+      color: var(--acc-t); background: var(--acc-15); border: 1px solid var(--acc-25);
+      border-radius: 5px; padding: .15rem .45rem; white-space: nowrap; flex-shrink: 0;
+      margin-top: 1px; min-width: 6rem; text-align: center;
+    }
+    #detailScreen .ds-mval { font-size: .8rem; color: var(--txt2); line-height: 1.45; word-break: break-word; }
+    #detailScreen .ds-chip {
+      display: inline-block; background: var(--acc-10); border: 1px solid var(--acc-20);
+      border-radius: 4px; padding: .1rem .4rem; font-size: .75rem;
+      margin: 0 .3rem .3rem 0; color: var(--txt3);
+    }
+    #detailScreen .ds-lnk {
+      color: var(--acc-t); text-decoration: none; font-size: .8rem;
+      display: inline-flex; align-items: center; gap: .28rem;
+    }
+    #detailScreen .ds-lnk:hover { text-decoration: underline; color: var(--acc); }
+    #detailScreen .ds-kpi-item {
+      display: flex; gap: .5rem; align-items: baseline;
+      font-size: .8rem; margin-bottom: .28rem; color: var(--txt2);
+    }
+    #detailScreen .ds-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--acc);
+      flex: none; transform: translateY(-1px); display: inline-block;
+    }
+    #detailScreen .ds-sub {
+      font-size: .61rem; font-weight: 700; color: var(--acc-t); text-transform: uppercase;
+      letter-spacing: .07em; margin: .55rem 0 .3rem;
+    }
+    #detailScreen .ds-sub:first-child { margin-top: 0; }
+    #detailScreen .ds-empty-muted { color: var(--txt5); font-size: .8rem; font-style: italic; }
+    #detailScreen .ip-tool-link {
+      color: var(--acc-t); text-decoration: none; font-size: .8rem;
+      display: inline-flex; align-items: center; gap: .28rem;
+    }
+    #detailScreen .ip-tool-link::before { content: '↗'; font-size: .68rem; opacity: .7; flex-shrink: 0; }
+    #detailScreen .ip-tool-link:hover { color: var(--acc); text-decoration: underline; }
+
     .sysov-toolbar {
       background: var(--nav); border-bottom: 1px solid var(--bdr-s);
       padding: .55rem 1rem; display: flex; align-items: center; gap: .75rem;
@@ -2233,6 +2367,79 @@
       <div id="sysovScroll">
         <div id="sysovContent">
           <svg id="sysovSvg"></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Process Detail Screen -->
+  <div id="detailScreen" class="hidden">
+    <div class="detail-toolbar">
+      <button class="dt-btn dt-btn-back" id="btnDetailBack">&#8249; Back</button>
+      <span class="dt-title" id="detailToolbarTitle"></span>
+    </div>
+    <div class="ds-wrap">
+      <div class="ds-hero">
+        <div class="ds-crumbs" id="dsCrumbs"></div>
+        <div class="ds-hero-main">
+          <span class="ds-code" id="dsCode"></span>
+          <h1 id="dsTitle"></h1>
+          <span class="ds-type-badge" id="dsTypeBadge"></span>
+        </div>
+        <p class="ds-desc" id="dsDesc"></p>
+      </div>
+      <!-- PROCESS pillar -->
+      <div class="ds-pillar">
+        <div class="ds-pillar-head">Process</div>
+        <div class="ds-pillar-cards">
+          <div id="dsKpiGoalRow">
+            <section class="ds-card">
+              <div class="ds-card-head"><h2>KPIs &amp; Goals</h2></div>
+              <div class="ds-card-body" id="dsKpiGoalBody"></div>
+            </section>
+          </div>
+          <section class="ds-card">
+            <div class="ds-card-head"><h2>Timing</h2></div>
+            <div class="ds-card-body"><div class="ds-meta" id="dsTimingMeta"></div></div>
+          </section>
+          <section class="ds-card">
+            <div class="ds-card-head"><h2>Documentation</h2></div>
+            <div class="ds-card-body" id="dsDocsBody"></div>
+          </section>
+        </div>
+      </div>
+      <!-- PEOPLE pillar -->
+      <div class="ds-pillar">
+        <div class="ds-pillar-head">People</div>
+        <div class="ds-pillar-cards">
+          <section class="ds-card">
+            <div class="ds-card-head"><h2>RASCI</h2></div>
+            <div class="ds-card-body"><div class="ds-grid r5" id="dsRasciGrid"></div></div>
+          </section>
+          <section class="ds-card">
+            <div class="ds-card-head"><h2>Owners</h2></div>
+            <div class="ds-card-body"><div class="ds-meta" id="dsOwnersMeta"></div></div>
+          </section>
+        </div>
+      </div>
+      <!-- DATA pillar -->
+      <div class="ds-pillar">
+        <div class="ds-pillar-head">Data</div>
+        <div class="ds-pillar-cards">
+          <section class="ds-card">
+            <div class="ds-card-head"><h2>SIPOC</h2></div>
+            <div class="ds-card-body"><div class="ds-grid r4" id="dsSipocGrid"></div></div>
+          </section>
+        </div>
+      </div>
+      <!-- TOOL pillar -->
+      <div class="ds-pillar" id="dsSysCard">
+        <div class="ds-pillar-head">Tool (Technology)</div>
+        <div class="ds-pillar-cards">
+          <section class="ds-card">
+            <div class="ds-card-head"><h2>Systems &amp; Functionality</h2></div>
+            <div class="ds-card-body"><div class="ds-meta" id="dsSysMeta"></div></div>
+          </section>
         </div>
       </div>
     </div>
@@ -3206,6 +3413,9 @@
           flowContainer.querySelectorAll('.erp-node').forEach(n => n.classList.remove('erp-selected'));
           updateInfoPanel(key, nodeObj._meta, nodeObj._desc);
           updatePathTree();
+          if (levelOffset + level >= 4) {
+            openDetailScreen(key, nodeObj._meta, nodeObj._desc);
+          }
         });
       }
 
@@ -3285,6 +3495,7 @@
       closeSysOverviewScreen();
       $('yearScreen').classList.add('hidden');
       $('ganttScreen').classList.add('hidden');
+      $('detailScreen').classList.add('hidden');
       if (currentPath.length) {
         history.pushState(null, '', pathToHash([]));
         currentPath = [];
@@ -3834,6 +4045,7 @@
       $('yearScreen').classList.add('hidden');
       closeOverviewScreen();
       closeSysOverviewScreen();
+      $('detailScreen').classList.add('hidden');
       $('ganttScreen').classList.remove('hidden');
 
       // L0 level no longer in use — always hide the L0 dropdown
@@ -3866,6 +4078,287 @@
 
     function closeGanttScreen() {
       $('ganttScreen').classList.add('hidden');
+    }
+
+    // ── PROCESS DETAIL SCREEN ────────────────────────────────────────────────
+    function openDetailScreen(key, meta, desc) {
+      ctrlPanel.classList.add('hidden');
+      closeRolePanel();
+      closeToolPanel();
+      $('yearScreen').classList.add('hidden');
+      $('ganttScreen').classList.add('hidden');
+      closeOverviewScreen();
+      closeSysOverviewScreen();
+      renderDetailScreen(key, meta, desc);
+      $('detailScreen').classList.remove('hidden');
+    }
+
+    function closeDetailScreen() {
+      $('detailScreen').classList.add('hidden');
+    }
+
+    function renderDetailScreen(name, meta, desc) {
+      const label = altLabel(name);
+      $('dsTitle').textContent = label;
+
+      // Toolbar title: path segments › current node
+      const pathParts = currentPath.map(s => altLabel(s)).concat(label);
+      const toolbarEl = $('detailToolbarTitle');
+      toolbarEl.innerHTML = '';
+      pathParts.forEach(function(p, i) {
+        if (i > 0) {
+          const sep = document.createElement('span');
+          sep.style.cssText = 'opacity:.4;padding:0 .25rem';
+          sep.textContent = '›';
+          toolbarEl.appendChild(sep);
+        }
+        if (i === pathParts.length - 1) {
+          const b = document.createElement('b');
+          b.textContent = p;
+          toolbarEl.appendChild(b);
+        } else {
+          toolbarEl.appendChild(document.createTextNode(p));
+        }
+      });
+
+      // Breadcrumbs under hero
+      const crumbsEl = $('dsCrumbs');
+      crumbsEl.innerHTML = '';
+      pathParts.forEach(function(p, i) {
+        if (i > 0) {
+          const sep = document.createElement('span');
+          sep.className = 'ds-sep';
+          sep.textContent = '/';
+          crumbsEl.appendChild(sep);
+        }
+        const sp = document.createElement('span');
+        sp.textContent = p;
+        crumbsEl.appendChild(sp);
+      });
+
+      // Code chip — look up node in current level
+      const codeEl = $('dsCode');
+      const nodesAtLevel = getNodesAtPath(currentPath);
+      const nodeObj = nodesAtLevel[name] || null;
+      const code = nodeObj ? nodeObj._code : '';
+      if (code) { codeEl.textContent = code; codeEl.style.display = ''; }
+      else { codeEl.style.display = 'none'; }
+
+      // Type badge
+      const typeBadgeEl = $('dsTypeBadge');
+      const rawType = meta && meta.Type ? String(meta.Type).trim() : '';
+      const rawTypeLc = rawType.toLowerCase();
+      const displayType = (rawTypeLc === 'system' || rawTypeLc === 'system activity') ? 'System activity' : rawType;
+      if (displayType) { typeBadgeEl.textContent = displayType; typeBadgeEl.style.display = ''; }
+      else { typeBadgeEl.style.display = 'none'; }
+
+      // Description
+      const effectiveDesc = (desc && desc.trim()) || (meta && meta.L4_Desc && String(meta.L4_Desc).trim()) || '';
+      const descEl = $('dsDesc');
+      descEl.textContent = effectiveDesc;
+      descEl.style.display = effectiveDesc ? '' : 'none';
+
+      if (!meta) {
+        ['dsRasciGrid','dsSipocGrid','dsKpiGoalBody','dsSysMeta','dsDocsBody','dsOwnersMeta','dsTimingMeta'].forEach(function(id) { $(id).innerHTML = ''; });
+        $('dsKpiGoalRow').style.display = 'none';
+        $('dsSysCard').style.display = 'none';
+        return;
+      }
+
+      // ── RASCI ──
+      const rasciGrid = $('dsRasciGrid');
+      rasciGrid.innerHTML = '';
+      ['R','A','S','C','I'].forEach(function(f) {
+        const col = document.createElement('div');
+        const head = document.createElement('div');
+        head.className = 'ds-col-head';
+        head.textContent = f;
+        col.appendChild(head);
+        const vals = meta[f] ? splitSemicolon(String(meta[f])) : [];
+        if (vals.length) {
+          vals.forEach(function(v) {
+            const cell = document.createElement('div');
+            cell.className = 'ds-cell';
+            cell.textContent = v;
+            col.appendChild(cell);
+          });
+        } else {
+          const cell = document.createElement('div');
+          cell.className = 'ds-cell ds-cell-muted';
+          cell.textContent = '—';
+          col.appendChild(cell);
+        }
+        rasciGrid.appendChild(col);
+      });
+
+      // ── SIPOC ──
+      const sipocGrid = $('dsSipocGrid');
+      sipocGrid.innerHTML = '';
+      const nodePath = currentPath.concat(name);
+      const nodePathKey = nodePath.join('|');
+      const currentDfsIdx = _dfsPathList.findIndex(function(p) { return p.join('|') === nodePathKey; });
+
+      ['Supplier','Input','Output','Customer'].forEach(function(f) {
+        const col = document.createElement('div');
+        const head = document.createElement('div');
+        head.className = 'ds-col-head';
+        head.textContent = f;
+        col.appendChild(head);
+        const vals = meta[f] ? splitSemicolon(String(meta[f])) : [];
+        if (vals.length) {
+          vals.forEach(function(v) {
+            const cell = document.createElement('div');
+            cell.className = 'ds-cell';
+            cell.textContent = v;
+            // SIPOC cross-links
+            let targetPath = null;
+            if (f === 'Input' && _outputIndex.size && currentDfsIdx >= 0) {
+              const matches = _outputIndex.get(v.toLowerCase());
+              if (matches) {
+                const preceding = matches.filter(function(m) { return m.path.join('|') !== nodePathKey && m.dfsIdx < currentDfsIdx; });
+                if (preceding.length) targetPath = preceding[preceding.length - 1].path;
+              }
+            } else if (f === 'Output' && _inputIndex.size && currentDfsIdx >= 0) {
+              const matches = _inputIndex.get(v.toLowerCase());
+              if (matches) {
+                const following = matches.filter(function(m) { return m.path.join('|') !== nodePathKey && m.dfsIdx > currentDfsIdx; });
+                if (following.length) targetPath = following[0].path;
+              }
+            }
+            if (targetPath) {
+              const tp = targetPath;
+              cell.classList.add('ds-cell-link');
+              cell.title = (f === 'Input' ? 'Output of: ' : 'Input of: ') + altLabel(tp[tp.length - 1]);
+              cell.addEventListener('click', function() {
+                closeDetailScreen();
+                currentPath = tp.slice(0, -1);
+                render('none');
+                requestAnimationFrame(function() {
+                  const targetKey = tp[tp.length - 1];
+                  selectedKey = targetKey;
+                  const allNodes = Array.from(flowContainer.querySelectorAll('.node'));
+                  allNodes.forEach(function(n) { n.classList.toggle('node-selected', n.getAttribute('data-key') === targetKey); });
+                  const targetEl = allNodes.find(function(n) { return n.getAttribute('data-key') === targetKey; });
+                  if (targetEl) focusNode(targetEl, allNodes.indexOf(targetEl));
+                  const targetNode = getNodeAtPath(tp);
+                  if (targetNode) updateInfoPanel(targetKey, targetNode._meta, targetNode._desc);
+                });
+              });
+            }
+            col.appendChild(cell);
+          });
+        } else {
+          const cell = document.createElement('div');
+          cell.className = 'ds-cell ds-cell-muted';
+          cell.textContent = '—';
+          col.appendChild(cell);
+        }
+        sipocGrid.appendChild(col);
+      });
+
+      // ── KPIs & Goals ──
+      const kpiBody = $('dsKpiGoalBody');
+      kpiBody.innerHTML = '';
+      const kpiVal = meta.KPI ? String(meta.KPI).trim() : '';
+      const goalVal = meta.Goal ? String(meta.Goal).trim() : '';
+      if (kpiVal) {
+        const sub = document.createElement('div');
+        sub.className = 'ds-sub';
+        sub.textContent = 'KPIs';
+        kpiBody.appendChild(sub);
+        splitSemicolon(kpiVal).forEach(function(k) {
+          const row = document.createElement('div');
+          row.className = 'ds-kpi-item';
+          row.innerHTML = '<span class="ds-dot"></span>' + escHtml(k);
+          kpiBody.appendChild(row);
+        });
+      }
+      if (goalVal) {
+        const sub = document.createElement('div');
+        sub.className = 'ds-sub';
+        if (kpiVal) sub.style.marginTop = '.8rem';
+        sub.textContent = 'Goals';
+        kpiBody.appendChild(sub);
+        splitSemicolon(goalVal).forEach(function(g) {
+          const row = document.createElement('div');
+          row.className = 'ds-kpi-item';
+          row.innerHTML = '<span class="ds-dot"></span>' + escHtml(g);
+          kpiBody.appendChild(row);
+        });
+      }
+      $('dsKpiGoalRow').style.display = (kpiVal || goalVal) ? '' : 'none';
+
+      // ── Systems & functionality ──
+      const sysMeta = $('dsSysMeta');
+      sysMeta.innerHTML = '';
+      const toolVal = meta.Tool ? String(meta.Tool).trim() : '';
+      const toolFn  = meta.Tool_function ? String(meta.Tool_function).trim() : '';
+      const toolNav = meta.Tool_navigation ? String(meta.Tool_navigation).trim() : '';
+      const toolDesc = meta.Tool_desc ? String(meta.Tool_desc).trim() : '';
+      const testScript = meta.TestScript_link ? String(meta.TestScript_link).trim() : '';
+
+      function addSysRow(labelTxt, valHtml) {
+        const row = document.createElement('div');
+        row.className = 'ds-mrow';
+        row.innerHTML = '<div class="ds-mlabel">' + escHtml(labelTxt) + '</div><div class="ds-mval">' + valHtml + '</div>';
+        sysMeta.appendChild(row);
+      }
+      if (toolVal)    addSysRow('Tool', splitSemicolon(toolVal).map(function(p) { return linkPartToHtml(p, 'ds-lnk'); }).join(' '));
+      if (toolFn)     addSysRow('Functionality', splitSemicolon(toolFn).map(function(f) { return '<span class="ds-chip">' + escHtml(f) + '</span>'; }).join(''));
+      if (toolNav)    addSysRow('Navigation', splitSemicolon(toolNav).map(function(p) { return linkPartToHtml(p, 'ds-lnk'); }).join(' '));
+      if (toolDesc)   addSysRow('What it does', escHtml(toolDesc));
+      if (testScript) addSysRow('Test script', splitSemicolon(testScript).map(function(p) { return linkPartToHtml(p, 'ds-lnk'); }).join(' '));
+      $('dsSysCard').style.display = (toolVal || toolFn || toolNav || toolDesc || testScript) ? '' : 'none';
+
+      // ── Documentation ──
+      const docsBody = $('dsDocsBody');
+      docsBody.innerHTML = '';
+      const docVal = meta.Documentation ? String(meta.Documentation).trim() : '';
+      if (docVal) {
+        const wrap = document.createElement('div');
+        wrap.className = 'ds-meta';
+        splitSemicolon(docVal).forEach(function(d) {
+          const row = document.createElement('div');
+          row.innerHTML = linkPartToHtml(d, 'ds-lnk');
+          wrap.appendChild(row);
+        });
+        docsBody.appendChild(wrap);
+      } else {
+        docsBody.innerHTML = '<span class="ds-empty-muted">—</span>';
+      }
+
+      // ── Owners ──
+      const ownersMeta = $('dsOwnersMeta');
+      ownersMeta.innerHTML = '';
+      function addOwnerRow(lbl, val) {
+        if (!val || !String(val).trim()) return;
+        const row = document.createElement('div');
+        row.className = 'ds-mrow';
+        row.innerHTML = '<div class="ds-mlabel">' + escHtml(lbl) + '</div><div class="ds-mval">' + escHtml(String(val).trim()) + '</div>';
+        ownersMeta.appendChild(row);
+      }
+      addOwnerRow('BPO', meta.BPO);
+      addOwnerRow('BPE', meta.BPE);
+      addOwnerRow('SME', meta.SME);
+      if (!ownersMeta.children.length) ownersMeta.innerHTML = '<span class="ds-empty-muted">—</span>';
+
+      // ── Timing ──
+      const timingMeta = $('dsTimingMeta');
+      timingMeta.innerHTML = '';
+      function addTimingRow(lbl, val) {
+        if (!val || !String(val).trim()) return;
+        const row = document.createElement('div');
+        row.className = 'ds-mrow';
+        row.innerHTML = '<div class="ds-mlabel">' + escHtml(lbl) + '</div><div class="ds-mval">' + escHtml(String(val).trim()) + '</div>';
+        timingMeta.appendChild(row);
+      }
+      addTimingRow('Frequency', meta.Frequency);
+      const startV = meta.Start != null ? String(meta.Start) : '';
+      const endV   = meta.End   != null ? String(meta.End)   : '';
+      const windowStr = (startV && endV) ? startV + ' → ' + endV : (startV || endV);
+      addTimingRow('Window', windowStr);
+      addTimingRow('Unit', meta.Time_UoM);
+      if (!timingMeta.children.length) timingMeta.innerHTML = '<span class="ds-empty-muted">—</span>';
     }
 
     // ── YEAR OVERVIEW ──────────────────────────────────────────────────────
@@ -4303,6 +4796,7 @@
       $('ganttScreen').classList.add('hidden');
       closeOverviewScreen();
       closeSysOverviewScreen();
+      $('detailScreen').classList.add('hidden');
       yearExpandedPaths.clear();
       yearView = 'year';
       yearViewIndex = 0;
@@ -4484,6 +4978,7 @@
       $('ganttScreen').classList.add('hidden');
       $('yearScreen').classList.add('hidden');
       closeSysOverviewScreen();
+      $('detailScreen').classList.add('hidden');
       $('rolePanel').classList.remove('open');
       $('toolPanel').classList.remove('open');
       clearInfoPanel();
@@ -4539,6 +5034,7 @@
       $('ganttScreen').classList.add('hidden');
       $('yearScreen').classList.add('hidden');
       closeOverviewScreen();
+      $('detailScreen').classList.add('hidden');
       $('sysoverviewScreen').classList.remove('hidden');
 
       const l1Keys = Object.keys(tree);
@@ -4998,6 +5494,7 @@
     });
 
     $('btnGanttClose').addEventListener('click', closeGanttScreen);
+    $('btnDetailBack').addEventListener('click', closeDetailScreen);
 
     /** Build an SVG of the fully-expanded Gantt for the current L1 and download as JPEG */
     function exportGanttAsJpeg() {
