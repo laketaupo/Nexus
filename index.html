@@ -4432,6 +4432,7 @@
       const uomCounts = {}, freqCounts = {};
       function walk(n) {
         if (n._meta) {
+          if ((n._meta.Frequency || '').toLowerCase().includes('continuously')) return;
           const s = n._meta.Start, e = n._meta.End;
           const u = ganttNormUoM(n._meta.Time_UoM || '');
           const f = yearNormFreq(n._meta.Frequency || '');
@@ -4472,6 +4473,8 @@
         if (depth === 0 && yearL0Filter !== null && key !== yearL0Filter) continue;
         const pathKey  = parentPath ? parentPath + '\x1E' + key : key;
         const hasKids  = Object.keys(nodeObj._children || {}).length > 0;
+        if (!hasKids && nodeObj._meta &&
+            (nodeObj._meta.Frequency || '').toLowerCase().includes('continuously')) continue;
         const isExpanded = yearExpandedPaths.has(pathKey);
         const env      = yearNodeEnvelope(nodeObj);
         const levelNum = depth + lo;
