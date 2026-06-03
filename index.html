@@ -2054,45 +2054,104 @@
     }
     #sysovScroll {
       flex: 1; overflow: auto; position: relative; background: var(--bg);
+      display: flex; flex-direction: column;
+      cursor: grab; user-select: none;
     }
+    #sysovScroll.sysov-dragging { cursor: grabbing; }
     #sysovContent {
-      position: relative; display: block;
-      width: 100%; padding-bottom: 4rem;
+      position: relative; min-width: max-content;
+      flex: 1; display: flex; flex-direction: column;
     }
-    .sysov-sticky-header {
-      position: sticky; top: 0; z-index: 5;
-      background: var(--bg); padding: 1.5rem 0 .75rem;
-      border-bottom: 1px solid var(--bdr-s);
+    /* Sticky top header: L2 / L3 section labels */
+    .sysov-top-hdr {
+      position: sticky; top: 0; z-index: 6;
+      background: var(--bg); display: flex; flex-direction: row;
+      min-height: 56px; box-sizing: border-box;
+      border-bottom: 2px solid var(--bdr-s);
       transition: background .2s, border-color .2s;
     }
+    .sysov-top-hdr-corner {
+      flex-shrink: 0; background: var(--bg);
+      position: sticky; left: 0; z-index: 7;
+      border-right: 1px solid var(--bdr-s);
+      transition: background .2s, border-color .2s;
+    }
+    .sysov-top-hdr-labels {
+      position: relative; flex: 1; overflow: hidden; min-height: 56px;
+    }
+    .sysov-hdr-l2 {
+      position: absolute; top: 5px;
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .07em; color: var(--txt2);
+      padding-left: 7px; line-height: 1.25;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sysov-hdr-l3 {
+      position: absolute; top: 30px;
+      font-size: .63rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--txt2); opacity: 0.65;
+      padding-left: 7px; line-height: 1.25;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
     #sysovSvg {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      position: absolute; top: 0; left: 0;
       pointer-events: none; overflow: visible;
     }
-
-    .sysov-column {
-      display: flex; flex-direction: column; align-items: center;
-      min-width: 180px; width: 180px; flex-shrink: 0;
+    /* Swimlane body */
+    .sysov-swim-body {
+      display: flex; flex-direction: row; flex: 1;
     }
-    .sysov-col-header {
+    /* Sticky left column: tool/system row labels */
+    .sysov-labels-col {
+      position: sticky; left: 0; z-index: 5; flex-shrink: 0;
+      background: var(--bg); border-right: 1px solid var(--bdr-s);
+      transition: background .2s, border-color .2s;
+      display: flex; flex-direction: column;
+    }
+    .sysov-row-label {
+      flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end;
+      padding: 0 .75rem 0 .5rem;
       font-size: .68rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .07em; padding: .25rem .65rem; border-radius: 5px;
-      border: 1px solid; margin-bottom: 1.25rem; white-space: nowrap;
-      max-width: 164px; overflow: hidden; text-overflow: ellipsis; text-align: center;
+      letter-spacing: .06em; text-align: right;
+      border: 1px solid; border-radius: 5px;
+      margin: 8px 0.5rem;
+      white-space: normal; word-break: break-word; line-height: 1.25;
+    }
+    /* Node area: absolute-positioned nodes */
+    .sysov-node-area {
+      position: relative; flex-shrink: 0;
     }
     .sysov-node {
-      width: 156px; min-height: 54px; border-radius: 8px;
-      border: 1.5px solid; padding: .5rem .7rem;
+      position: absolute; width: 180px; height: 60px; border-radius: 8px;
+      border: 1.5px solid; padding: .4rem .7rem;
       font-size: .76rem; font-weight: 600; text-align: center;
       display: flex; align-items: center; justify-content: center;
-      line-height: 1.35; word-break: break-word;
+      line-height: 1.3; word-break: break-word; box-sizing: border-box;
+      overflow: hidden;
     }
-    .sysov-row {
-      display: flex; flex-direction: row; width: 100%; justify-content: center;
-      margin-bottom: 48px;
+
+    /* ── RESPONSIBLE OVERVIEW SCREEN ────────────────────────────────────── */
+    #respoverviewScreen {
+      position: fixed; top: 56px; left: 0; right: 0; bottom: 0;
+      background: var(--bg); z-index: 95;
+      display: flex; flex-direction: column;
+      transition: background .2s;
     }
-    /* Column gap spacers between .sysov-column elements */
-    .sysov-col-gap { width: 60px; flex-shrink: 0; }
+    #respoverviewScreen.hidden { display: none; }
+    #respovScroll {
+      flex: 1; overflow: auto; position: relative; background: var(--bg);
+      display: flex; flex-direction: column;
+      cursor: grab; user-select: none;
+    }
+    #respovScroll.respov-dragging { cursor: grabbing; }
+    #respovContent {
+      position: relative; min-width: max-content;
+      flex: 1; display: flex; flex-direction: column;
+    }
+    #respovSvg {
+      position: absolute; top: 0; left: 0;
+      pointer-events: none; overflow: visible;
+    }
 
     /* ── OVERVIEW TREE (export-style nested flex) ─────────────────────── */
     .ov-wrap {
@@ -2183,6 +2242,7 @@
           <button id="btnViewsOverview">Overview</button>
           <button id="btnViewsTimeline">Timeline</button>
           <button id="btnViewsSysOverview">System Overview</button>
+          <button id="btnViewsRespOverview">Responsible Overview</button>
         </div>
       </div>
       <div class="nav-dropdown" id="navLookupDrop">
@@ -2367,6 +2427,30 @@
       <div id="sysovScroll">
         <div id="sysovContent">
           <svg id="sysovSvg"></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Responsible Overview Screen -->
+  <div id="respoverviewScreen" class="hidden">
+    <div class="sysov-toolbar">
+      <span class="sysov-toolbar-title">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><line x1="16" y1="11" x2="22" y2="11"/><line x1="19" y1="8" x2="19" y2="14"/>
+        </svg>Responsible Overview
+      </span>
+      <div class="sysov-l1-tabs" id="respovL1Tabs"></div>
+      <button id="btnRespOvClose" class="sysov-close-btn">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>Close
+      </button>
+    </div>
+    <div class="sysov-body">
+      <div id="respovScroll">
+        <div id="respovContent">
+          <svg id="respovSvg"></svg>
         </div>
       </div>
     </div>
@@ -3493,6 +3577,7 @@
       closeToolPanel();
       closeOverviewScreen();
       closeSysOverviewScreen();
+      closeRespOverviewScreen();
       $('yearScreen').classList.add('hidden');
       $('ganttScreen').classList.add('hidden');
       $('detailScreen').classList.add('hidden');
@@ -4045,6 +4130,7 @@
       $('yearScreen').classList.add('hidden');
       closeOverviewScreen();
       closeSysOverviewScreen();
+      closeRespOverviewScreen();
       $('detailScreen').classList.add('hidden');
       $('ganttScreen').classList.remove('hidden');
 
@@ -4089,6 +4175,7 @@
       $('ganttScreen').classList.add('hidden');
       closeOverviewScreen();
       closeSysOverviewScreen();
+      closeRespOverviewScreen();
       renderDetailScreen(key, meta, desc);
       $('detailScreen').classList.remove('hidden');
     }
@@ -4796,6 +4883,7 @@
       $('ganttScreen').classList.add('hidden');
       closeOverviewScreen();
       closeSysOverviewScreen();
+      closeRespOverviewScreen();
       $('detailScreen').classList.add('hidden');
       yearExpandedPaths.clear();
       yearView = 'year';
@@ -4978,6 +5066,7 @@
       $('ganttScreen').classList.add('hidden');
       $('yearScreen').classList.add('hidden');
       closeSysOverviewScreen();
+      closeRespOverviewScreen();
       $('detailScreen').classList.add('hidden');
       $('rolePanel').classList.remove('open');
       $('toolPanel').classList.remove('open');
@@ -5034,6 +5123,7 @@
       $('ganttScreen').classList.add('hidden');
       $('yearScreen').classList.add('hidden');
       closeOverviewScreen();
+      closeRespOverviewScreen();
       $('detailScreen').classList.add('hidden');
       $('sysoverviewScreen').classList.remove('hidden');
 
@@ -5067,8 +5157,11 @@
     }
 
     function renderSysOverview(l1Key) {
+      const scroll  = $('sysovScroll');
       const content = $('sysovContent');
-      // Remove everything except the SVG layer
+      // Remove old sticky header and all content-children except the SVG layer
+      const oldHdr = scroll.querySelector('.sysov-top-hdr');
+      if (oldHdr) oldHdr.remove();
       Array.from(content.children).forEach(function (c) {
         if (c.id !== 'sysovSvg') c.remove();
       });
@@ -5076,93 +5169,121 @@
       svg.innerHTML = '';
       if (!l1Key || !tree[l1Key]) return;
 
-      // DFS-walk to collect L4 leaf nodes in order
+      // DFS-walk tracking L2/L3 ancestry for each leaf node
       const orderedNodes = [];
-      function dfsCollect(children) {
+      function dfsCollect(children, depth, l2, l3) {
         for (const [key, node] of Object.entries(children)) {
           if (node._meta) {
-            orderedNodes.push({ name: key, meta: node._meta });
+            orderedNodes.push({ name: key, meta: node._meta,
+              l2Key: l2, l3Key: l3 });
           } else {
-            dfsCollect(node._children);
+            dfsCollect(node._children, depth + 1,
+              depth === 0 ? key : l2,
+              depth === 1 ? key : l3);
           }
         }
       }
-      dfsCollect(tree[l1Key]._children);
+      dfsCollect(tree[l1Key]._children, 0, null, null);
 
       if (!orderedNodes.length) return;
 
-      // Assign each node its column key (preserving first-seen order)
-      const colKeys = [];
+      // Assign each node its row key (tool/system), preserving first-seen order
+      const rowKeys = [];
       orderedNodes.forEach(function (n) {
         const tool = (n.meta.Tool || '').trim();
         const key = (!tool || tool.toLowerCase() === 'n/a') ? 'Manual / Other' : tool;
-        n.colKey = key;
-        if (!colKeys.includes(key)) colKeys.push(key);
+        n.rowKey = key;
+        if (!rowKeys.includes(key)) rowKeys.push(key);
       });
+      const rowIndex = {};
+      rowKeys.forEach(function (k, i) { rowIndex[k] = i; });
 
-      // Color map: colKey → color
-      const colColor = {};
-      colKeys.forEach(function (k, i) { colColor[k] = SYSOV_COLORS[i % SYSOV_COLORS.length]; });
+      // Color map: rowKey → color
+      const rowColor = {};
+      rowKeys.forEach(function (k, i) { rowColor[k] = SYSOV_COLORS[i % SYSOV_COLORS.length]; });
 
-      // Shared grid template: "180px 60px 180px 60px 180px …"
-      const colW = 180, gapW = 60;
-      const gtc = colKeys.map(function () { return colW + 'px'; }).join(' ' + gapW + 'px ');
+      // Layout constants
+      const nodeW = 180, nodeH = 60, nodeGap = 80;
+      const rowH = 120, labelW = 180;
+      const padV = 16, padH = 24;  // padV: visual breathing room; labels live in sticky header
+      const N = orderedNodes.length, M = rowKeys.length;
+      const areaW = N * (nodeW + nodeGap) - nodeGap + 2 * padH;
+      const areaH = M * rowH + 2 * padV;
 
-      // ── Sticky header row ──
-      const stickyHdr = document.createElement('div');
-      stickyHdr.className = 'sysov-sticky-header';
+      // Vertical centering: push nodeArea (and matching labelsCol padding) down so
+      // the rows land in the middle of the available height below the sticky header.
+      const hdrH = 56;
+      const availH = $('sysovScroll').clientHeight - hdrH;
+      const nodeAreaTopOffset = Math.max(0, Math.round((availH - areaH) / 2));
 
-      const hdrGrid = document.createElement('div');
-      hdrGrid.style.cssText = 'display:grid;grid-template-columns:' + gtc + ';width:fit-content;margin:0 auto;padding:0 2.5rem;';
-      colKeys.forEach(function (k, ci) {
-        const color = colColor[k];
-        const hdr = document.createElement('div');
-        hdr.className = 'sysov-col-header';
-        hdr.textContent = k;
-        hdr.style.color       = color.acc;
-        hdr.style.borderColor = color.border;
-        hdr.style.background  = color.bg;
-        hdr.style.margin      = '0 12px 0';
-        hdrGrid.appendChild(hdr);
-        if (ci < colKeys.length - 1) hdrGrid.appendChild(document.createElement('div'));
+      // ── Sticky header (outside sysovContent so sticky top works) ──
+      const topHdr = document.createElement('div');
+      topHdr.className = 'sysov-top-hdr';
+      topHdr.style.minWidth = (labelW + areaW) + 'px';
+      const hdrCorner = document.createElement('div');
+      hdrCorner.className = 'sysov-top-hdr-corner';
+      hdrCorner.style.width  = labelW + 'px';
+      hdrCorner.style.minHeight = '56px';
+      topHdr.appendChild(hdrCorner);
+      const hdrLabels = document.createElement('div');
+      hdrLabels.className = 'sysov-top-hdr-labels';
+      topHdr.appendChild(hdrLabels);
+      scroll.insertBefore(topHdr, content);
+
+      // ── Swimlane body: labels column + node area ──
+      const swimBody = document.createElement('div');
+      swimBody.className = 'sysov-swim-body';
+      content.appendChild(swimBody);
+
+      // Left sticky label column
+      const labelsCol = document.createElement('div');
+      labelsCol.className = 'sysov-labels-col';
+      labelsCol.style.width = labelW + 'px';
+      labelsCol.style.paddingTop = (nodeAreaTopOffset + padV) + 'px';
+      rowKeys.forEach(function (k) {
+        const color = rowColor[k];
+        const lbl = document.createElement('div');
+        lbl.className = 'sysov-row-label';
+        lbl.textContent = k;
+        lbl.style.height = (rowH - 16) + 'px';
+        lbl.style.color = color.acc;
+        lbl.style.borderColor = color.border;
+        lbl.style.background = color.bg;
+        labelsCol.appendChild(lbl);
       });
-      stickyHdr.appendChild(hdrGrid);
-      content.appendChild(stickyHdr);
+      swimBody.appendChild(labelsCol);
 
-      // ── Single grid for all nodes ──
-      const grid = document.createElement('div');
-      grid.style.cssText = 'display:grid;grid-template-columns:' + gtc
-        + ';align-items:start;width:fit-content;margin:0 auto;padding:1.5rem 2.5rem 0;';
-      content.appendChild(grid);
+      // Node area (marginTop centres rows in the available viewport height)
+      const nodeArea = document.createElement('div');
+      nodeArea.className = 'sysov-node-area';
+      nodeArea.style.width     = areaW + 'px';
+      nodeArea.style.height    = areaH + 'px';
+      nodeArea.style.marginTop = nodeAreaTopOffset + 'px';
+      swimBody.appendChild(nodeArea);
 
       orderedNodes.forEach(function (n, seqIdx) {
-        const color = colColor[n.colKey];
+        const color = rowColor[n.rowKey];
+        const ri = rowIndex[n.rowKey];
+        const x = padH + seqIdx * (nodeW + nodeGap);
+        const y = padV + ri * rowH + (rowH - nodeH) / 2;
 
-        colKeys.forEach(function (k, ci) {
-          const cell = document.createElement('div');
-          cell.style.cssText = 'display:flex;justify-content:center;padding-bottom:48px;';
-
-          if (k === n.colKey) {
-            const nodeEl = document.createElement('div');
-            nodeEl.className = 'sysov-node';
-            nodeEl.dataset.seqIdx = seqIdx;
-            nodeEl.style.background  = color.bg;
-            nodeEl.style.borderColor = color.border;
-            nodeEl.style.color       = 'var(--txt)';
-            nodeEl.textContent       = n.name;
-            cell.appendChild(nodeEl);
-          }
-
-          grid.appendChild(cell);
-          if (ci < colKeys.length - 1) {
-            const gapCell = document.createElement('div');
-            gapCell.style.paddingBottom = '48px';
-            grid.appendChild(gapCell);
-          }
-        });
+        const nodeEl = document.createElement('div');
+        nodeEl.className = 'sysov-node';
+        nodeEl.dataset.seqIdx = seqIdx;
+        nodeEl.dataset.l2Key  = n.l2Key || '';
+        nodeEl.dataset.l3Key  = n.l3Key || '';
+        nodeEl.style.left        = x + 'px';
+        nodeEl.style.top         = y + 'px';
+        nodeEl.style.width       = nodeW + 'px';
+        nodeEl.style.height      = nodeH + 'px';
+        nodeEl.style.background  = color.bg;
+        nodeEl.style.borderColor = color.border;
+        nodeEl.style.color       = 'var(--txt)';
+        nodeEl.textContent       = n.name;
+        nodeArea.appendChild(nodeEl);
       });
 
-      // Draw connectors after layout settles
+      // Position SVG over full content (top-hdr + swimBody)
       requestAnimationFrame(function () { requestAnimationFrame(function () {
         drawSysOverviewConnectors();
       }); });
@@ -5173,53 +5294,134 @@
       if (!svg) return;
       svg.innerHTML = '';
 
-      const scroll = $('sysovScroll');
       const content = $('sysovContent');
+      const nodeArea = content.querySelector('.sysov-node-area');
+      if (!nodeArea) return;
+
       const contentRect = content.getBoundingClientRect();
+      const areaRect    = nodeArea.getBoundingClientRect();
 
-      // Collect all nodes in seq order
-      const nodeEls = Array.from(content.querySelectorAll('.sysov-node'));
+      // Size SVG to cover whole content area
+      const svgW = content.scrollWidth;
+      const svgH = content.scrollHeight;
+      svg.setAttribute('width',  svgW);
+      svg.setAttribute('height', svgH);
+      svg.style.width  = svgW + 'px';
+      svg.style.height = svgH + 'px';
+
+      // Layout offset of nodeArea within content coordinate space
+      // getBoundingClientRect difference cancels out scroll, giving pure layout offset
+      const areaOffX = areaRect.left - contentRect.left;
+      const areaOffY = areaRect.top  - contentRect.top;
+
+      // Collect nodes sorted by seqIdx
+      const nodeEls = Array.from(nodeArea.querySelectorAll('.sysov-node'));
       nodeEls.sort(function (a, b) { return Number(a.dataset.seqIdx) - Number(b.dataset.seqIdx); });
+      if (nodeEls.length < 1) return;
 
-      if (nodeEls.length < 2) return;
-
-      // Size SVG to content
-      svg.setAttribute('width', content.scrollWidth);
-      svg.setAttribute('height', content.scrollHeight);
-      svg.style.width  = content.scrollWidth + 'px';
-      svg.style.height = content.scrollHeight + 'px';
-
+      // Draw solid connectors — same L2 AND same L3 only
       for (let i = 0; i < nodeEls.length - 1; i++) {
         const a = nodeEls[i];
         const b = nodeEls[i + 1];
-        const ra = a.getBoundingClientRect();
-        const rb = b.getBoundingClientRect();
+        if (a.dataset.l2Key !== b.dataset.l2Key) continue;
+        if (a.dataset.l3Key !== b.dataset.l3Key) continue;
 
-        // Convert to content-local coords
-        const ax = ra.left - contentRect.left + ra.width  / 2;
-        const ay = ra.top  - contentRect.top  + ra.height;
-        const bx = rb.left - contentRect.left + rb.width  / 2;
-        const by = rb.top  - contentRect.top;
+        const ax_abs = parseFloat(a.style.left) + parseFloat(a.style.width || a.offsetWidth);
+        const ay_abs = parseFloat(a.style.top)  + a.offsetHeight / 2;
+        const bx_abs = parseFloat(b.style.left);
+        const by_abs = parseFloat(b.style.top)  + b.offsetHeight / 2;
 
-        const dy = by - ay;
-        const cp = Math.min(dy * 0.55, 80);
+        const ax = areaOffX + ax_abs;
+        const ay = areaOffY + ay_abs;
+        const bx = areaOffX + bx_abs;
+        const by = areaOffY + by_abs;
 
-        let d;
-        if (Math.abs(ax - bx) < 4) {
-          d = `M ${ax} ${ay} L ${bx} ${by}`;
-        } else {
-          d = `M ${ax} ${ay} C ${ax} ${ay + cp}, ${bx} ${by - cp}, ${bx} ${by}`;
-        }
+        const dx = bx - ax;
+        const cp = Math.min(Math.abs(dx) * 0.45, 60);
+        const d = 'M ' + ax + ' ' + ay
+          + ' C ' + (ax + cp) + ' ' + ay + ', '
+          + (bx - cp) + ' ' + by + ', '
+          + bx + ' ' + by;
 
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', d);
         path.setAttribute('fill', 'none');
+        path.setAttribute('stroke-linecap', 'round');
         path.setAttribute('stroke', 'var(--acc)');
         path.setAttribute('stroke-width', '1.8');
-        path.setAttribute('stroke-linecap', 'round');
         path.setAttribute('opacity', '0.6');
         svg.appendChild(path);
       }
+
+      // Collect section boundaries in order: L2 changes take priority over L3 changes
+      const nodeGap = 80;
+      const sections = []; // {type:'l2'|'l3', key, firstEl, isFirst}
+      nodeEls.forEach(function (el, i) {
+        if (i === 0) {
+          sections.push({ type: 'l2', key: el.dataset.l2Key, firstEl: el, isFirst: true });
+          return;
+        }
+        const prev = nodeEls[i - 1];
+        if (el.dataset.l2Key !== prev.dataset.l2Key) {
+          sections.push({ type: 'l2', key: el.dataset.l2Key, firstEl: el, isFirst: false });
+        } else if (el.dataset.l3Key !== prev.dataset.l3Key) {
+          sections.push({ type: 'l3', key: el.dataset.l3Key, firstEl: el, isFirst: false });
+        }
+      });
+
+      // Vertical divider lines extend from the top of the content area to the bottom of the swimlane
+      const lineY1 = 0;
+      const lineY2 = areaOffY + nodeArea.offsetHeight;
+
+      function svgLine(x, solid) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x); line.setAttribute('x2', x);
+        line.setAttribute('y1', lineY1); line.setAttribute('y2', lineY2);
+        if (solid) {
+          line.setAttribute('stroke', 'var(--txt2)');
+          line.setAttribute('stroke-width', '3');
+          line.setAttribute('opacity', '0.55');
+        } else {
+          line.setAttribute('stroke', 'var(--txt3)');
+          line.setAttribute('stroke-width', '1.5');
+          line.setAttribute('stroke-dasharray', '6 4');
+          line.setAttribute('opacity', '0.5');
+        }
+        svg.appendChild(line);
+      }
+
+      // Populate sticky header labels (HTML, not SVG)
+      const hdrLabels = $('sysovScroll').querySelector('.sysov-top-hdr-labels');
+      if (hdrLabels) hdrLabels.innerHTML = '';
+
+      sections.forEach(function (s) {
+        const nodeX = parseFloat(s.firstEl.style.left); // offset within nodeArea
+        const isL2  = s.type === 'l2';
+        const dividerX = areaOffX + nodeX - nodeGap / 2;
+
+        if (!s.isFirst) {
+          svgLine(dividerX, isL2);
+        }
+
+        // HTML label in sticky header — left is relative to hdrLabels which starts at nodeArea left
+        if (hdrLabels) {
+          const labelLeft = s.isFirst ? nodeX : nodeX - nodeGap / 2 + 8;
+          const div = document.createElement('div');
+          div.className = isL2 ? 'sysov-hdr-l2' : 'sysov-hdr-l3';
+          div.textContent = s.key;
+          div.style.left = labelLeft + 'px';
+          hdrLabels.appendChild(div);
+
+          // For L2 sections, also show the first L3 name on the line below
+          if (isL2 && s.firstEl.dataset.l3Key) {
+            const l3div = document.createElement('div');
+            l3div.className = 'sysov-hdr-l3';
+            l3div.textContent = s.firstEl.dataset.l3Key;
+            l3div.style.left = labelLeft + 'px';
+            hdrLabels.appendChild(l3div);
+          }
+        }
+      });
     }
 
     // Zoom controls
@@ -5243,14 +5445,371 @@
     $('btnOverviewClose').addEventListener('click', closeOverviewScreen);
     $('btnSysOvClose').addEventListener('click', closeSysOverviewScreen);
 
+    // ── Click-drag pan on the system overview scroll area ─────────────────
+    (function () {
+      const el = $('sysovScroll');
+      let dragging = false, startX = 0, startY = 0, scrollX = 0, scrollY = 0;
+
+      el.addEventListener('mousedown', function (e) {
+        if (e.button !== 0) return;
+        dragging = true;
+        startX  = e.clientX;
+        startY  = e.clientY;
+        scrollX = el.scrollLeft;
+        scrollY = el.scrollTop;
+        el.classList.add('sysov-dragging');
+        e.preventDefault();
+      });
+
+      window.addEventListener('mousemove', function (e) {
+        if (!dragging) return;
+        el.scrollLeft = scrollX - (e.clientX - startX);
+        el.scrollTop  = scrollY - (e.clientY - startY);
+      });
+
+      window.addEventListener('mouseup', function () {
+        if (!dragging) return;
+        dragging = false;
+        el.classList.remove('sysov-dragging');
+      });
+    }());
+
     window.addEventListener('resize', function () {
       if (!$('sysoverviewScreen').classList.contains('hidden')) {
         if (_sysovResizeRaf) cancelAnimationFrame(_sysovResizeRaf);
         _sysovResizeRaf = requestAnimationFrame(function () {
-          drawSysOverviewConnectors();
+          renderSysOverview(sysovActiveL1);
+        });
+      }
+      if (!$('respoverviewScreen').classList.contains('hidden')) {
+        if (_respovResizeRaf) cancelAnimationFrame(_respovResizeRaf);
+        _respovResizeRaf = requestAnimationFrame(function () {
+          renderRespOverview(respovActiveL1);
         });
       }
     });
+
+    // ── RESPONSIBLE OVERVIEW ─────────────────────────────────────────────
+
+    let respovActiveL1 = null;
+    let _respovResizeRaf = null;
+
+    function openRespOverviewScreen() {
+      ctrlPanel.classList.add('hidden');
+      closeRolePanel();
+      closeToolPanel();
+      $('ganttScreen').classList.add('hidden');
+      $('yearScreen').classList.add('hidden');
+      closeOverviewScreen();
+      closeSysOverviewScreen();
+      $('detailScreen').classList.add('hidden');
+      $('respoverviewScreen').classList.remove('hidden');
+
+      const l1Keys = Object.keys(tree);
+      buildRespOvL1Tabs(l1Keys);
+      const first = l1Keys[0] || null;
+      respovActiveL1 = first;
+      renderRespOverview(first);
+    }
+
+    function closeRespOverviewScreen() {
+      $('respoverviewScreen').classList.add('hidden');
+    }
+
+    function buildRespOvL1Tabs(l1Keys) {
+      const container = $('respovL1Tabs');
+      container.innerHTML = '';
+      l1Keys.forEach(function (k) {
+        const btn = document.createElement('button');
+        btn.className = 'sysov-l1-tab' + (k === respovActiveL1 ? ' active' : '');
+        btn.textContent = k;
+        btn.addEventListener('click', function () {
+          respovActiveL1 = k;
+          container.querySelectorAll('.sysov-l1-tab').forEach(function (b) {
+            b.classList.toggle('active', b.textContent === k);
+          });
+          renderRespOverview(k);
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    function renderRespOverview(l1Key) {
+      const scroll  = $('respovScroll');
+      const content = $('respovContent');
+      const oldHdr = scroll.querySelector('.sysov-top-hdr');
+      if (oldHdr) oldHdr.remove();
+      Array.from(content.children).forEach(function (c) {
+        if (c.id !== 'respovSvg') c.remove();
+      });
+      const svg = $('respovSvg');
+      svg.innerHTML = '';
+      if (!l1Key || !tree[l1Key]) return;
+
+      // DFS-walk tracking L2/L3 ancestry
+      const orderedNodes = [];
+      function dfsCollect(children, depth, l2, l3) {
+        for (const [key, node] of Object.entries(children)) {
+          if (node._meta) {
+            orderedNodes.push({ name: key, meta: node._meta, l2Key: l2, l3Key: l3 });
+          } else {
+            dfsCollect(node._children, depth + 1,
+              depth === 0 ? key : l2,
+              depth === 1 ? key : l3);
+          }
+        }
+      }
+      dfsCollect(tree[l1Key]._children, 0, null, null);
+      if (!orderedNodes.length) return;
+
+      // Row key = semicolon-joined R values; empty/N/A → "Unassigned"
+      const rowKeys = [];
+      orderedNodes.forEach(function (n) {
+        const raw = (n.meta.R || '').trim();
+        const key = (!raw || raw.toLowerCase() === 'n/a')
+          ? 'Unassigned'
+          : raw.split(';').map(function (s) { return s.trim(); }).filter(Boolean).join(' / ');
+        n.rowKey = key;
+        if (!rowKeys.includes(key)) rowKeys.push(key);
+      });
+      const rowIndex = {};
+      rowKeys.forEach(function (k, i) { rowIndex[k] = i; });
+
+      const rowColor = {};
+      rowKeys.forEach(function (k, i) { rowColor[k] = SYSOV_COLORS[i % SYSOV_COLORS.length]; });
+
+      // Layout constants (identical to System Overview)
+      const nodeW = 180, nodeH = 60, nodeGap = 80;
+      const rowH = 120, labelW = 180;
+      const padV = 16, padH = 24;
+      const N = orderedNodes.length, M = rowKeys.length;
+      const areaW = N * (nodeW + nodeGap) - nodeGap + 2 * padH;
+      const areaH = M * rowH + 2 * padV;
+
+      const hdrH = 56;
+      const availH = scroll.clientHeight - hdrH;
+      const nodeAreaTopOffset = Math.max(0, Math.round((availH - areaH) / 2));
+
+      // Sticky header
+      const topHdr = document.createElement('div');
+      topHdr.className = 'sysov-top-hdr';
+      topHdr.style.minWidth = (labelW + areaW) + 'px';
+      const hdrCorner = document.createElement('div');
+      hdrCorner.className = 'sysov-top-hdr-corner';
+      hdrCorner.style.width = labelW + 'px';
+      hdrCorner.style.minHeight = '56px';
+      const hdrLabels = document.createElement('div');
+      hdrLabels.className = 'sysov-top-hdr-labels';
+      topHdr.appendChild(hdrCorner);
+      topHdr.appendChild(hdrLabels);
+      scroll.insertBefore(topHdr, content);
+
+      // Swimlane body
+      const swimBody = document.createElement('div');
+      swimBody.className = 'sysov-swim-body';
+      content.appendChild(swimBody);
+
+      // Left label column
+      const labelsCol = document.createElement('div');
+      labelsCol.className = 'sysov-labels-col';
+      labelsCol.style.width = labelW + 'px';
+      labelsCol.style.paddingTop = (nodeAreaTopOffset + padV) + 'px';
+      rowKeys.forEach(function (k) {
+        const color = rowColor[k];
+        const lbl = document.createElement('div');
+        lbl.className = 'sysov-row-label';
+        lbl.textContent = k;
+        lbl.style.height = (rowH - 16) + 'px';
+        lbl.style.color = color.acc;
+        lbl.style.borderColor = color.border;
+        lbl.style.background = color.bg;
+        labelsCol.appendChild(lbl);
+      });
+      swimBody.appendChild(labelsCol);
+
+      // Node area
+      const nodeArea = document.createElement('div');
+      nodeArea.className = 'sysov-node-area';
+      nodeArea.style.width  = areaW + 'px';
+      nodeArea.style.height = areaH + 'px';
+      nodeArea.style.marginTop = nodeAreaTopOffset + 'px';
+      swimBody.appendChild(nodeArea);
+
+      orderedNodes.forEach(function (n, seqIdx) {
+        const color = rowColor[n.rowKey];
+        const ri = rowIndex[n.rowKey];
+        const x = padH + seqIdx * (nodeW + nodeGap);
+        const y = padV + ri * rowH + (rowH - nodeH) / 2;
+
+        const nodeEl = document.createElement('div');
+        nodeEl.className = 'sysov-node';
+        nodeEl.dataset.seqIdx = seqIdx;
+        nodeEl.dataset.l2Key  = n.l2Key || '';
+        nodeEl.dataset.l3Key  = n.l3Key || '';
+        nodeEl.style.left        = x + 'px';
+        nodeEl.style.top         = y + 'px';
+        nodeEl.style.width       = nodeW + 'px';
+        nodeEl.style.height      = nodeH + 'px';
+        nodeEl.style.background  = color.bg;
+        nodeEl.style.borderColor = color.border;
+        nodeEl.style.color       = 'var(--txt)';
+        nodeEl.textContent       = n.name;
+        nodeArea.appendChild(nodeEl);
+      });
+
+      requestAnimationFrame(function () { requestAnimationFrame(function () {
+        drawRespOverviewConnectors();
+      }); });
+    }
+
+    function drawRespOverviewConnectors() {
+      const svg = $('respovSvg');
+      if (!svg) return;
+      svg.innerHTML = '';
+
+      const content = $('respovContent');
+      const nodeArea = content.querySelector('.sysov-node-area');
+      if (!nodeArea) return;
+
+      const contentRect = content.getBoundingClientRect();
+      const areaRect    = nodeArea.getBoundingClientRect();
+
+      const svgW = content.scrollWidth;
+      const svgH = content.scrollHeight;
+      svg.setAttribute('width',  svgW);
+      svg.setAttribute('height', svgH);
+      svg.style.width  = svgW + 'px';
+      svg.style.height = svgH + 'px';
+
+      const areaOffX = areaRect.left - contentRect.left;
+      const areaOffY = areaRect.top  - contentRect.top;
+
+      const nodeEls = Array.from(nodeArea.querySelectorAll('.sysov-node'));
+      nodeEls.sort(function (a, b) { return Number(a.dataset.seqIdx) - Number(b.dataset.seqIdx); });
+      if (nodeEls.length < 1) return;
+
+      // Solid bezier connectors — same L2 and same L3 only
+      for (let i = 0; i < nodeEls.length - 1; i++) {
+        const a = nodeEls[i];
+        const b = nodeEls[i + 1];
+        if (a.dataset.l2Key !== b.dataset.l2Key) continue;
+        if (a.dataset.l3Key !== b.dataset.l3Key) continue;
+
+        const ax = areaOffX + parseFloat(a.style.left) + parseFloat(a.style.width || a.offsetWidth);
+        const ay = areaOffY + parseFloat(a.style.top)  + a.offsetHeight / 2;
+        const bx = areaOffX + parseFloat(b.style.left);
+        const by = areaOffY + parseFloat(b.style.top)  + b.offsetHeight / 2;
+
+        const cp = Math.min(Math.abs(bx - ax) * 0.45, 60);
+        const d = 'M ' + ax + ' ' + ay
+          + ' C ' + (ax + cp) + ' ' + ay + ', '
+          + (bx - cp) + ' ' + by + ', '
+          + bx + ' ' + by;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('stroke', 'var(--acc)');
+        path.setAttribute('stroke-width', '1.8');
+        path.setAttribute('opacity', '0.6');
+        svg.appendChild(path);
+      }
+
+      // Section boundaries
+      const nodeGap = 80;
+      const sections = [];
+      nodeEls.forEach(function (el, i) {
+        if (i === 0) {
+          sections.push({ type: 'l2', key: el.dataset.l2Key, firstEl: el, isFirst: true });
+          return;
+        }
+        const prev = nodeEls[i - 1];
+        if (el.dataset.l2Key !== prev.dataset.l2Key) {
+          sections.push({ type: 'l2', key: el.dataset.l2Key, firstEl: el, isFirst: false });
+        } else if (el.dataset.l3Key !== prev.dataset.l3Key) {
+          sections.push({ type: 'l3', key: el.dataset.l3Key, firstEl: el, isFirst: false });
+        }
+      });
+
+      const lineY1 = 0;
+      const lineY2 = areaOffY + nodeArea.offsetHeight;
+
+      function svgLine(x, solid) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x); line.setAttribute('x2', x);
+        line.setAttribute('y1', lineY1); line.setAttribute('y2', lineY2);
+        if (solid) {
+          line.setAttribute('stroke', 'var(--txt2)');
+          line.setAttribute('stroke-width', '3');
+          line.setAttribute('opacity', '0.55');
+        } else {
+          line.setAttribute('stroke', 'var(--txt3)');
+          line.setAttribute('stroke-width', '1.5');
+          line.setAttribute('stroke-dasharray', '6 4');
+          line.setAttribute('opacity', '0.5');
+        }
+        svg.appendChild(line);
+      }
+
+      const hdrLabels = $('respovScroll').querySelector('.sysov-top-hdr-labels');
+      if (hdrLabels) hdrLabels.innerHTML = '';
+
+      sections.forEach(function (s) {
+        const nodeX = parseFloat(s.firstEl.style.left);
+        const isL2  = s.type === 'l2';
+        const dividerX = areaOffX + nodeX - nodeGap / 2;
+
+        if (!s.isFirst) svgLine(dividerX, isL2);
+
+        if (hdrLabels) {
+          const labelLeft = s.isFirst ? nodeX : nodeX - nodeGap / 2 + 8;
+          const div = document.createElement('div');
+          div.className = isL2 ? 'sysov-hdr-l2' : 'sysov-hdr-l3';
+          div.textContent = s.key;
+          div.style.left = labelLeft + 'px';
+          hdrLabels.appendChild(div);
+
+          if (isL2 && s.firstEl.dataset.l3Key) {
+            const l3div = document.createElement('div');
+            l3div.className = 'sysov-hdr-l3';
+            l3div.textContent = s.firstEl.dataset.l3Key;
+            l3div.style.left = labelLeft + 'px';
+            hdrLabels.appendChild(l3div);
+          }
+        }
+      });
+    }
+
+    $('btnRespOvClose').addEventListener('click', closeRespOverviewScreen);
+
+    (function () {
+      const el = $('respovScroll');
+      let dragging = false, startX = 0, startY = 0, scrollX = 0, scrollY = 0;
+
+      el.addEventListener('mousedown', function (e) {
+        if (e.button !== 0) return;
+        dragging = true;
+        startX  = e.clientX;
+        startY  = e.clientY;
+        scrollX = el.scrollLeft;
+        scrollY = el.scrollTop;
+        el.classList.add('respov-dragging');
+        e.preventDefault();
+      });
+
+      window.addEventListener('mousemove', function (e) {
+        if (!dragging) return;
+        el.scrollLeft = scrollX - (e.clientX - startX);
+        el.scrollTop  = scrollY - (e.clientY - startY);
+      });
+
+      window.addEventListener('mouseup', function () {
+        if (!dragging) return;
+        dragging = false;
+        el.classList.remove('respov-dragging');
+      });
+    }());
 
     // ── PAN & WHEEL on overview canvas ────────────────────────────────────
     (function () {
@@ -5375,12 +5934,14 @@
       const btnViews = $('btnViews');
       const btnOv    = $('btnViewsOverview');
       const btnTl    = $('btnViewsTimeline');
-      const btnSysOv = $('btnViewsSysOverview');
+      const btnSysOv  = $('btnViewsSysOverview');
+      const btnRespOv = $('btnViewsRespOverview');
 
       function updateViewsActive() {
         btnOv.classList.toggle('views-active', !$('overviewScreen').classList.contains('hidden'));
         btnTl.classList.toggle('views-active', !$('yearScreen').classList.contains('hidden'));
         btnSysOv.classList.toggle('views-active', !$('sysoverviewScreen').classList.contains('hidden'));
+        btnRespOv.classList.toggle('views-active', !$('respoverviewScreen').classList.contains('hidden'));
       }
 
       btnViews.addEventListener('click', function (e) {
@@ -5409,6 +5970,12 @@
         closeViewsMenu();
         if ($('sysoverviewScreen').classList.contains('hidden')) openSysOverviewScreen();
         else closeSysOverviewScreen();
+      });
+
+      btnRespOv.addEventListener('click', function () {
+        closeViewsMenu();
+        if ($('respoverviewScreen').classList.contains('hidden')) openRespOverviewScreen();
+        else closeRespOverviewScreen();
       });
 
       // ── Lookup ──
