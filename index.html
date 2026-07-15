@@ -1911,6 +1911,18 @@
       text-overflow: ellipsis; white-space: nowrap; flex: 1;
     }
     #detailScreen .dt-title b { color: var(--txt2); font-weight: 600; }
+    #detailScreen .dt-nav-btn {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      z-index: 8; width: 44px; height: 44px; border-radius: 50%;
+      background: var(--surf); border: 1px solid var(--bdr); color: var(--txt3);
+      font-size: 1.4rem; line-height: 1; cursor: pointer; font-family: inherit;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color .15s, background .15s, color .15s;
+    }
+    #detailScreen .dt-nav-btn:hover { background: var(--bdr); border-color: var(--acc); color: var(--txt); }
+    #detailScreen .dt-nav-prev { left: 1rem; }
+    #detailScreen .dt-nav-next { right: 1rem; }
+    #detailScreen .dt-nav-btn.hidden { display: none; }
     #detailScreen .ds-wrap {
       max-width: 960px; margin: 0 auto; padding: 1rem 1.5rem 4rem;
     }
@@ -2462,6 +2474,8 @@
       <button class="dt-btn dt-btn-back" id="btnDetailBack">&#8249; Back</button>
       <span class="dt-title" id="detailToolbarTitle"></span>
     </div>
+    <button class="dt-nav-btn dt-nav-prev hidden" id="dsNavPrev" aria-label="Previous process">&#8249;</button>
+    <button class="dt-nav-btn dt-nav-next hidden" id="dsNavNext" aria-label="Next process">&#8250;</button>
     <div class="ds-wrap">
       <div class="ds-hero">
         <div class="ds-crumbs" id="dsCrumbs"></div>
