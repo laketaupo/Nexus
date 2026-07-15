@@ -3033,6 +3033,44 @@
       return cur;
     }
 
+    function getDetailNavSiblings(currentName) {
+      const siblings = getNodesAtPath(currentPath);
+      const names = Object.keys(siblings).filter(function(k) {
+        return Object.keys(siblings[k]._children).length === 0;
+      });
+      return { names: names, idx: names.indexOf(currentName) };
+    }
+
+    function updateDetailNav(currentName) {
+      const prevBtn = $('dsNavPrev');
+      const nextBtn = $('dsNavNext');
+      const info = getDetailNavSiblings(currentName);
+
+      if (info.idx <= 0) {
+        prevBtn.classList.add('hidden');
+        prevBtn.onclick = null;
+      } else {
+        prevBtn.classList.remove('hidden');
+        const prevName = info.names[info.idx - 1];
+        prevBtn.onclick = function() {
+          const sib = getNodesAtPath(currentPath)[prevName];
+          openDetailScreen(prevName, sib._meta, sib._desc);
+        };
+      }
+
+      if (info.idx === -1 || info.idx >= info.names.length - 1) {
+        nextBtn.classList.add('hidden');
+        nextBtn.onclick = null;
+      } else {
+        nextBtn.classList.remove('hidden');
+        const nextName = info.names[info.idx + 1];
+        nextBtn.onclick = function() {
+          const sib = getNodesAtPath(currentPath)[nextName];
+          openDetailScreen(nextName, sib._meta, sib._desc);
+        };
+      }
+    }
+
     function getNodeAtPath(pathArr) {
       if (!pathArr.length) return null;
       let cur = tree;
@@ -4201,6 +4239,7 @@
     function renderDetailScreen(name, meta, desc) {
       const label = altLabel(name);
       $('dsTitle').textContent = label;
+      updateDetailNav(name);
 
       // Toolbar title: path segments › current node
       const pathParts = currentPath.map(s => altLabel(s)).concat(label);
