@@ -7488,6 +7488,22 @@
     document.addEventListener('keydown', e => {
       if (e.target === searchInput || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
 
+      // ── L4 detail screen prev/next arrow-key navigation ──────────────
+      if (!$('detailScreen').classList.contains('hidden')) {
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          const prevBtn = $('dsNavPrev');
+          if (!prevBtn.classList.contains('hidden')) prevBtn.click();
+          return;
+        }
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          const nextBtn = $('dsNavNext');
+          if (!nextBtn.classList.contains('hidden')) nextBtn.click();
+          return;
+        }
+      }
+
       // ── ERP lane keyboard navigation ──────────────────────────────────
       if (document.activeElement && document.activeElement.getAttribute('data-erp') === '1') {
         const erpNodes = Array.from(flowContainer.querySelectorAll('.erp-node:not(.erp-empty)'));
