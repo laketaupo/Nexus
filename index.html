@@ -6347,6 +6347,25 @@
         }
       });
 
+      if (rcOverlayVisible && rcData.length) {
+        const overlayTop    = PAD + HEADER_H;
+        const overlayBottom = PAD + HEADER_H + rows.length * ROW_H;
+        rcData.forEach(function (entry) {
+          rcExpandEvents(entry).forEach(function (ev) {
+            const x = PAD + LABEL_W + Math.round(ev.left / 100 * BAR_AREA_W);
+            if (entry.type === 'Period') {
+              const fill = RC_PERIOD_FILLS[entry.colorKey] || RC_PERIOD_FILLS.default;
+              if (fill !== 'transparent') {
+                const w = Math.max(1, Math.round(ev.width / 100 * BAR_AREA_W));
+                parts.push('<rect x="' + x + '" y="' + overlayTop + '" width="' + w + '" height="' + (overlayBottom - overlayTop) + '" fill="' + fill + '"/>');
+              }
+            } else {
+              parts.push('<line x1="' + x + '" y1="' + overlayTop + '" x2="' + x + '" y2="' + overlayBottom + '" stroke="rgba(50,130,220,0.90)" stroke-width="3" stroke-dasharray="5,4"/>');
+            }
+          });
+        });
+      }
+
       const svgStr =
         '<?xml version="1.0" encoding="UTF-8"?>\n' +
         '<svg xmlns="http://www.w3.org/2000/svg" width="' + totalW + '" height="' + totalH + '"' +
