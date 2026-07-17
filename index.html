@@ -2024,6 +2024,20 @@
     }
     #detailScreen .ds-sub:first-child { margin-top: 0; }
     #detailScreen .ds-empty-muted { color: var(--txt5); font-size: .8rem; font-style: italic; }
+    /* Empty-fields highlight (control panel toggle), L4 detail screen only */
+    #detailScreen.hl-empty.lvl-4 .ds-cell-muted,
+    #detailScreen.hl-empty.lvl-4 .ds-empty-muted {
+      background: rgba(240,40,40,.40);
+      border: 1px solid rgba(255,70,70,.85);
+      border-radius: 4px;
+      color: #ffc2c2;
+    }
+    html.light #detailScreen.hl-empty.lvl-4 .ds-cell-muted,
+    html.light #detailScreen.hl-empty.lvl-4 .ds-empty-muted {
+      background: #ffc2c2;
+      border-color: #ff6b6b;
+      color: #b01818;
+    }
     #detailScreen .ip-tool-link {
       color: var(--acc-t); text-decoration: none; font-size: .8rem;
       display: inline-flex; align-items: center; gap: .28rem;
@@ -2689,6 +2703,17 @@
     </div>
 
     <div class="cp-section">
+      <div class="cp-section-title">Detail screen</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;">
+        <span style="font-size:.75rem;color:var(--txt4);">Empty fields</span>
+        <div class="cp-theme-seg" style="margin:0">
+          <button class="cp-theme-opt active" id="cpEmptyOff">Off</button>
+          <button class="cp-theme-opt" id="cpEmptyOn">On</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cp-section">
       <div class="cp-section-title">File</div>
       <div class="cp-btn-row" style="margin-bottom:.5rem">
         <button class="cp-btn" id="btnSave" title="Save a shareable HTML file with data embedded">
@@ -2906,6 +2931,7 @@
     const levelOffset = 1;   // always L1 as root (L0 level no longer used)
     let _sessionData  = null;   // in-memory only; cleared on every fresh page load
     let erpLaneVisible = false;   // ERP swim-lane toggle
+    let highlightEmptyFields = false;   // highlight empty fields on L4 detail screen
     let _outputIndex  = new Map(); // lowercase output text → [{path: string[], dfsIdx: number}]
     let _inputIndex   = new Map(); // lowercase output text → steps that consume it as Input
     let _dfsPathList  = [];        // all node paths in DFS pre-order
@@ -4245,6 +4271,12 @@
       const label = altLabel(name);
       $('dsTitle').textContent = label;
       updateDetailNav(name);
+
+      // Empty-fields highlight — L4 detail screens only
+      const absLevel = levelOffset + currentPath.length;
+      const detailScreenEl = $('detailScreen');
+      detailScreenEl.classList.toggle('lvl-4', absLevel === 4);
+      detailScreenEl.classList.toggle('hl-empty', highlightEmptyFields);
 
       // Toolbar title: path segments › current node
       const pathParts = currentPath.map(s => altLabel(s)).concat(label);
@@ -7534,6 +7566,20 @@
       $('cpHlMeetOff').classList.add('active');
       $('cpHlMeetOn').classList.remove('active');
       document.body.classList.remove('hl-meeting');
+    });
+
+    // ── EMPTY-FIELDS HIGHLIGHT TOGGLE (L4 detail screen) ────────────────────
+    $('cpEmptyOn').addEventListener('click', () => {
+      highlightEmptyFields = true;
+      $('cpEmptyOn').classList.add('active');
+      $('cpEmptyOff').classList.remove('active');
+      $('detailScreen').classList.add('hl-empty');
+    });
+    $('cpEmptyOff').addEventListener('click', () => {
+      highlightEmptyFields = false;
+      $('cpEmptyOff').classList.add('active');
+      $('cpEmptyOn').classList.remove('active');
+      $('detailScreen').classList.remove('hl-empty');
     });
 
     // ── CONTROLS PANEL ─────────────────────────────────────────────────────
