@@ -4406,32 +4406,29 @@
       kpiBody.innerHTML = '';
       const kpiVal = meta.KPI ? String(meta.KPI).trim() : '';
       const goalVal = meta.Goal ? String(meta.Goal).trim() : '';
-      if (kpiVal) {
+      function addKpiGoalGroup(subTitle, val, marginTop) {
         const sub = document.createElement('div');
         sub.className = 'ds-sub';
-        sub.textContent = 'KPIs';
+        if (marginTop) sub.style.marginTop = '.8rem';
+        sub.textContent = subTitle;
         kpiBody.appendChild(sub);
-        splitSemicolon(kpiVal).forEach(function(k) {
+        if (val) {
+          splitSemicolon(val).forEach(function(v) {
+            const row = document.createElement('div');
+            row.className = 'ds-kpi-item';
+            row.innerHTML = '<span class="ds-dot"></span>' + escHtml(v);
+            kpiBody.appendChild(row);
+          });
+        } else {
           const row = document.createElement('div');
           row.className = 'ds-kpi-item';
-          row.innerHTML = '<span class="ds-dot"></span>' + escHtml(k);
+          row.innerHTML = '<span class="ds-empty-muted">—</span>';
           kpiBody.appendChild(row);
-        });
+        }
       }
-      if (goalVal) {
-        const sub = document.createElement('div');
-        sub.className = 'ds-sub';
-        if (kpiVal) sub.style.marginTop = '.8rem';
-        sub.textContent = 'Goals';
-        kpiBody.appendChild(sub);
-        splitSemicolon(goalVal).forEach(function(g) {
-          const row = document.createElement('div');
-          row.className = 'ds-kpi-item';
-          row.innerHTML = '<span class="ds-dot"></span>' + escHtml(g);
-          kpiBody.appendChild(row);
-        });
-      }
-      $('dsKpiGoalRow').style.display = (kpiVal || goalVal) ? '' : 'none';
+      addKpiGoalGroup('KPIs', kpiVal, false);
+      addKpiGoalGroup('Goals', goalVal, true);
+      $('dsKpiGoalRow').style.display = '';
 
       // ── Systems & functionality ──
       const sysMeta = $('dsSysMeta');
@@ -4445,15 +4442,15 @@
       function addSysRow(labelTxt, valHtml) {
         const row = document.createElement('div');
         row.className = 'ds-mrow';
-        row.innerHTML = '<div class="ds-mlabel">' + escHtml(labelTxt) + '</div><div class="ds-mval">' + valHtml + '</div>';
+        row.innerHTML = '<div class="ds-mlabel">' + escHtml(labelTxt) + '</div><div class="ds-mval">' + (valHtml || '<span class="ds-empty-muted">—</span>') + '</div>';
         sysMeta.appendChild(row);
       }
-      if (toolVal)    addSysRow('Tool', splitSemicolon(toolVal).map(function(p) { return linkPartToHtml(p, 'ds-lnk'); }).join(' '));
-      if (toolFn)     addSysRow('Functionality', splitSemicolon(toolFn).map(function(f) { return '<span class="ds-chip">' + escHtml(f) + '</span>'; }).join(''));
-      if (toolNav)    addSysRow('Navigation', splitSemicolon(toolNav).map(function(p) { return linkPartToHtml(p, 'ds-lnk'); }).join(' '));
-      if (toolDesc)   addSysRow('What it does', escHtml(toolDesc));
-      if (testScript) addSysRow('Test script', splitSemicolon(testScript).map(function(p) { return linkPartToHtml(p, 'ds-lnk'); }).join(' '));
-      $('dsSysCard').style.display = (toolVal || toolFn || toolNav || toolDesc || testScript) ? '' : 'none';
+      addSysRow('Tool', toolVal ? splitSemicolon(toolVal).map(function(p) { return linkPartToHtml(p, 'ds-lnk'); }).join(' ') : '');
+      addSysRow('Functionality', toolFn ? splitSemicolon(toolFn).map(function(f) { return '<span class="ds-chip">' + escHtml(f) + '</span>'; }).join('') : '');
+      addSysRow('Navigation', toolNav ? splitSemicolon(toolNav).map(function(p) { return linkPartToHtml(p, 'ds-lnk'); }).join(' ') : '');
+      addSysRow('What it does', toolDesc ? escHtml(toolDesc) : '');
+      addSysRow('Test script', testScript ? splitSemicolon(testScript).map(function(p) { return linkPartToHtml(p, 'ds-lnk'); }).join(' ') : '');
+      $('dsSysCard').style.display = '';
 
       // ── Documentation ──
       const docsBody = $('dsDocsBody');
@@ -4476,25 +4473,24 @@
       const ownersMeta = $('dsOwnersMeta');
       ownersMeta.innerHTML = '';
       function addOwnerRow(lbl, val) {
-        if (!val || !String(val).trim()) return;
+        const trimmed = val ? String(val).trim() : '';
         const row = document.createElement('div');
         row.className = 'ds-mrow';
-        row.innerHTML = '<div class="ds-mlabel">' + escHtml(lbl) + '</div><div class="ds-mval">' + escHtml(String(val).trim()) + '</div>';
+        row.innerHTML = '<div class="ds-mlabel">' + escHtml(lbl) + '</div><div class="ds-mval">' + (trimmed ? escHtml(trimmed) : '<span class="ds-empty-muted">—</span>') + '</div>';
         ownersMeta.appendChild(row);
       }
       addOwnerRow('BPO', meta.BPO);
       addOwnerRow('BPE', meta.BPE);
       addOwnerRow('SME', meta.SME);
-      if (!ownersMeta.children.length) ownersMeta.innerHTML = '<span class="ds-empty-muted">—</span>';
 
       // ── Timing ──
       const timingMeta = $('dsTimingMeta');
       timingMeta.innerHTML = '';
       function addTimingRow(lbl, val) {
-        if (!val || !String(val).trim()) return;
+        const trimmed = val ? String(val).trim() : '';
         const row = document.createElement('div');
         row.className = 'ds-mrow';
-        row.innerHTML = '<div class="ds-mlabel">' + escHtml(lbl) + '</div><div class="ds-mval">' + escHtml(String(val).trim()) + '</div>';
+        row.innerHTML = '<div class="ds-mlabel">' + escHtml(lbl) + '</div><div class="ds-mval">' + (trimmed ? escHtml(trimmed) : '<span class="ds-empty-muted">—</span>') + '</div>';
         timingMeta.appendChild(row);
       }
       addTimingRow('Frequency', meta.Frequency);
@@ -4503,7 +4499,6 @@
       const windowStr = (startV && endV) ? startV + ' → ' + endV : (startV || endV);
       addTimingRow('Window', windowStr);
       addTimingRow('Unit', meta.Time_UoM);
-      if (!timingMeta.children.length) timingMeta.innerHTML = '<span class="ds-empty-muted">—</span>';
     }
 
     // ── YEAR OVERVIEW ──────────────────────────────────────────────────────
