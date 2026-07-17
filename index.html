@@ -1996,8 +1996,8 @@
     #detailScreen .ds-mlabel {
       font-size: .61rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
       color: var(--acc-t); background: var(--acc-15); border: 1px solid var(--acc-25);
-      border-radius: 5px; padding: .15rem .45rem; white-space: nowrap; flex-shrink: 0;
-      margin-top: 1px; min-width: 6rem; text-align: center;
+      border-radius: 5px; padding: .15rem .45rem; flex-shrink: 0;
+      margin-top: 1px; width: 8.5rem; text-align: center;
     }
     #detailScreen .ds-mval { font-size: .8rem; color: var(--txt2); line-height: 1.45; word-break: break-word; }
     #detailScreen .ds-chip {
@@ -4445,9 +4445,9 @@
         row.innerHTML = '<div class="ds-mlabel">' + escHtml(labelTxt) + '</div><div class="ds-mval">' + (valHtml || '<span class="ds-empty-muted">—</span>') + '</div>';
         sysMeta.appendChild(row);
       }
-      addSysRow('Tool', toolVal ? splitSemicolon(toolVal).map(function(p) { return linkPartToHtml(p, 'ds-lnk'); }).join(' ') : '');
+      addSysRow('Tool', toolVal ? splitSemicolon(toolVal).map(function(p) { return linkPartToHtml(p, null); }).join(' ') : '');
       addSysRow('Functionality', toolFn ? splitSemicolon(toolFn).map(function(f) { return '<span class="ds-chip">' + escHtml(f) + '</span>'; }).join('') : '');
-      addSysRow('Navigation', toolNav ? splitSemicolon(toolNav).map(function(p) { return linkPartToHtml(p, 'ds-lnk'); }).join(' ') : '');
+      addSysRow('Navigation', toolNav ? splitSemicolon(toolNav).map(function(p) { return linkPartToHtml(p, null); }).join(' ') : '');
       addSysRow('What it does', toolDesc ? escHtml(toolDesc) : '');
       addSysRow('Test script', testScript ? splitSemicolon(testScript).map(function(p) { return linkPartToHtml(p, 'ds-lnk'); }).join(' ') : '');
       $('dsSysCard').style.display = '';
