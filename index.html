@@ -4509,7 +4509,7 @@
       addSysRow('Tool', toolVal ? splitSemicolon(toolVal).map(function(p) { return linkPartToHtml(p, null); }).join(' ') : '');
       addSysRow('Functionality', toolFn ? splitSemicolon(toolFn).map(function(f) { return '<span class="ds-chip">' + escHtml(f) + '</span>'; }).join('') : '');
       addSysRow('Navigation', toolNav ? splitSemicolon(toolNav).map(function(p) { return linkPartToHtml(p, null); }).join(' ') : '');
-      addSysRow('What it does', toolDesc ? escHtml(toolDesc) : '');
+      addSysRow('Description', toolDesc ? escHtml(toolDesc) : '');
       addSysRow('Test script', testScript ? splitSemicolon(testScript).map(function(p) { return linkPartToHtml(p, 'ds-lnk'); }).join(' ') : '');
       $('dsSysCard').style.display = '';
 
