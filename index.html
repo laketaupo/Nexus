@@ -1893,16 +1893,6 @@
       transition: background .2s;
     }
     #detailScreen.hidden { display: none; }
-    #detailScreen .detail-toolbar {
-      flex: 0 0 auto; z-index: 10; display: flex; align-items: center;
-      gap: .7rem; height: 52px; padding: 0 1rem;
-      background: var(--nav); border-bottom: 1px solid var(--bdr-s);
-      transition: background .2s, border-color .2s;
-    }
-    #detailScreen .dt-nav-inline { display: flex; gap: .4rem; margin-left: auto; flex: 0 0 auto; }
-    #detailScreen .dt-nav-inline .dt-nav-btn {
-      position: static; transform: none; width: 30px; height: 30px; font-size: 1.05rem;
-    }
     #detailScreen .dt-btn {
       background: var(--surf); border: 1px solid var(--bdr); border-radius: 6px;
       color: var(--txt3); font-size: .78rem; padding: .3rem .75rem; cursor: pointer;
@@ -1910,7 +1900,10 @@
       display: flex; align-items: center; gap: .35rem; flex-shrink: 0; white-space: nowrap;
     }
     #detailScreen .dt-btn:hover { background: var(--bdr); border-color: var(--acc); color: var(--txt); }
-    #detailScreen .dt-btn-back { font-weight: 600; }
+    #detailScreen .dt-btn-back {
+      position: absolute; top: 14px; left: 16px; z-index: 20;
+      font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,.18);
+    }
     #detailScreen .dt-nav-btn {
       position: absolute; top: 50%; transform: translateY(-50%);
       z-index: 8; width: 44px; height: 44px; border-radius: 50%;
@@ -1926,7 +1919,7 @@
     #detailScreen .ds-wrap {
       flex: 1 1 auto; min-height: 0; max-width: 1500px; width: 100%; margin: 0 auto;
       display: grid; grid-template-rows: auto minmax(0, 1.5fr) minmax(0, 1fr);
-      gap: .6rem; padding: .65rem 1.25rem .8rem;
+      gap: .6rem; padding: 3rem 1.25rem .8rem;
     }
     #detailScreen .ds-hero-line { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
     /* Description row (clamped, expandable) */
@@ -2511,13 +2504,9 @@
 
   <!-- Process Detail Screen -->
   <div id="detailScreen" class="hidden">
-    <div class="detail-toolbar">
-      <button class="dt-btn dt-btn-back" id="btnDetailBack">&#8249; Back</button>
-      <div class="dt-nav-inline">
-        <button class="dt-nav-btn hidden" id="dsNavPrev" aria-label="Previous process">&#8249;</button>
-        <button class="dt-nav-btn hidden" id="dsNavNext" aria-label="Next process">&#8250;</button>
-      </div>
-    </div>
+    <button class="dt-btn dt-btn-back" id="btnDetailBack">&#8249; Back</button>
+    <button class="dt-nav-btn dt-nav-prev hidden" id="dsNavPrev" aria-label="Previous process">&#8249;</button>
+    <button class="dt-nav-btn dt-nav-next hidden" id="dsNavNext" aria-label="Next process">&#8250;</button>
     <div class="ds-wrap">
       <section class="ds-card ds-hero-card">
         <div class="ds-crumbs" id="dsCrumbs"></div>
