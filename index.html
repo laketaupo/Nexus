@@ -2038,11 +2038,6 @@
       margin-top: 1px; width: 8.5rem; text-align: center;
     }
     #detailScreen .ds-mval { font-size: .8rem; color: var(--txt2); line-height: 1.45; word-break: break-word; }
-    #detailScreen .ds-chip {
-      display: inline-block; background: var(--acc-10); border: 1px solid var(--acc-20);
-      border-radius: 4px; padding: .1rem .4rem; font-size: .75rem;
-      margin: 0 .3rem .3rem 0; color: var(--txt3);
-    }
     #detailScreen .ds-lnk {
       color: var(--acc-t); text-decoration: none; font-size: .8rem;
       display: inline-flex; align-items: center; gap: .28rem;
@@ -4507,7 +4502,7 @@
         sysMeta.appendChild(row);
       }
       addSysRow('Tool', toolVal ? splitSemicolon(toolVal).map(function(p) { return linkPartToHtml(p, null); }).join(' ') : '');
-      addSysRow('Functionality', toolFn ? splitSemicolon(toolFn).map(function(f) { return '<span class="ds-chip">' + escHtml(f) + '</span>'; }).join('') : '');
+      addSysRow('Functionality', toolFn ? escHtml(splitSemicolon(toolFn).join(', ')) : '');
       addSysRow('Navigation', toolNav ? splitSemicolon(toolNav).map(function(p) { return linkPartToHtml(p, null); }).join(' ') : '');
       addSysRow('Description', toolDesc ? escHtml(toolDesc) : '');
       addSysRow('Test script', testScript ? splitSemicolon(testScript).map(function(p) { return linkPartToHtml(p, 'ds-lnk'); }).join(' ') : '');
