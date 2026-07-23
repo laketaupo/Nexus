@@ -3658,7 +3658,7 @@
     }
     function goHome() {
       // Close all overlay screens
-      ctrlPanel.classList.add('hidden');
+      closeCtrlPanel();
       closeRolePanel();
       closeToolPanel();
       closeOverviewScreen();
@@ -4210,7 +4210,7 @@
 
     function openGanttScreen() {
       // Close other panels
-      ctrlPanel.classList.add('hidden');
+      closeCtrlPanel();
       closeRolePanel();
       closeToolPanel();
       $('yearScreen').classList.add('hidden');
@@ -4254,7 +4254,7 @@
 
     // ── PROCESS DETAIL SCREEN ────────────────────────────────────────────────
     function openDetailScreen(key, meta, desc) {
-      ctrlPanel.classList.add('hidden');
+      closeCtrlPanel();
       closeRolePanel();
       closeToolPanel();
       $('yearScreen').classList.add('hidden');
@@ -5086,7 +5086,7 @@
     }
 
     function openYearScreen() {
-      ctrlPanel.classList.add('hidden');
+      closeCtrlPanel();
       closeRolePanel();
       closeToolPanel();
       $('ganttScreen').classList.add('hidden');
@@ -5326,7 +5326,7 @@
     let _sysovResizeRaf = null;
 
     function openSysOverviewScreen() {
-      ctrlPanel.classList.add('hidden');
+      closeCtrlPanel();
       closeRolePanel();
       closeToolPanel();
       $('ganttScreen').classList.add('hidden');
@@ -5704,7 +5704,7 @@
     let _respovResizeRaf = null;
 
     function openRespOverviewScreen() {
-      ctrlPanel.classList.add('hidden');
+      closeCtrlPanel();
       closeRolePanel();
       closeToolPanel();
       $('ganttScreen').classList.add('hidden');
@@ -6765,7 +6765,7 @@
 
     function openRolePanel() {
       // Close controls panel, tool panel and overlay screens if open
-      ctrlPanel.classList.add('hidden');
+      closeCtrlPanel();
       closeToolPanel();
       $('yearScreen').classList.add('hidden');
       $('ganttScreen').classList.add('hidden');
@@ -7084,7 +7084,7 @@
     const btnToolLookup = $('btnToolLookup');
 
     function openToolPanel() {
-      ctrlPanel.classList.add('hidden');
+      closeCtrlPanel();
       closeRolePanel();
       $('yearScreen').classList.add('hidden');
       $('ganttScreen').classList.add('hidden');
@@ -7584,16 +7584,21 @@
 
     // ── CONTROLS PANEL ─────────────────────────────────────────────────────
     const ctrlPanel  = $('ctrlPanel');
+    function closeCtrlPanel() {
+      ctrlPanel.classList.add('hidden');
+      $('shortcutsDropdown').classList.add('hidden');
+    }
     const btnControls = $('btnControls');
   btnControls.addEventListener('click', e => {
       e.stopPropagation();
       ctrlPanel.classList.toggle('hidden');
+      $('shortcutsDropdown').classList.add('hidden');
     });
-    $('btnControlsClose').addEventListener('click', () => ctrlPanel.classList.add('hidden'));
+    $('btnControlsClose').addEventListener('click', () => closeCtrlPanel());
     document.addEventListener('click', e => {
       if (!ctrlPanel.classList.contains('hidden') &&
           !ctrlPanel.contains(e.target) && e.target !== btnControls) {
-        ctrlPanel.classList.add('hidden');
+        closeCtrlPanel();
       }
     });
     btnReset.addEventListener('click', () => {
@@ -7620,6 +7625,7 @@
       clone.querySelector('#exportModal').className = 'exp-overlay hidden';
       clone.querySelector('#becOverlay').className = 'bec-overlay hidden';
       clone.querySelector('#ctrlPanel').className = 'hidden';
+      clone.querySelector('#shortcutsDropdown').classList.add('hidden');
       clone.querySelector('#importOverlay').className = 'imp-overlay hidden';
 
       // Build metadata
