@@ -274,6 +274,12 @@
     /* Sections */
     .cp-section { padding: .7rem 1rem; }
     .cp-section + .cp-section { border-top: 1px solid var(--bdr-xs); }
+    .cp-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: .5rem; padding: .28rem 0;
+    }
+    .cp-row-label { font-size: .75rem; color: var(--txt4); }
+    .cp-row-divider { border-top: 1px solid var(--bdr-xs); margin-top: .35rem; padding-top: .5rem; }
 
     /* ── CP TOGGLE (switch) ─────────────────────────────────────────────── */
     .cp-toggle-row {
@@ -2630,7 +2636,15 @@
         </svg>
         Controls
       </span>
-      <button class="cp-close" id="btnControlsClose" title="Close">✕</button>
+      <div style="display:flex;align-items:center;gap:.15rem">
+        <button class="cp-close" id="btnShortcutsToggle" title="Keyboard shortcuts">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="5" width="20" height="14" rx="2"/>
+            <path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M10 13h.01M14 13h.01M18 13h.01M8 17h8"/>
+          </svg>
+        </button>
+        <button class="cp-close" id="btnControlsClose" title="Close">✕</button>
+      </div>
     </div>
 
     <div class="cp-section">
@@ -2653,54 +2667,48 @@
     </div>
 
     <div class="cp-section">
-      <div class="cp-section-title">Presentation</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.5rem">
-        <span style="font-size:.75rem;color:var(--txt4);">Mode</span>
+      <div class="cp-section-title">Display</div>
+
+      <div class="cp-row">
+        <span class="cp-row-label">Presentation mode</span>
         <div class="cp-theme-seg" style="margin:0">
           <button class="cp-theme-opt active" id="cpPresentOff">Off</button>
           <button class="cp-theme-opt" id="cpPresentOn">On</button>
         </div>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.15rem">
-        <span style="font-size:.75rem;color:var(--txt4);">Text scale</span>
-        <span id="presentScaleLabel" style="font-size:.7rem;color:var(--acc-t);font-weight:700;min-width:30px;text-align:right;">1.5×</span>
+      <div style="margin:.3rem 0 .6rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.15rem">
+          <span style="font-size:.72rem;color:var(--txt5);">Text scale</span>
+          <span id="presentScaleLabel" style="font-size:.7rem;color:var(--acc-t);font-weight:700;min-width:30px;text-align:right;">1.5×</span>
+        </div>
+        <input type="range" id="presentScaleSlider" min="1.0" max="3.0" step="0.1" value="1.5" disabled>
       </div>
-      <input type="range" id="presentScaleSlider" min="1.0" max="3.0" step="0.1" value="1.5" disabled>
-    </div>
 
-    <div class="cp-section">
-      <div class="cp-section-title">Settings</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;">
-        <span style="font-size:.75rem;color:var(--txt4);">System lane</span>
+      <div class="cp-row">
+        <span class="cp-row-label">System lane</span>
         <div class="cp-theme-seg" style="margin:0">
           <button class="cp-theme-opt active" id="cpErpOff">Off</button>
           <button class="cp-theme-opt" id="cpErpOn">On</button>
         </div>
       </div>
-    </div>
 
-    <div class="cp-section">
-      <div class="cp-section-title">Highlight Types</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.4rem">
-        <span style="font-size:.75rem;color:var(--txt4);">System activity</span>
+      <div class="cp-row cp-row-divider">
+        <span class="cp-row-label">Highlight: System activity</span>
         <div class="cp-theme-seg" style="margin:0">
           <button class="cp-theme-opt active" id="cpHlSysOff">Off</button>
           <button class="cp-theme-opt" id="cpHlSysOn">On</button>
         </div>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;">
-        <span style="font-size:.75rem;color:var(--txt4);">Meeting</span>
+      <div class="cp-row">
+        <span class="cp-row-label">Highlight: Meeting</span>
         <div class="cp-theme-seg" style="margin:0">
           <button class="cp-theme-opt active" id="cpHlMeetOff">Off</button>
           <button class="cp-theme-opt" id="cpHlMeetOn">On</button>
         </div>
       </div>
-    </div>
 
-    <div class="cp-section">
-      <div class="cp-section-title">Detail screen</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;">
-        <span style="font-size:.75rem;color:var(--txt4);">Empty fields</span>
+      <div class="cp-row">
+        <span class="cp-row-label">Empty fields</span>
         <div class="cp-theme-seg" style="margin:0">
           <button class="cp-theme-opt active" id="cpEmptyOff">Off</button>
           <button class="cp-theme-opt" id="cpEmptyOn">On</button>
@@ -2735,23 +2743,23 @@
       </div>
     </div>
 
-    <div class="cp-section">
-      <div class="cp-section-title">Keyboard shortcuts</div>
-      <div class="cp-shortcuts">
-        <span class="cp-key">&#8592;</span><span class="cp-key-desc">Previous node</span>
-        <span class="cp-key">&#8594;</span><span class="cp-key-desc">Next node</span>
-        <span class="cp-key">&#8595;</span><span class="cp-key-desc">Drill into node</span>
-        <span class="cp-key">&#8593;</span><span class="cp-key-desc">Go up one level</span>
-        <span class="cp-key">Esc</span><span class="cp-key-desc">Go to top level</span>
-        <span class="cp-key">E</span><span class="cp-key-desc">Export single process</span>
-        <span class="cp-key">B</span><span class="cp-key-desc">Export bulk processes</span>
-        <span class="cp-key">/</span><span class="cp-key-desc">Focus search</span>
-        <span class="cp-key">S</span><span class="cp-key-desc">Save HTML file</span>
-        <span class="cp-key">C</span><span class="cp-key-desc">Open/close controls</span>
-        <span class="cp-key">N</span><span class="cp-key-desc">Upload new CSV</span>
-        <span class="cp-key">T</span><span class="cp-key-desc">Toggle system lane (at L5)</span>
-        <span class="cp-key">P</span><span class="cp-key-desc">Toggle presentation mode</span>
-      </div>
+  </div>
+
+  <div id="shortcutsDropdown" class="info-dropdown hidden" style="width:280px;">
+    <div class="cp-shortcuts">
+      <span class="cp-key">&#8592;</span><span class="cp-key-desc">Previous node</span>
+      <span class="cp-key">&#8594;</span><span class="cp-key-desc">Next node</span>
+      <span class="cp-key">&#8595;</span><span class="cp-key-desc">Drill into node</span>
+      <span class="cp-key">&#8593;</span><span class="cp-key-desc">Go up one level</span>
+      <span class="cp-key">Esc</span><span class="cp-key-desc">Go to top level</span>
+      <span class="cp-key">E</span><span class="cp-key-desc">Export single process</span>
+      <span class="cp-key">B</span><span class="cp-key-desc">Export bulk processes</span>
+      <span class="cp-key">/</span><span class="cp-key-desc">Focus search</span>
+      <span class="cp-key">S</span><span class="cp-key-desc">Save HTML file</span>
+      <span class="cp-key">C</span><span class="cp-key-desc">Open/close controls</span>
+      <span class="cp-key">N</span><span class="cp-key-desc">Upload new CSV</span>
+      <span class="cp-key">T</span><span class="cp-key-desc">Toggle system lane (at L5)</span>
+      <span class="cp-key">P</span><span class="cp-key-desc">Toggle presentation mode</span>
     </div>
   </div>
 
@@ -3650,7 +3658,7 @@
     }
     function goHome() {
       // Close all overlay screens
-      ctrlPanel.classList.add('hidden');
+      closeCtrlPanel();
       closeRolePanel();
       closeToolPanel();
       closeOverviewScreen();
@@ -4202,7 +4210,7 @@
 
     function openGanttScreen() {
       // Close other panels
-      ctrlPanel.classList.add('hidden');
+      closeCtrlPanel();
       closeRolePanel();
       closeToolPanel();
       $('yearScreen').classList.add('hidden');
@@ -4246,7 +4254,7 @@
 
     // ── PROCESS DETAIL SCREEN ────────────────────────────────────────────────
     function openDetailScreen(key, meta, desc) {
-      ctrlPanel.classList.add('hidden');
+      closeCtrlPanel();
       closeRolePanel();
       closeToolPanel();
       $('yearScreen').classList.add('hidden');
@@ -5078,7 +5086,7 @@
     }
 
     function openYearScreen() {
-      ctrlPanel.classList.add('hidden');
+      closeCtrlPanel();
       closeRolePanel();
       closeToolPanel();
       $('ganttScreen').classList.add('hidden');
@@ -5318,7 +5326,7 @@
     let _sysovResizeRaf = null;
 
     function openSysOverviewScreen() {
-      ctrlPanel.classList.add('hidden');
+      closeCtrlPanel();
       closeRolePanel();
       closeToolPanel();
       $('ganttScreen').classList.add('hidden');
@@ -5696,7 +5704,7 @@
     let _respovResizeRaf = null;
 
     function openRespOverviewScreen() {
-      ctrlPanel.classList.add('hidden');
+      closeCtrlPanel();
       closeRolePanel();
       closeToolPanel();
       $('ganttScreen').classList.add('hidden');
@@ -6757,7 +6765,7 @@
 
     function openRolePanel() {
       // Close controls panel, tool panel and overlay screens if open
-      ctrlPanel.classList.add('hidden');
+      closeCtrlPanel();
       closeToolPanel();
       $('yearScreen').classList.add('hidden');
       $('ganttScreen').classList.add('hidden');
@@ -7076,7 +7084,7 @@
     const btnToolLookup = $('btnToolLookup');
 
     function openToolPanel() {
-      ctrlPanel.classList.add('hidden');
+      closeCtrlPanel();
       closeRolePanel();
       $('yearScreen').classList.add('hidden');
       $('ganttScreen').classList.add('hidden');
@@ -7576,16 +7584,21 @@
 
     // ── CONTROLS PANEL ─────────────────────────────────────────────────────
     const ctrlPanel  = $('ctrlPanel');
+    function closeCtrlPanel() {
+      ctrlPanel.classList.add('hidden');
+      $('shortcutsDropdown').classList.add('hidden');
+    }
     const btnControls = $('btnControls');
   btnControls.addEventListener('click', e => {
       e.stopPropagation();
       ctrlPanel.classList.toggle('hidden');
+      $('shortcutsDropdown').classList.add('hidden');
     });
-    $('btnControlsClose').addEventListener('click', () => ctrlPanel.classList.add('hidden'));
+    $('btnControlsClose').addEventListener('click', () => closeCtrlPanel());
     document.addEventListener('click', e => {
       if (!ctrlPanel.classList.contains('hidden') &&
           !ctrlPanel.contains(e.target) && e.target !== btnControls) {
-        ctrlPanel.classList.add('hidden');
+        closeCtrlPanel();
       }
     });
     btnReset.addEventListener('click', () => {
@@ -7612,6 +7625,7 @@
       clone.querySelector('#exportModal').className = 'exp-overlay hidden';
       clone.querySelector('#becOverlay').className = 'bec-overlay hidden';
       clone.querySelector('#ctrlPanel').className = 'hidden';
+      clone.querySelector('#shortcutsDropdown').classList.add('hidden');
       clone.querySelector('#importOverlay').className = 'imp-overlay hidden';
 
       // Build metadata
@@ -7688,6 +7702,23 @@
         const r = btn.getBoundingClientRect();
         dropdown.style.top  = (r.bottom + 6) + 'px';
         dropdown.style.left = (r.right - 320) + 'px';
+      }
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        positionDropdown();
+        dropdown.classList.toggle('hidden');
+      });
+      document.addEventListener('click', () => dropdown.classList.add('hidden'));
+    }
+
+    function initShortcutsDropdown() {
+      const btn = $('btnShortcutsToggle');
+      const dropdown = $('shortcutsDropdown');
+
+      function positionDropdown() {
+        const r = btn.getBoundingClientRect();
+        dropdown.style.top = (r.bottom + 6) + 'px';
+        dropdown.style.left = (r.right - 280) + 'px';
       }
       btn.addEventListener('click', e => {
         e.stopPropagation();
@@ -7968,6 +7999,7 @@
         case 'c': case 'C': {
           e.preventDefault();
           ctrlPanel.classList.toggle('hidden');
+          $('shortcutsDropdown').classList.add('hidden');
           break;
         }
         case 'p': case 'P':
@@ -8728,6 +8760,7 @@
         $('infoWrap').style.display = 'block';
         initInfoDropdown();
       }
+      initShortcutsDropdown();
       btnHome.addEventListener('click', goHome);
       btnUp.addEventListener('click', goUp);
       await loadAndRender();
