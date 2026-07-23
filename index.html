@@ -1899,11 +1899,6 @@
       background: var(--nav); border-bottom: 1px solid var(--bdr-s);
       transition: background .2s, border-color .2s;
     }
-    /* Hero merged into toolbar */
-    #detailScreen .ds-title {
-      font-size: 1rem; font-weight: 600; letter-spacing: -.01em; color: var(--txt);
-      white-space: nowrap; flex: 0 0 auto;
-    }
     #detailScreen .dt-nav-inline { display: flex; gap: .4rem; margin-left: auto; flex: 0 0 auto; }
     #detailScreen .dt-nav-inline .dt-nav-btn {
       position: static; transform: none; width: 30px; height: 30px; font-size: 1.05rem;
@@ -1916,11 +1911,6 @@
     }
     #detailScreen .dt-btn:hover { background: var(--bdr); border-color: var(--acc); color: var(--txt); }
     #detailScreen .dt-btn-back { font-weight: 600; }
-    #detailScreen .dt-title {
-      font-size: .75rem; color: var(--txt4); overflow: hidden;
-      text-overflow: ellipsis; white-space: nowrap; flex: 1;
-    }
-    #detailScreen .dt-title b { color: var(--txt2); font-weight: 600; }
     #detailScreen .dt-nav-btn {
       position: absolute; top: 50%; transform: translateY(-50%);
       z-index: 8; width: 44px; height: 44px; border-radius: 50%;
@@ -1938,8 +1928,9 @@
       display: grid; grid-template-rows: auto minmax(0, 1.5fr) minmax(0, 1fr);
       gap: .6rem; padding: .65rem 1.25rem .8rem;
     }
+    #detailScreen .ds-hero-line { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
     /* Description row (clamped, expandable) */
-    #detailScreen .ds-desc-wrap { display: flex; align-items: baseline; gap: .5rem; min-width: 0; }
+    #detailScreen .ds-desc-wrap { display: flex; align-items: baseline; gap: .5rem; min-width: 0; margin-top: .5rem; }
     #detailScreen .ds-desc-more {
       flex: 0 0 auto; background: none; border: none; color: var(--acc-t);
       font: inherit; font-size: .78rem; font-weight: 500; cursor: pointer; padding: 0;
@@ -1959,20 +1950,16 @@
     #detailScreen .ds-ribbon .ds-mlabel { width: 6.5rem; margin-top: 0; }
     #detailScreen .ds-ribbon .ds-meta { gap: .15rem; }
     #detailScreen .ds-ribbon .ds-lnk { font-size: .92rem; margin-bottom: .3rem; }
-    #detailScreen .ds-hero {
-      padding: 0 0 1rem; border-bottom: 1px solid var(--bdr-s); margin-bottom: 1.1rem;
-    }
-    #detailScreen .ds-crumbs { font-size: .7rem; color: var(--txt5); margin-bottom: .5rem; }
+    #detailScreen .ds-crumbs { font-size: .7rem; color: var(--txt5); margin-bottom: .45rem; }
     #detailScreen .ds-crumbs span { color: var(--txt4); }
     #detailScreen .ds-crumbs .ds-sep { color: var(--bdr); padding: 0 .3rem; }
-    #detailScreen .ds-hero-main { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
     #detailScreen .ds-code {
       font-family: ui-monospace, Menlo, monospace; font-size: .68rem; font-weight: 600;
       color: var(--acc-t); background: var(--acc-10); border: 1px solid var(--acc-25);
       border-radius: 4px; padding: .15rem .4rem;
     }
-    #detailScreen .ds-hero h1 {
-      font-size: 1.3rem; font-weight: 600; letter-spacing: -.01em; color: var(--txt);
+    #detailScreen .ds-title {
+      font-size: 1.25rem; font-weight: 700; letter-spacing: -.015em; color: var(--txt);
     }
     #detailScreen .ds-type-badge {
       font-size: .61rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
@@ -1998,6 +1985,8 @@
       background: var(--surf); border: 1px solid var(--bdr-s); border-radius: 10px;
       overflow: hidden; display: flex; flex-direction: column; min-height: 0;
     }
+    /* Hero card: breadcrumb + code/title/type + description, above RASCI/SIPOC */
+    #detailScreen .ds-hero-card { padding: .7rem 1.1rem .85rem; border-left: 3px solid var(--acc); }
     #detailScreen .ds-card-head {
       flex: 0 0 auto;
       display: flex; align-items: center; gap: .5rem; padding: .3rem .75rem;
@@ -2524,21 +2513,24 @@
   <div id="detailScreen" class="hidden">
     <div class="detail-toolbar">
       <button class="dt-btn dt-btn-back" id="btnDetailBack">&#8249; Back</button>
-      <span class="ds-code" id="dsCode"></span>
-      <h1 class="ds-title" id="dsTitle"></h1>
-      <span class="ds-type-badge" id="dsTypeBadge"></span>
-      <span class="dt-title" id="detailToolbarTitle"></span>
       <div class="dt-nav-inline">
         <button class="dt-nav-btn hidden" id="dsNavPrev" aria-label="Previous process">&#8249;</button>
         <button class="dt-nav-btn hidden" id="dsNavNext" aria-label="Next process">&#8250;</button>
       </div>
     </div>
-    <span id="dsCrumbs" hidden></span>
     <div class="ds-wrap">
-      <div class="ds-desc-wrap">
-        <p class="ds-desc" id="dsDesc"></p>
-        <button class="ds-desc-more" id="dsDescMore" hidden>Show more</button>
-      </div>
+      <section class="ds-card ds-hero-card">
+        <div class="ds-crumbs" id="dsCrumbs"></div>
+        <div class="ds-hero-line">
+          <span class="ds-code" id="dsCode"></span>
+          <h1 class="ds-title" id="dsTitle"></h1>
+          <span class="ds-type-badge" id="dsTypeBadge"></span>
+        </div>
+        <div class="ds-desc-wrap">
+          <p class="ds-desc" id="dsDesc"></p>
+          <button class="ds-desc-more" id="dsDescMore" hidden>Show more</button>
+        </div>
+      </section>
       <!-- 2×2 priority quadrants -->
       <div class="ds-quad">
         <section class="ds-card">
@@ -4292,27 +4284,8 @@
       detailScreenEl.classList.toggle('lvl-4', absLevel === 4);
       detailScreenEl.classList.toggle('hl-empty', highlightEmptyFields);
 
-      // Toolbar title: path segments › current node
+      // Breadcrumbs — path segments › current node
       const pathParts = currentPath.map(s => altLabel(s)).concat(label);
-      const toolbarEl = $('detailToolbarTitle');
-      toolbarEl.innerHTML = '';
-      pathParts.forEach(function(p, i) {
-        if (i > 0) {
-          const sep = document.createElement('span');
-          sep.style.cssText = 'opacity:.4;padding:0 .25rem';
-          sep.textContent = '›';
-          toolbarEl.appendChild(sep);
-        }
-        if (i === pathParts.length - 1) {
-          const b = document.createElement('b');
-          b.textContent = p;
-          toolbarEl.appendChild(b);
-        } else {
-          toolbarEl.appendChild(document.createTextNode(p));
-        }
-      });
-
-      // Breadcrumbs under hero
       const crumbsEl = $('dsCrumbs');
       crumbsEl.innerHTML = '';
       pathParts.forEach(function(p, i) {
