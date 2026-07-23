@@ -274,6 +274,12 @@
     /* Sections */
     .cp-section { padding: .7rem 1rem; }
     .cp-section + .cp-section { border-top: 1px solid var(--bdr-xs); }
+    .cp-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: .5rem; padding: .28rem 0;
+    }
+    .cp-row-label { font-size: .75rem; color: var(--txt4); }
+    .cp-row-divider { border-top: 1px solid var(--bdr-xs); margin-top: .35rem; padding-top: .5rem; }
 
     /* ── CP TOGGLE (switch) ─────────────────────────────────────────────── */
     .cp-toggle-row {
@@ -2653,54 +2659,48 @@
     </div>
 
     <div class="cp-section">
-      <div class="cp-section-title">Presentation</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.5rem">
-        <span style="font-size:.75rem;color:var(--txt4);">Mode</span>
+      <div class="cp-section-title">Display</div>
+
+      <div class="cp-row">
+        <span class="cp-row-label">Presentation mode</span>
         <div class="cp-theme-seg" style="margin:0">
           <button class="cp-theme-opt active" id="cpPresentOff">Off</button>
           <button class="cp-theme-opt" id="cpPresentOn">On</button>
         </div>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.15rem">
-        <span style="font-size:.75rem;color:var(--txt4);">Text scale</span>
-        <span id="presentScaleLabel" style="font-size:.7rem;color:var(--acc-t);font-weight:700;min-width:30px;text-align:right;">1.5×</span>
+      <div style="margin:.3rem 0 .6rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.15rem">
+          <span style="font-size:.72rem;color:var(--txt5);">Text scale</span>
+          <span id="presentScaleLabel" style="font-size:.7rem;color:var(--acc-t);font-weight:700;min-width:30px;text-align:right;">1.5×</span>
+        </div>
+        <input type="range" id="presentScaleSlider" min="1.0" max="3.0" step="0.1" value="1.5" disabled>
       </div>
-      <input type="range" id="presentScaleSlider" min="1.0" max="3.0" step="0.1" value="1.5" disabled>
-    </div>
 
-    <div class="cp-section">
-      <div class="cp-section-title">Settings</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;">
-        <span style="font-size:.75rem;color:var(--txt4);">System lane</span>
+      <div class="cp-row">
+        <span class="cp-row-label">System lane</span>
         <div class="cp-theme-seg" style="margin:0">
           <button class="cp-theme-opt active" id="cpErpOff">Off</button>
           <button class="cp-theme-opt" id="cpErpOn">On</button>
         </div>
       </div>
-    </div>
 
-    <div class="cp-section">
-      <div class="cp-section-title">Highlight Types</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.4rem">
-        <span style="font-size:.75rem;color:var(--txt4);">System activity</span>
+      <div class="cp-row cp-row-divider">
+        <span class="cp-row-label">Highlight: System activity</span>
         <div class="cp-theme-seg" style="margin:0">
           <button class="cp-theme-opt active" id="cpHlSysOff">Off</button>
           <button class="cp-theme-opt" id="cpHlSysOn">On</button>
         </div>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;">
-        <span style="font-size:.75rem;color:var(--txt4);">Meeting</span>
+      <div class="cp-row">
+        <span class="cp-row-label">Highlight: Meeting</span>
         <div class="cp-theme-seg" style="margin:0">
           <button class="cp-theme-opt active" id="cpHlMeetOff">Off</button>
           <button class="cp-theme-opt" id="cpHlMeetOn">On</button>
         </div>
       </div>
-    </div>
 
-    <div class="cp-section">
-      <div class="cp-section-title">Detail screen</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;">
-        <span style="font-size:.75rem;color:var(--txt4);">Empty fields</span>
+      <div class="cp-row">
+        <span class="cp-row-label">Empty fields</span>
         <div class="cp-theme-seg" style="margin:0">
           <button class="cp-theme-opt active" id="cpEmptyOff">Off</button>
           <button class="cp-theme-opt" id="cpEmptyOn">On</button>
