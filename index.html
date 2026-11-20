@@ -2842,6 +2842,10 @@
               <option value="auto">Number from structure</option>
               <option value="data">Use codes from CSV (number missing ones)</option>
             </select>
+            <select id="expCodePos" class="exp-opt-input" title="Where the code is shown">
+              <option value="inline">Code before name</option>
+              <option value="line">Code on its own line</option>
+            </select>
             <label class="exp-opt">Start at <input type="number" id="expCodeStart" class="exp-opt-input exp-opt-num" min="0" value="1"></label>
           </div>
           <label class="exp-opt"><input type="checkbox" id="expTypeShapes"> Shape by activity type (human / system / meeting) + legend</label>
@@ -8300,6 +8304,7 @@
         opts: {
           arrowLevels,
           showCodes: $('expShowCodes').checked,
+          codeOwnLine: $('expCodePos').value === 'line',
           codeMode: $('expCodeMode').value,
           codeStart: Number.isFinite(start) ? start : 1,
           typeShapes: $('expTypeShapes').checked,
@@ -8455,7 +8460,7 @@
         const ci = Math.min(absLevel, EXP_FILLS.length - 1);
         const ts = opts.typeShapes && nodeObj && nodeObj._meta ? expTypeStyle(nodeObj._meta.Type) : null;
         const sh = { x: nodeX, y: nodeY, w: nodeW, h: nodeH, name: key, level: absLevel,
-          text: (opts.showCodes && code) ? code + ' ' + key : key,
+          text: (opts.showCodes && code) ? code + (opts.codeOwnLine ? '\n' : ' ') + key : key,
           kind: ts ? ts.kind : 'rounded',
           fill: (ts && ts.fill) || EXP_FILLS[ci], stroke: (ts && ts.stroke) || EXP_STROKES[ci],
           color: (ts && ts.color) || EXP_TEXTS[ci],
@@ -8480,7 +8485,8 @@
         );
         if (sh.text) {
           const fs = sh.fontSize || S.FONT;
-          const lines = wrapText(sh.text, sh.w - 20, fs);
+          // Explicit line breaks (e.g. code on its own line) are kept; each part wraps on its own
+          const lines = String(sh.text).split('\n').flatMap(part => wrapText(part, sh.w - 20, fs));
           const lh = fs * 1.4;
           const textStartY = sh.y + sh.h / 2 - (lines.length * lh) / 2 + fs;
           lines.forEach((ln, li) => {
@@ -8920,7 +8926,7 @@
       const geo = (o) => '<mxGeometry x="' + r1(o.x) + '" y="' + r1(o.y) + '" width="' + r1(o.w) +
         '" height="' + r1(o.h) + '" as="geometry"/>';
       // Labels are rendered as HTML (html=1, needed for wrapping), so escape twice.
-      const label = t => vsdxEsc(escHtml(t));
+      const label = t => vsdxEsc(String(t).split('\n').map(escHtml).join('<br>'));
       const cells = [];
       let id = 2;
       (result.levelTags || []).forEach(t => {
