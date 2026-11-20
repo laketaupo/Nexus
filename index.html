@@ -1161,6 +1161,15 @@
     }
     .exp-format-opt input[type="radio"] { accent-color: var(--acc); cursor: pointer; }
 
+    /* ── DRAW.IO XML MODAL ───────────────────────────────────────────── */
+    .drawio-hint { font-size: .82rem; color: var(--txt3); line-height: 1.45; }
+    .drawio-xml {
+      width: 100%; height: 320px; resize: vertical; box-sizing: border-box;
+      font: .72rem/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: var(--txt2); background: var(--surf); border: 1px solid var(--bdr-s);
+      border-radius: 8px; padding: .6rem; white-space: pre; overflow: auto;
+    }
+
     /* ── BULK EXPORT CONFIG MODAL ────────────────────────────────────── */
     .bec-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,.55);
@@ -2814,11 +2823,27 @@
           <label class="exp-format-opt"><input type="radio" name="expFmt" value="svg" checked> SVG</label>
           <label class="exp-format-opt"><input type="radio" name="expFmt" value="jpeg"> JPEG &middot; 300 PPI</label>
           <label class="exp-format-opt"><input type="radio" name="expFmt" value="vsdx"> Visio (.vsdx)</label>
+          <label class="exp-format-opt"><input type="radio" name="expFmt" value="drawio"> draw.io (XML)</label>
         </div>
       </div>
       <div class="exp-actions">
         <button id="btnExpCancel" class="exp-btn exp-btn-cancel">Cancel</button>
         <button id="btnExpGo" class="exp-btn exp-btn-go">Export</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- draw.io XML Modal -->
+  <div id="drawioModal" class="exp-overlay hidden">
+    <div class="exp-box">
+      <div class="exp-title">draw.io XML</div>
+      <div class="drawio-hint">Copy the XML and paste it onto a draw.io canvas (Ctrl/Cmd+V), or use
+        Extras &rarr; Edit Diagram. Process data is under right-click &rarr; Edit Data.</div>
+      <textarea id="drawioXml" class="drawio-xml" readonly spellcheck="false"></textarea>
+      <div class="exp-actions">
+        <button id="drawioClose" class="exp-btn exp-btn-cancel">Close</button>
+        <button id="drawioDownload" class="exp-btn exp-btn-cancel">Download .drawio</button>
+        <button id="drawioCopy" class="exp-btn exp-btn-go">Copy XML</button>
       </div>
     </div>
   </div>
@@ -8419,6 +8444,9 @@
 
       if (fmt === 'jpeg') {
         downloadJPEG(svg, svgW, svgH, fileBase + '.jpg');
+      } else if (fmt === 'drawio') {
+        exportModal.classList.add('hidden');
+        showDrawioModal(buildDrawioXml(result, label), fileBase + '.drawio');
       } else if (fmt === 'vsdx') {
         const blob = buildVsdxBlob(result, label);
         const url  = URL.createObjectURL(blob);
@@ -8458,7 +8486,9 @@
     const vsdxNum = n => String(Math.round(n * 1e6) / 1e6);
     const vsdxIn  = px => vsdxNum(px / VSDX_DPI);
 
-    function vsdxShapeData(sh) {
+    // Process data attached to an exported node, as [key, label, value]
+    // (empty values skipped). Shared by the Visio and draw.io exporters.
+    function exportDataRows(sh) {
       const rows = [
         ['Level', 'Level', 'L' + sh.level],
         ['Code', 'Code', sh.code],
@@ -8475,8 +8505,11 @@
          ['Documentation','Documentation'],['Tool_link','Tool link'],['TestScript_link','Test script link']]
           .forEach(([k, label]) => rows.push([k, label, m[k]]));
       }
-      const cells = rows
-        .filter(([, , v]) => v !== null && v !== undefined && String(v).trim() !== '')
+      return rows.filter(([, , v]) => v !== null && v !== undefined && String(v).trim() !== '');
+    }
+
+    function vsdxShapeData(sh) {
+      const cells = exportDataRows(sh)
         .map(([k, label, v], i) =>
           '<Row N="' + k.replace(/[^A-Za-z0-9_]/g, '_') + '">' +
           '<Cell N="Value" V="' + vsdxEsc(String(v).trim()) + '" U="STR"/>' +
@@ -8655,6 +8688,70 @@
       return new Blob([zipStore(files)], { type: 'application/vnd.ms-visio.drawing' });
     }
 
+    // ── DRAW.IO EXPORT ────────────────────────────────────────────────────────
+    // Same layout as the SVG export, as draw.io XML (mxfile). Process data is
+    // stored as shape properties (Edit Data in draw.io). The XML can be pasted
+    // straight onto a draw.io canvas or saved as a .drawio file.
+    function buildDrawioXml(result, pageName) {
+      const r1 = n => String(Math.round(n * 10) / 10);
+      const geo = (o) => '<mxGeometry x="' + r1(o.x) + '" y="' + r1(o.y) + '" width="' + r1(o.w) +
+        '" height="' + r1(o.h) + '" as="geometry"/>';
+      // Labels are rendered as HTML (html=1, needed for wrapping), so escape twice.
+      const label = t => vsdxEsc(escHtml(t));
+      const cells = [];
+      let id = 2;
+      (result.levelTags || []).forEach(t => {
+        cells.push('<mxCell id="n' + (id++) + '" value="' + label(t.text) + '" style="text;html=1;align=right;' +
+          'verticalAlign=middle;fontStyle=1;fontSize=11;fontColor=' + t.color + ';" vertex="1" parent="1">' +
+          geo(t) + '</mxCell>');
+      });
+      (result.shapes || []).forEach(sh => {
+        const attrs = exportDataRows(sh)
+          .filter(([k]) => k !== 'Name')
+          .map(([k, , v]) => ' ' + k.replace(/[^A-Za-z0-9_]/g, '_') + '="' + vsdxEsc(String(v).trim()) + '"').join('');
+        cells.push('<object id="n' + (id++) + '" label="' + label(sh.text) + '"' + attrs + '>' +
+          '<mxCell style="rounded=1;absoluteArcSize=1;arcSize=' + (SVG_LAYOUT.CORNER * 2) + ';whiteSpace=wrap;html=1;' +
+          'fillColor=' + sh.fill + ';strokeColor=' + sh.stroke + ';strokeWidth=1.5;fontColor=' + sh.color +
+          ';fontSize=' + SVG_LAYOUT.FONT + ';spacing=10;" vertex="1" parent="1">' + geo(sh) + '</mxCell></object>');
+      });
+      const name = vsdxEsc(pageName || 'Process');
+      return '<mxfile host="Nexus" type="device">\n' +
+        '<diagram id="nexus-process" name="' + name + '">\n' +
+        '<mxGraphModel grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" ' +
+        'pageScale="1" pageWidth="' + Math.ceil(result.svgW) + '" pageHeight="' + Math.ceil(result.svgH) + '" math="0" shadow="0">\n' +
+        '<root>\n<mxCell id="0"/>\n<mxCell id="1" parent="0"/>\n' + cells.join('\n') + '\n</root>\n' +
+        '</mxGraphModel>\n</diagram>\n</mxfile>\n';
+    }
+
+    const drawioModal = $('drawioModal');
+    let drawioFileName = 'processflow.drawio';
+    function showDrawioModal(xml, fileName) {
+      drawioFileName = fileName;
+      $('drawioXml').value = xml;
+      $('drawioCopy').textContent = 'Copy XML';
+      drawioModal.classList.remove('hidden');
+      $('drawioXml').focus(); $('drawioXml').select(); $('drawioXml').scrollTop = 0;
+    }
+    $('drawioClose').addEventListener('click', () => drawioModal.classList.add('hidden'));
+    drawioModal.addEventListener('click', e => { if (e.target === drawioModal) drawioModal.classList.add('hidden'); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !drawioModal.classList.contains('hidden')) drawioModal.classList.add('hidden'); });
+    $('drawioCopy').addEventListener('click', async () => {
+      const ta = $('drawioXml');
+      try { await navigator.clipboard.writeText(ta.value); }
+      catch (_) { ta.focus(); ta.select(); document.execCommand('copy'); }
+      $('drawioCopy').textContent = 'Copied ✓';
+      showExportToast('draw.io XML copied');
+    });
+    $('drawioDownload').addEventListener('click', () => {
+      const blob = new Blob([$('drawioXml').value], { type: 'application/xml' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = drawioFileName;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+      showExportToast('Exported draw.io file');
+    });
+
     // Minimal ZIP writer (store, no compression) — enough for an OPC package.
     const ZIP_CRC_TABLE = (() => {
       const t = new Uint32Array(256);
@@ -8824,7 +8921,7 @@
         tdFmt.className = 'bec-fmt-cell';
         const sel = document.createElement('select');
         sel.dataset.row = r;
-        [['jpeg','JPEG'],['svg','SVG'],['png','PNG'],['vsdx','Visio']].forEach(([v, f]) => {
+        [['jpeg','JPEG'],['svg','SVG'],['png','PNG'],['vsdx','Visio'],['drawio','draw.io']].forEach(([v, f]) => {
           const opt = document.createElement('option');
           opt.value = v; opt.textContent = f;
           sel.appendChild(opt);
@@ -8837,7 +8934,7 @@
     }
 
     function becGetConfig(rowIdx) {
-      // Returns { levels: [abs,...], orientations: {abs: 'h'|'v'}, format: 'jpeg'|'svg'|'png'|'vsdx' }
+      // Returns { levels: [abs,...], orientations: {abs: 'h'|'v'}, format: 'jpeg'|'svg'|'png'|'vsdx'|'drawio' }
       // or null if no levels checked
       const levels = [];
       const orientations = {};
@@ -8872,6 +8969,7 @@
 
     async function becSvgToBlob(result, format, pageName) {
       if (format === 'vsdx') return buildVsdxBlob(result, pageName);
+      if (format === 'drawio') return new Blob([buildDrawioXml(result, pageName)], { type: 'application/xml' });
       if (format === 'svg') return new Blob([result.svg], { type: 'image/svg+xml' });
       if (format === 'jpeg') return await svgToJpegBlob(result.svg, result.svgW, result.svgH);
       if (format === 'png') {
@@ -8915,7 +9013,7 @@
       showExportToast('Exporting…');
 
       const sanitize = s => String(s).replace(/[^a-z0-9 _-]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-      const extMap = { svg: '.svg', jpeg: '.jpg', png: '.png', vsdx: '.vsdx' };
+      const extMap = { svg: '.svg', jpeg: '.jpg', png: '.png', vsdx: '.vsdx', drawio: '.drawio' };
       let count = 0;
 
       for (const cfg of configs) {
