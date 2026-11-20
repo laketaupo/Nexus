@@ -1099,6 +1099,23 @@
       box-shadow: 0 8px 32px var(--shd); display: flex; flex-direction: column; gap: 1.1rem;
     }
     .exp-title { font-size: 1.05rem; font-weight: 700; color: var(--txt); }
+    #exportModal .exp-box { max-height: calc(100vh - 2rem); padding: 1.3rem 1.6rem; gap: .9rem; }
+    .exp-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+    .exp-link { background: none; border: none; color: var(--acc); font-size: .78rem; cursor: pointer; padding: 0; }
+    .exp-link:hover { text-decoration: underline; }
+    .exp-body { display: flex; flex-direction: column; gap: 1.05rem; overflow-y: auto; min-height: 0;
+      margin: 0 -.4rem; padding: 0 .4rem; }
+    .exp-step { display: inline-flex; align-items: center; justify-content: center; width: 1.15rem; height: 1.15rem;
+      border-radius: 50%; background: var(--acc); color: #fff; font-size: .66rem; margin-right: .45rem; }
+    .exp-sublabel { font-size: .78rem; color: var(--txt4); }
+    .exp-summary { font-size: .78rem; color: var(--txt3); background: var(--surf2); border-radius: 6px; padding: .35rem .6rem; }
+    .exp-level-row.is-out { opacity: .45; }
+    .exp-level-row.is-parent .exp-lv-name { font-style: italic; }
+    .exp-level-row.is-parent .exp-lv-opts { opacity: .35; pointer-events: none; }
+    .exp-opt-input:disabled { opacity: .5; }
+    .exp-btn-go:disabled { opacity: .45; cursor: not-allowed; filter: none; }
+    .gantt-export-fmt { font-size: .72rem; padding: .18rem .3rem; border-radius: 6px; border: 1px solid var(--bdr-s);
+      background: var(--surf); color: var(--txt2); cursor: pointer; }
     .exp-section { display: flex; flex-direction: column; gap: .45rem; }
     .exp-label { font-size: .72rem; font-weight: 600; text-transform: uppercase;
       letter-spacing: .05em; color: var(--txt4); }
@@ -1139,8 +1156,8 @@
       border-radius: 6px; cursor: pointer; transition: background .12s;
     }
     .exp-level-row:hover { background: var(--bdr-xs); }
-    .exp-lv-main { display: flex; align-items: center; gap: .6rem; cursor: pointer; flex: 1; min-width: 0; }
-    .exp-lv-main input[type="checkbox"] { accent-color: var(--acc); width: 15px; height: 15px; cursor: pointer; }
+    .exp-level-row .exp-lv-name { flex: 1; min-width: 0; font-size: .8rem; color: var(--txt3); }
+    .exp-level-row { cursor: default; }
     .exp-lv-opts { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; }
     .exp-lv-orient { display: inline-flex; border: 1px solid var(--bdr-s); border-radius: 6px; overflow: hidden; }
     .exp-lv-orient button { background: none; border: none; padding: .15rem .5rem; font-size: .72rem;
@@ -1185,101 +1202,6 @@
       color: var(--txt2); background: var(--surf); border: 1px solid var(--bdr-s);
       border-radius: 8px; padding: .6rem; white-space: pre; overflow: auto;
     }
-
-    /* ── BULK EXPORT CONFIG MODAL ────────────────────────────────────── */
-    .bec-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,.55);
-      z-index: 500; display: flex; align-items: flex-start; justify-content: center;
-      padding: 3.5rem 1rem 2rem; overflow-y: auto;
-    }
-    .bec-overlay.hidden { display: none; }
-    .bec-box {
-      background: var(--surf); border: 1px solid var(--bdr-s); border-radius: 12px;
-      padding: 1.75rem 2rem; width: 100%; max-width: 1100px;
-      box-shadow: 0 8px 40px var(--shd);
-    }
-    .bec-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 1.25rem; gap: 1rem;
-    }
-    .bec-title { font-size: 1.05rem; font-weight: 600; color: var(--txt); }
-    .bec-subtitle { font-size: .8rem; color: var(--txt4); margin-top: .15rem; }
-    .bec-close {
-      background: none; border: none; cursor: pointer; color: var(--txt3);
-      font-size: 1.2rem; padding: .2rem .4rem; border-radius: 4px; line-height: 1;
-      transition: color .15s, background .15s;
-    }
-    .bec-close:hover { color: var(--txt); background: var(--bdr-s); }
-
-    .bec-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
-    .bec-table th {
-      text-align: left; padding: .45rem .6rem; color: var(--txt4);
-      font-weight: 500; font-size: .75rem; text-transform: uppercase; letter-spacing: .04em;
-      border-bottom: 1px solid var(--bdr-s); white-space: nowrap;
-    }
-    .bec-table td { padding: .4rem .5rem; border-bottom: 1px solid var(--bdr-xs); vertical-align: middle; }
-    .bec-table tr:last-child td { border-bottom: none; }
-    .bec-row-num {
-      color: var(--txt5); font-size: .75rem; text-align: center; width: 24px; user-select: none;
-    }
-    .bec-levels-cell { white-space: nowrap; }
-    /* Level pill: checkbox toggle + inline H/V control combined */
-    .bec-level-pill {
-      display: inline-flex; align-items: stretch;
-      border: 1px solid var(--bdr-s); border-radius: 6px;
-      overflow: hidden; margin-right: 5px; margin-bottom: 2px;
-      transition: border-color .12s;
-    }
-    .bec-level-pill.active { border-color: var(--acc); }
-    .bec-level-cb { display: none; }
-    .bec-level-label {
-      display: inline-flex; align-items: center; padding: .22rem .55rem;
-      cursor: pointer; color: var(--txt4); font-size: .8rem; font-weight: 600;
-      background: var(--surf2); border-right: 1px solid var(--bdr-s);
-      user-select: none; transition: background .12s, color .12s, border-color .12s;
-      white-space: nowrap;
-    }
-    .bec-level-cb:checked + .bec-level-label {
-      background: var(--acc-15); color: var(--acc-t);
-    }
-    .bec-pill-orient {
-      display: inline-flex; align-items: center;
-    }
-    .bec-pill-orient input[type="radio"] { display: none; }
-    .bec-pill-orient label {
-      display: inline-flex; align-items: center;
-      padding: .22rem .4rem; cursor: pointer; font-size: .75rem; color: var(--txt5);
-      transition: background .12s, color .12s; user-select: none; white-space: nowrap;
-    }
-    .bec-pill-orient label:first-of-type { border-right: 1px solid var(--bdr-xs); }
-    .bec-pill-orient input[type="radio"]:checked + label {
-      background: var(--acc-20); color: var(--acc-t); font-weight: 700;
-    }
-    /* Dim orient controls when level not checked */
-    .bec-level-pill:not(.active) .bec-pill-orient label {
-      opacity: .3; pointer-events: none;
-    }
-
-    .bec-fmt-cell select, .bec-l0-cell select {
-      background: var(--surf2); border: 1px solid var(--bdr-s); border-radius: 5px;
-      color: var(--txt2); font-size: .78rem; padding: .18rem .4rem; cursor: pointer;
-    }
-    .bec-l0-cell { min-width: 130px; }
-    .bec-actions {
-      display: flex; justify-content: flex-end; gap: .6rem;
-      margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--bdr-xs);
-    }
-    .bec-btn {
-      padding: .38rem 1rem; border-radius: 7px; font-size: .85rem;
-      cursor: pointer; border: 1px solid var(--bdr); transition: background .15s, border-color .15s;
-    }
-    .bec-btn-cancel { background: var(--surf2); color: var(--txt2); }
-    .bec-btn-cancel:hover { background: var(--bdr-s); }
-    .bec-btn-run {
-      background: var(--acc); color: #fff; border-color: var(--acc); font-weight: 600;
-    }
-    .bec-btn-run:hover { filter: brightness(1.12); }
-    .bec-btn-run:disabled { opacity: .4; cursor: not-allowed; filter: none; }
 
     /* ── IMPORT OVERLAY ───────────────────────────────────────────────── */
     .imp-overlay {
@@ -2374,8 +2296,11 @@
       <button id="btnGanttExport" class="gantt-export-btn">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>Export JPG
+        </svg>Export
       </button>
+      <select id="ganttExportFmt" class="gantt-export-fmt" title="Export format">
+        <option value="jpeg">JPEG</option><option value="png">PNG</option><option value="svg">SVG</option>
+      </select>
       <button id="btnGanttClose" class="gantt-close-btn">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -2430,8 +2355,11 @@
       <button id="btnYearExport" class="gantt-export-btn">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>Export JPG
+        </svg>Export
       </button>
+      <select id="yearExportFmt" class="gantt-export-fmt" title="Export format">
+        <option value="jpeg">JPEG</option><option value="png">PNG</option><option value="svg">SVG</option>
+      </select>
       <div style="position:relative;flex-shrink:0">
         <button id="btnYearLegend" class="year-legend-btn" title="Legend" aria-label="Legend">i</button>
         <div id="yearLegendPop" class="year-legend-pop hidden">
@@ -2783,8 +2711,8 @@
       <span class="cp-key">&#8595;</span><span class="cp-key-desc">Drill into node</span>
       <span class="cp-key">&#8593;</span><span class="cp-key-desc">Go up one level</span>
       <span class="cp-key">Esc</span><span class="cp-key-desc">Go to top level</span>
-      <span class="cp-key">E</span><span class="cp-key-desc">Export single process</span>
-      <span class="cp-key">B</span><span class="cp-key-desc">Export bulk processes</span>
+      <span class="cp-key">E</span><span class="cp-key-desc">Export process diagram(s)</span>
+      <span class="cp-key">B</span><span class="cp-key-desc">Export one diagram per process</span>
       <span class="cp-key">/</span><span class="cp-key-desc">Focus search</span>
       <span class="cp-key">S</span><span class="cp-key-desc">Save HTML file</span>
       <span class="cp-key">C</span><span class="cp-key-desc">Open/close controls</span>
@@ -2815,45 +2743,62 @@
   <div id="levelLabel"></div>
   <div id="pathTree" class="empty"></div>
   <div id="exportToast">Exported SVG</div>
-  <button id="btnBulkExport" style="display:none" aria-hidden="true"></button>
-
-  <!-- Custom Export Modal -->
+  <!-- Export Modal: one window for every process-diagram export -->
   <div id="exportModal" class="exp-overlay hidden">
     <div class="exp-box">
-      <div class="exp-title">Export</div>
-      <div class="exp-section">
-        <div class="exp-label">Starting process</div>
-        <div class="exp-picker">
-          <div class="exp-col" id="expCol0"></div>
-          <div class="exp-col" id="expCol1"></div>
-          <div class="exp-col" id="expCol2"></div>
-        </div>
+      <div class="exp-head">
+        <div class="exp-title">Export process diagram</div>
+        <button type="button" id="expReset" class="exp-link" title="Restore the default settings">Reset to defaults</button>
       </div>
-      <div class="exp-section">
-        <div class="exp-label">Levels to include</div>
-        <div id="expLevelChecks" class="exp-level-checks"></div>
-      </div>
-      <div class="exp-section">
-        <div class="exp-label">Options</div>
-        <div class="exp-options">
-          <div class="exp-opt-line">
-            <label class="exp-opt"><input type="checkbox" id="expShowCodes"> Show codes</label>
-            <select id="expCodeMode" class="exp-opt-input" title="Where codes come from">
-              <option value="auto">Number from structure</option>
-              <option value="data">Use codes from CSV (number missing ones)</option>
-            </select>
-            <label class="exp-opt">Start at <input type="number" id="expCodeStart" class="exp-opt-input exp-opt-num" min="0" value="1"></label>
+      <div class="exp-body">
+        <div class="exp-section">
+          <div class="exp-label"><span class="exp-step">1</span>What to export</div>
+          <div class="exp-sublabel">Start from (leave empty for all processes)</div>
+          <div class="exp-picker">
+            <div class="exp-col" id="expCol0"></div>
+            <div class="exp-col" id="expCol1"></div>
+            <div class="exp-col" id="expCol2"></div>
           </div>
-          <label class="exp-opt"><input type="checkbox" id="expTypeShapes"> Shape by activity type (human / system / meeting) + legend</label>
+          <div class="exp-opt-line">
+            <label class="exp-opt">Diagrams <select id="expSplit" class="exp-opt-input"></select></label>
+            <label class="exp-opt" title="Show the direct parent processes as bars above each diagram"><input type="checkbox" id="expParents"> Include parent chain</label>
+          </div>
+          <div id="expSummary" class="exp-summary"></div>
         </div>
-      </div>
-      <div class="exp-section">
-        <div class="exp-label">Format</div>
-        <div class="exp-format-opts">
-          <label class="exp-format-opt"><input type="radio" name="expFmt" value="svg" checked> SVG</label>
-          <label class="exp-format-opt"><input type="radio" name="expFmt" value="jpeg"> JPEG &middot; 300 PPI</label>
-          <label class="exp-format-opt"><input type="radio" name="expFmt" value="vsdx"> Visio (.vsdx)</label>
-          <label class="exp-format-opt"><input type="radio" name="expFmt" value="drawio"> draw.io (XML)</label>
+        <div class="exp-section">
+          <div class="exp-label"><span class="exp-step">2</span>Levels</div>
+          <div class="exp-opt-line">
+            <label class="exp-opt">Down to <select id="expDeepest" class="exp-opt-input"></select></label>
+          </div>
+          <div id="expLevelChecks" class="exp-level-checks"></div>
+        </div>
+        <div class="exp-section">
+          <div class="exp-label"><span class="exp-step">3</span>Labels</div>
+          <div class="exp-options">
+            <div class="exp-opt-line">
+              <label class="exp-opt"><input type="checkbox" id="expShowCodes"> Show codes</label>
+              <select id="expCodeMode" class="exp-opt-input" title="Where codes come from">
+                <option value="auto">Number from structure</option>
+                <option value="data">Use codes from CSV (number missing ones)</option>
+              </select>
+              <select id="expCodePos" class="exp-opt-input" title="Where the code is shown">
+                <option value="inline">Code before name</option>
+                <option value="line">Code on its own line</option>
+              </select>
+              <label class="exp-opt" title="Number given to the starting process">Start at <input type="number" id="expCodeStart" class="exp-opt-input exp-opt-num" min="0" value="1"></label>
+            </div>
+            <label class="exp-opt"><input type="checkbox" id="expTypeShapes"> Shape by activity type (human / system / meeting) + legend</label>
+          </div>
+        </div>
+        <div class="exp-section">
+          <div class="exp-label"><span class="exp-step">4</span>Format</div>
+          <div class="exp-format-opts">
+            <label class="exp-format-opt"><input type="radio" name="expFmt" value="svg"> SVG</label>
+            <label class="exp-format-opt"><input type="radio" name="expFmt" value="jpeg"> JPEG &middot; 300 PPI</label>
+            <label class="exp-format-opt"><input type="radio" name="expFmt" value="png"> PNG &middot; 300 PPI</label>
+            <label class="exp-format-opt"><input type="radio" name="expFmt" value="vsdx"> Visio (.vsdx)</label>
+            <label class="exp-format-opt"><input type="radio" name="expFmt" value="drawio"> draw.io</label>
+          </div>
         </div>
       </div>
       <div class="exp-actions">
@@ -2874,34 +2819,6 @@
         <button id="drawioClose" class="exp-btn exp-btn-cancel">Close</button>
         <button id="drawioDownload" class="exp-btn exp-btn-cancel">Download .drawio</button>
         <button id="drawioCopy" class="exp-btn exp-btn-go">Copy XML</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bulk Export Config Modal -->
-  <div id="becOverlay" class="bec-overlay hidden">
-    <div class="bec-box">
-      <div class="bec-header">
-        <div>
-          <div class="bec-title">Bulk Export Configuration</div>
-          <div class="bec-subtitle">Configure up to 10 export setups. Each row generates one file per node at the highest selected level.</div>
-        </div>
-        <button class="bec-close" id="becClose">✕</button>
-      </div>
-      <table class="bec-table" id="becTable">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>L1 Process</th>
-            <th>Levels &amp; orientation</th>
-            <th>Format</th>
-          </tr>
-        </thead>
-        <tbody id="becBody"></tbody>
-      </table>
-      <div class="bec-actions">
-        <button class="bec-btn bec-btn-cancel" id="becCancel">Cancel</button>
-        <button class="bec-btn bec-btn-run" id="becRun">Choose Folder &amp; Export</button>
       </div>
     </div>
   </div>
@@ -6499,10 +6416,9 @@
         'Year';
       const levelLabel = yearMinLevel === null ? 'All' : 'L' + yearMinLevel;
       const l0Label     = yearL0Filter !== null ? yearL0Filter : 'All';
-      const sanitize    = function (s) { return s.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, ''); };
-      const filename    = 'Timeline - ' + sanitize(l0Label) + ' - ' + sanitize(viewLabel) + ' - ' + sanitize(levelLabel) + '.jpg';
+      const filename    = 'Timeline - ' + l0Label + ' - ' + viewLabel + ' - ' + levelLabel;
 
-      downloadJPEG(svgStr, totalW, totalH, filename);
+      exportViewImage(svgStr, totalW, totalH, filename);
     }
 
     /** Build an SVG of the fully-expanded Gantt for the current L1 and download as JPEG */
@@ -6657,8 +6573,7 @@
         parts.map(function(s) { return '  ' + s; }).join('\n') +
         '\n</svg>';
 
-      const sanitize = function(s) { return s.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, ''); };
-      downloadJPEG(svgStr, totalW, totalH, 'Gantt - ' + sanitize(ganttL1Key) + '.jpg');
+      exportViewImage(svgStr, totalW, totalH, 'Gantt - ' + ganttL1Key);
     }
 
     $('btnGanttExport').addEventListener('click', exportGanttAsJpeg);
@@ -7715,7 +7630,7 @@
 
       // Ensure modals are closed in the saved file
       clone.querySelector('#exportModal').className = 'exp-overlay hidden';
-      clone.querySelector('#becOverlay').className = 'bec-overlay hidden';
+      clone.querySelector('#drawioModal').className = 'exp-overlay hidden';
       clone.querySelector('#ctrlPanel').className = 'hidden';
       clone.querySelector('#shortcutsDropdown').classList.add('hidden');
       clone.querySelector('#importOverlay').className = 'imp-overlay hidden';
@@ -8074,7 +7989,7 @@
         case 'e': case 'E':
           e.preventDefault(); openExportModal(); break;
         case 'b': case 'B':
-          e.preventDefault(); $('btnBulkExport').click(); break;
+          e.preventDefault(); openExportModal({ perProcess: true }); break;
         case '/':
           e.preventDefault(); searchInput.focus(); searchInput.select(); break;
         case 'g': case 'G':
@@ -8149,10 +8064,41 @@
     });
 
     // ── EXPORT MODAL ───────────────────────────────────────────────────────
+    // One window for every process-diagram export: what (start + one diagram or
+    // one per process, optional parent chain), levels (depth, H/V, arrows),
+    // labels (codes, activity-type shapes) and format. Settings are remembered.
     const exportModal  = $('exportModal');
     const expLvlChecks = $('expLevelChecks');
     let expSel  = [null, null, null];  // selected key in each picker column
     let expPath = [];                  // derived from expSel
+    const EXP_MAX_LEVEL    = 4;
+    const EXP_SETTINGS_KEY = 'nexus.export.settings.v1';
+    const EXP_DEFAULTS = {
+      split: 'one', parents: false, deepest: 4,
+      levels: { 1: { o: 'h', a: true }, 2: { o: 'h', a: true }, 3: { o: 'h', a: true }, 4: { o: 'v', a: false } },
+      showCodes: false, codeMode: 'auto', codePos: 'inline', typeShapes: false, fmt: 'svg',
+    };
+
+    function expMergeDefaults(saved) {
+      const d = JSON.parse(JSON.stringify(EXP_DEFAULTS));
+      if (!saved || typeof saved !== 'object') return d;
+      Object.keys(d).forEach(k => {
+        if (k === 'levels') {
+          Object.keys(d.levels).forEach(l => {
+            if (saved.levels && saved.levels[l]) Object.assign(d.levels[l], saved.levels[l]);
+          });
+        } else if (saved[k] !== undefined) d[k] = saved[k];
+      });
+      return d;
+    }
+    function expLoadSettings() {
+      try { return expMergeDefaults(JSON.parse(localStorage.getItem(EXP_SETTINGS_KEY))); }
+      catch (_) { return expMergeDefaults(null); }
+    }
+    function expSaveSettings() {
+      try { localStorage.setItem(EXP_SETTINGS_KEY, JSON.stringify(expSettings)); } catch (_) {}
+    }
+    let expSettings = expLoadSettings();
 
     function updateExpPath() {
       expPath = [];
@@ -8199,17 +8145,11 @@
         item.title = key;
         item.addEventListener('click', () => {
           // Toggle: clicking the already-selected item clears it and deeper cols
-          if (expSel[colIdx] === key) {
-            expSel[colIdx] = null;
-          } else {
-            expSel[colIdx] = key;
-          }
-          // Clear all deeper selections
+          expSel[colIdx] = expSel[colIdx] === key ? null : key;
           for (let j = colIdx + 1; j < 3; j++) expSel[j] = null;
           updateExpPath();
-          // Rebuild this and deeper columns
           for (let j = colIdx; j < 3; j++) buildPickerCol(j);
-          buildLevelChecks();
+          expScopeChanged();
         });
         col.appendChild(item);
       });
@@ -8219,50 +8159,143 @@
       for (let i = 0; i < 3; i++) buildPickerCol(i);
     }
 
+    function expNodeAt(path) {
+      if (!path.length) return null;
+      const parent = getNodesAtPath(path.slice(0, -1));
+      return parent[path[path.length - 1]] || null;
+    }
+
+    // Absolute level of the starting process (0 = all processes)
+    const expScopeLevel = () => expPath.length;
+    // Level at which each diagram starts
+    function expRootLevel() {
+      return expSettings.split === 'one' ? Math.max(1, expScopeLevel()) : Number(expSettings.split);
+    }
+
+    // Paths of the diagrams to export (one path per diagram; [] = all processes)
+    function expDiagramPaths() {
+      if (expSettings.split === 'one') return [expPath.slice()];
+      const target = Number(expSettings.split);
+      const out = [];
+      (function walk(nodes, path) {
+        Object.keys(nodes).forEach(k => {
+          const p = path.concat(k);
+          if (p.length === target) out.push(p);
+          else if (p.length < target) walk(nodes[k]._children, p);
+        });
+      })(expPath.length ? expNodeAt(expPath)._children : tree, expPath.slice());
+      return out;
+    }
+
+    // Direct ancestors of a diagram root, top-down, as parent-chain bars
+    function expParentChain(path) {
+      const chain = [];
+      for (let i = 0; i + 1 < path.length; i++) {
+        const p = path.slice(0, i + 1);
+        chain.push({ key: p[i], nodeObj: expNodeAt(p), abs: levelOffset + i, path: p });
+      }
+      return chain;
+    }
+
+    // Codes: numbered from the starting process (which gets `start`), or taken
+    // from the CSV with missing ones numbered. Returns path → code.
+    function expBuildCodeOf(mode, start) {
+      const map = new Map();
+      const keyOf = p => p.join('\u001f');
+      function walk(nodes, basePath, parentCode) {
+        Object.keys(nodes).forEach((k, i) => {
+          const n = nodes[k], p = basePath.concat(k);
+          const code = (mode === 'data' && n._code) ? String(n._code)
+            : parentCode ? parentCode + '.' + (i + 1) : String(start + i);
+          map.set(keyOf(p), code);
+          walk(n._children, p, code);
+        });
+      }
+      if (expPath.length) {
+        const n = expNodeAt(expPath);
+        const code = (mode === 'data' && n._code) ? String(n._code) : String(start);
+        map.set(keyOf(expPath), code);
+        walk(n._children, expPath, code);
+      } else {
+        walk(tree, [], '');
+      }
+      return path => {
+        if (map.has(keyOf(path))) return map.get(keyOf(path));
+        // Parents above the starting process: only their own CSV code, if any
+        const n = mode === 'data' ? expNodeAt(path) : null;
+        return n && n._code ? String(n._code) : '';
+      };
+    }
+
+    function expDefaultCodeStart() {
+      const n = expPath.length ? expNodeAt(expPath) : tree[Object.keys(tree)[0]];
+      const num = parseInt(String((n && n._code) || '').split('.').pop(), 10);
+      return Number.isFinite(num) ? num : 1;
+    }
+
+    function sanitizeFileName(s) {
+      return String(s).replace(/[\/\\:*?"<>|]+/g, '-').replace(/\s+/g, ' ').trim().slice(0, 90) || 'export';
+    }
+    // File name for a diagram: "S&OP - 1.2 Demand review"
+    function expFileBase(path, codeOf) {
+      if (!path.length) return 'All processes';
+      const names = path.map(sanitizeFileName);
+      const code = codeOf ? codeOf(path) : '';
+      if (code) names[names.length - 1] = sanitizeFileName(code) + ' ' + names[names.length - 1];
+      return names.join(' - ');
+    }
+
+    // ── Modal rendering ──
+    function expBuildSplitOptions() {
+      const sel = $('expSplit');
+      sel.innerHTML = '';
+      const add = (v, t) => { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); };
+      add('one', 'One diagram');
+      for (let n = Math.max(1, expScopeLevel() + 1); n <= 3; n++) add(String(n), 'One per L' + n + ' process (separate files)');
+      if (![...sel.options].some(o => o.value === String(expSettings.split))) expSettings.split = 'one';
+      sel.value = String(expSettings.split);
+    }
+
+    function expBuildDeepestOptions() {
+      const sel = $('expDeepest');
+      sel.innerHTML = '';
+      const root = expRootLevel();
+      for (let l = root; l <= EXP_MAX_LEVEL; l++) {
+        const o = document.createElement('option'); o.value = l; o.textContent = 'L' + l; sel.appendChild(o);
+      }
+      if (expSettings.deepest < root) expSettings.deepest = root;
+      sel.value = String(expSettings.deepest);
+    }
+
     function buildLevelChecks() {
       expLvlChecks.innerHTML = '';
-      const startAbsLevel = levelOffset + expPath.length;
-      const maxAbs = 4;   // absolute L4 is always the ceiling
-      for (let abs = startAbsLevel; abs <= maxAbs; abs++) {
+      const root = expRootLevel();
+      for (let abs = 1; abs <= EXP_MAX_LEVEL; abs++) {
+        const lv = expSettings.levels[abs];
+        const inDiagram = abs >= root && abs <= expSettings.deepest;
+        const isParent  = abs < root && expSettings.parents;
         const row = document.createElement('div');
-        row.className = 'exp-level-row';
-        const main = document.createElement('label');
-        main.className = 'exp-lv-main';
-        const cb = document.createElement('input');
-        cb.type = 'checkbox'; cb.checked = true; cb.dataset.abs = abs;
-        cb.addEventListener('change', () => {
-          if (!cb.checked) {
-            expLvlChecks.querySelectorAll('input[type=checkbox][data-abs]').forEach(c => {
-              if (parseInt(c.dataset.abs) > abs) c.checked = false;
-            });
-          } else {
-            expLvlChecks.querySelectorAll('input[type=checkbox][data-abs]').forEach(c => {
-              if (parseInt(c.dataset.abs) < abs) c.checked = true;
-            });
-          }
-        });
-        const lvlSpan = document.createElement('span');
-        lvlSpan.className = 'exp-lv-label';
-        lvlSpan.textContent = 'L' + abs;
-        const nameSpan = document.createElement('span');
-        nameSpan.className = 'exp-lv-name';
-        nameSpan.textContent = abs === startAbsLevel
-          ? (expPath.length ? expPath[expPath.length - 1] : 'All processes')
-          : '';
-        main.appendChild(cb); main.appendChild(lvlSpan); main.appendChild(nameSpan);
-        row.appendChild(main);
+        row.className = 'exp-level-row' + (inDiagram ? '' : isParent ? ' is-parent' : ' is-out');
 
-        // Per-level layout options: orientation and flow arrows between siblings
+        const lbl = document.createElement('span');
+        lbl.className = 'exp-lv-label'; lbl.textContent = 'L' + abs;
+        const state = document.createElement('span');
+        state.className = 'exp-lv-name';
+        state.textContent = inDiagram ? (abs === root ? 'Diagram top level' : 'Included')
+          : isParent ? 'Parent bar' : abs < root ? 'Above diagram' : 'Not included';
+        row.appendChild(lbl); row.appendChild(state);
+
         const optsEl = document.createElement('span');
         optsEl.className = 'exp-lv-opts';
         const orient = document.createElement('span');
         orient.className = 'exp-lv-orient';
-        [['h', 'Horizontal'], ['v', 'Vertical']].forEach(([v, t]) => {
+        [['h', '⇆ H', 'Horizontal'], ['v', '⇅ V', 'Vertical']].forEach(([v, t, title]) => {
           const b = document.createElement('button');
-          b.type = 'button'; b.textContent = v === 'h' ? '⇆ H' : '⇅ V'; b.title = t + ' layout for L' + abs;
+          b.type = 'button'; b.textContent = t; b.title = title + ' layout for L' + abs;
           b.dataset.abs = abs; b.dataset.orient = v;
-          if (v === 'h') b.classList.add('active');
+          if (lv.o === v) b.classList.add('active');
           b.addEventListener('click', () => {
+            lv.o = v; expSaveSettings();
             orient.querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
           });
           orient.appendChild(b);
@@ -8271,66 +8304,212 @@
         arrLbl.className = 'exp-lv-arrows';
         arrLbl.title = 'Arrows between consecutive shapes on L' + abs;
         const arrCb = document.createElement('input');
-        arrCb.type = 'checkbox'; arrCb.dataset.arrowAbs = abs;
+        arrCb.type = 'checkbox'; arrCb.dataset.arrowAbs = abs; arrCb.checked = !!lv.a;
+        arrCb.addEventListener('change', () => { lv.a = arrCb.checked; expSaveSettings(); });
         arrLbl.appendChild(arrCb); arrLbl.appendChild(document.createTextNode(' Arrows'));
         optsEl.appendChild(orient); optsEl.appendChild(arrLbl);
         row.appendChild(optsEl);
         expLvlChecks.appendChild(row);
       }
-      // Default code start number = first segment of the first exported node's code
-      const rootNodes = expPath.length ? getNodesAtPath(expPath.slice(0, -1)) : tree;
-      const firstKey  = expPath.length ? expPath[expPath.length - 1] : Object.keys(tree)[0];
-      const firstCode = firstKey && rootNodes[firstKey] ? String(rootNodes[firstKey]._code || '') : '';
-      const firstNum  = parseInt(firstCode.split('.').pop(), 10);
-      $('expCodeStart').value = Number.isFinite(firstNum) ? firstNum : 1;
     }
 
-    function getExportOptions() {
-      const orientations = {};
-      expLvlChecks.querySelectorAll('.exp-lv-orient button.active').forEach(b => {
-        orientations[parseInt(b.dataset.abs)] = b.dataset.orient;
-      });
-      const arrowLevels = [];
-      expLvlChecks.querySelectorAll('input[data-arrow-abs]').forEach(c => {
-        if (c.checked) arrowLevels.push(parseInt(c.dataset.arrowAbs));
-      });
-      const start = parseInt($('expCodeStart').value, 10);
-      return {
-        orientations,
-        opts: {
-          arrowLevels,
-          showCodes: $('expShowCodes').checked,
-          codeMode: $('expCodeMode').value,
-          codeStart: Number.isFinite(start) ? start : 1,
-          typeShapes: $('expTypeShapes').checked,
-        },
-      };
+    function expUpdateSummary() {
+      const n = expDiagramPaths().length;
+      const scope = expPath.length ? expPath[expPath.length - 1] : 'All processes';
+      const root = expRootLevel();
+      const range = root === expSettings.deepest ? 'L' + root : 'L' + root + '–L' + expSettings.deepest;
+      $('expSummary').textContent = expSettings.split === 'one'
+        ? '1 diagram: ' + scope + ' · ' + range
+        : n + ' diagram' + (n === 1 ? '' : 's') + ', one per L' + expSettings.split + ' process in ' + scope + ' · ' + range;
+      const fmt = expSettings.fmt;
+      $('btnExpGo').textContent = n > 1 ? 'Export ' + n + ' files'
+        : fmt === 'drawio' ? 'Show draw.io XML' : 'Export';
+      $('btnExpGo').disabled = n === 0;
     }
 
-    function openExportModal() {
+    function expSyncLabelControls() {
+      $('expShowCodes').checked = !!expSettings.showCodes;
+      $('expCodeMode').value = expSettings.codeMode;
+      $('expCodePos').value = expSettings.codePos;
+      $('expTypeShapes').checked = !!expSettings.typeShapes;
+      $('expParents').checked = !!expSettings.parents;
+      exportModal.querySelectorAll('input[name="expFmt"]').forEach(r => { r.checked = r.value === expSettings.fmt; });
+      ['expCodeMode', 'expCodePos', 'expCodeStart'].forEach(id => { $(id).disabled = !expSettings.showCodes; });
+    }
+
+    function expRefresh() {
+      expBuildSplitOptions();
+      expBuildDeepestOptions();
+      buildLevelChecks();
+      expSyncLabelControls();
+      expUpdateSummary();
+    }
+    function expScopeChanged() {
+      $('expCodeStart').value = expDefaultCodeStart();
+      expRefresh();
+    }
+
+    function openExportModal(preset) {
       if (!Object.keys(tree).length) return;
       // Pre-select from currentPath (up to 3 levels)
       expSel = [null, null, null];
       for (let i = 0; i < 3 && i < currentPath.length; i++) expSel[i] = currentPath[i];
       updateExpPath();
+      if (preset && preset.perProcess && expSettings.split === 'one') {
+        expSettings.split = String(Math.max(1, expScopeLevel() + 1));
+        if (Number(expSettings.split) > 3) expSettings.split = 'one';
+      }
       buildAllPickerCols();
-      buildLevelChecks();
+      expScopeChanged();
       exportModal.classList.remove('hidden');
     }
+
+    $('expSplit').addEventListener('change', e => { expSettings.split = e.target.value; expSaveSettings(); expRefresh(); });
+    $('expDeepest').addEventListener('change', e => { expSettings.deepest = Number(e.target.value); expSaveSettings(); expRefresh(); });
+    $('expParents').addEventListener('change', e => { expSettings.parents = e.target.checked; expSaveSettings(); expRefresh(); });
+    $('expShowCodes').addEventListener('change', e => { expSettings.showCodes = e.target.checked; expSaveSettings(); expSyncLabelControls(); });
+    $('expCodeMode').addEventListener('change', e => { expSettings.codeMode = e.target.value; expSaveSettings(); });
+    $('expCodePos').addEventListener('change', e => { expSettings.codePos = e.target.value; expSaveSettings(); });
+    $('expTypeShapes').addEventListener('change', e => { expSettings.typeShapes = e.target.checked; expSaveSettings(); });
+    exportModal.querySelectorAll('input[name="expFmt"]').forEach(r => r.addEventListener('change', () => {
+      if (r.checked) { expSettings.fmt = r.value; expSaveSettings(); expUpdateSummary(); }
+    }));
+    $('expReset').addEventListener('click', () => {
+      expSettings = expMergeDefaults(null); expSaveSettings(); expScopeChanged();
+    });
 
     $('btnExpCancel').addEventListener('click', () => exportModal.classList.add('hidden'));
     exportModal.addEventListener('click', e => { if (e.target === exportModal) exportModal.classList.add('hidden'); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !exportModal.classList.contains('hidden')) exportModal.classList.add('hidden'); });
 
-    $('btnExpGo').addEventListener('click', () => {
-      let maxCheckedAbs = levelOffset + expPath.length;
-      expLvlChecks.querySelectorAll('input[type=checkbox][data-abs]').forEach(c => {
-        if (c.checked) maxCheckedAbs = Math.max(maxCheckedAbs, parseInt(c.dataset.abs));
+    // ── Run the export ──
+    async function runProcessExport() {
+      const s = expSettings;
+      const orientations = {}, arrowLevels = [];
+      Object.keys(s.levels).forEach(l => {
+        orientations[l] = s.levels[l].o;
+        if (s.levels[l].a) arrowLevels.push(Number(l));
       });
+      const start = parseInt($('expCodeStart').value, 10);
+      const codeOf = s.showCodes ? expBuildCodeOf(s.codeMode, Number.isFinite(start) ? start : 1) : null;
+      const items = [];
+      expDiagramPaths().forEach(path => {
+        const result = buildSvgString(path, s.deepest, orientations, {
+          arrowLevels, showCodes: s.showCodes, codeOwnLine: s.codePos === 'line',
+          typeShapes: s.typeShapes, codeOf: codeOf || undefined,
+          parentChain: s.parents ? expParentChain(path) : [],
+        });
+        if (result) items.push({ result, base: expFileBase(path, codeOf),
+                                 title: path.length ? path[path.length - 1] : 'All processes' });
+      });
+      if (!items.length) { showExportToast('Nothing to export'); return; }
       exportModal.classList.add('hidden');
-      const { orientations, opts } = getExportOptions();
-      exportSVG(expPath, maxCheckedAbs, orientations, opts);
+
+      const ext = EXPORT_EXT[s.fmt];
+      if (items.length === 1) {
+        const it = items[0];
+        if (s.fmt === 'drawio') { showDrawioModal(buildDrawioXml(it.result, it.title), it.base + ext); return; }
+        const blob = await diagramBlob(it.result, s.fmt, it.title);
+        if (!blob) { showExportToast('Export failed: diagram too large for ' + s.fmt.toUpperCase()); return; }
+        saveBlob(blob, it.base + ext);
+        showExportToast('Exported ' + EXPORT_LABEL[s.fmt]);
+        return;
+      }
+      await saveFiles(items.map(it => ({ name: it.base + ext, make: () => diagramBlob(it.result, s.fmt, it.title) })));
+    }
+
+    $('btnExpGo').addEventListener('click', runProcessExport);
+
+    // ── Shared export helpers (process diagrams, Gantt, Timeline) ──
+    const EXPORT_EXT   = { svg: '.svg', jpeg: '.jpg', png: '.png', vsdx: '.vsdx', drawio: '.drawio' };
+    const EXPORT_LABEL = { svg: 'SVG', jpeg: 'JPEG', png: 'PNG', vsdx: 'Visio file', drawio: 'draw.io file' };
+
+    function saveBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    }
+
+    // SVG string → raster blob at 300 PPI (white background); null if it fails
+    function svgToRasterBlob(svgStr, svgW, svgH, mime) {
+      return new Promise(resolve => {
+        const scale = 300 / 96;
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(svgW * scale); canvas.height = Math.round(svgH * scale);
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { resolve(null); return; }
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const url = URL.createObjectURL(new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' }));
+        const img = new Image();
+        img.onload  = () => { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); URL.revokeObjectURL(url);
+                              canvas.toBlob(b => resolve(b), mime, 0.95); };
+        img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+        img.src = url;
+      });
+    }
+
+    async function imageBlob(svgStr, svgW, svgH, fmt) {
+      if (fmt === 'svg') return new Blob([svgStr], { type: 'image/svg+xml' });
+      return svgToRasterBlob(svgStr, svgW, svgH, fmt === 'png' ? 'image/png' : 'image/jpeg');
+    }
+
+    async function diagramBlob(result, fmt, title) {
+      if (fmt === 'vsdx')   return buildVsdxBlob(result, title);
+      if (fmt === 'drawio') return new Blob([buildDrawioXml(result, title)], { type: 'application/xml' });
+      return imageBlob(result.svg, result.svgW, result.svgH, fmt);
+    }
+
+    // Several files: into a folder the user picks (Chromium), else one download each
+    async function saveFiles(files) {
+      let count = 0;
+      if (window.showDirectoryPicker) {
+        let dir;
+        try { dir = await window.showDirectoryPicker({ mode: 'readwrite' }); } catch (_) { return; }
+        showExportToast('Exporting ' + files.length + ' files…');
+        for (const f of files) {
+          const blob = await f.make();
+          if (!blob) continue;
+          const fh = await dir.getFileHandle(f.name, { create: true });
+          const w  = await fh.createWritable();
+          await w.write(blob); await w.close();
+          count++;
+        }
+      } else {
+        for (const f of files) {
+          const blob = await f.make();
+          if (!blob) continue;
+          saveBlob(blob, f.name); count++;
+          await new Promise(r => setTimeout(r, 300));
+        }
+      }
+      showExportToast('Exported ' + count + ' file' + (count === 1 ? '' : 's'));
+    }
+
+    // Gantt / Timeline: one format choice (JPEG / PNG / SVG), remembered
+    const VIEW_FMT_KEY = 'nexus.export.viewFormat';
+    function viewExportFormat() {
+      try { const f = localStorage.getItem(VIEW_FMT_KEY); if (['jpeg', 'png', 'svg'].includes(f)) return f; } catch (_) {}
+      return 'jpeg';
+    }
+    ['ganttExportFmt', 'yearExportFmt'].forEach(id => {
+      const sel = $(id);
+      if (!sel) return;
+      sel.value = viewExportFormat();
+      sel.addEventListener('change', () => {
+        try { localStorage.setItem(VIEW_FMT_KEY, sel.value); } catch (_) {}
+        ['ganttExportFmt', 'yearExportFmt'].forEach(o => { if ($(o)) $(o).value = sel.value; });
+      });
     });
+    async function exportViewImage(svgStr, w, h, baseName) {
+      const fmt = viewExportFormat();
+      const blob = await imageBlob(svgStr, w, h, fmt);
+      if (!blob) { showExportToast('Export failed: image too large for ' + fmt.toUpperCase()); return; }
+      saveBlob(blob, sanitizeFileName(baseName) + EXPORT_EXT[fmt]);
+      showExportToast('Exported ' + EXPORT_LABEL[fmt]);
+    }
 
     // ── SVG EXPORT ─────────────────────────────────────────────────────────
     const SVG_LAYOUT = { NW: 200, NH: 80, HGAP: 28, VGAP: 28, VLEAF: 28, PAD: 60, FONT: 13, SMALL_FONT: 11, CORNER: 8 };
@@ -8455,7 +8634,7 @@
         const ci = Math.min(absLevel, EXP_FILLS.length - 1);
         const ts = opts.typeShapes && nodeObj && nodeObj._meta ? expTypeStyle(nodeObj._meta.Type) : null;
         const sh = { x: nodeX, y: nodeY, w: nodeW, h: nodeH, name: key, level: absLevel,
-          text: (opts.showCodes && code) ? code + ' ' + key : key,
+          text: (opts.showCodes && code) ? code + (opts.codeOwnLine ? '\n' : ' ') + key : key,
           kind: ts ? ts.kind : 'rounded',
           fill: (ts && ts.fill) || EXP_FILLS[ci], stroke: (ts && ts.stroke) || EXP_STROKES[ci],
           color: (ts && ts.color) || EXP_TEXTS[ci],
@@ -8480,7 +8659,8 @@
         );
         if (sh.text) {
           const fs = sh.fontSize || S.FONT;
-          const lines = wrapText(sh.text, sh.w - 20, fs);
+          // Explicit line breaks (e.g. code on its own line) are kept; each part wraps on its own
+          const lines = String(sh.text).split('\n').flatMap(part => wrapText(part, sh.w - 20, fs));
           const lh = fs * 1.4;
           const textStartY = sh.y + sh.h / 2 - (lines.length * lh) / 2 + fs;
           lines.forEach((ln, li) => {
@@ -8494,9 +8674,11 @@
         return parts.shapes.length - 1;
       }
 
-      // Generated code for the i-th sibling under parentCode (data code wins in 'data' mode)
-      function codeFor(nodeObj, parentCode, i) {
+      // Code for a node: from opts.codeOf(path) when given (export window), else
+      // generated for the i-th sibling under parentCode (data code wins in 'data' mode)
+      function codeFor(nodeObj, parentCode, i, path) {
         const dataCode = nodeObj && nodeObj._code ? String(nodeObj._code) : '';
+        if (opts.codeOf) return opts.codeOf(path) || '';
         if (!opts.showCodes) return dataCode;
         if (opts.codeMode === 'data' && dataCode) return dataCode;
         const start = Number.isFinite(opts.codeStart) ? opts.codeStart : 1;
@@ -8504,7 +8686,18 @@
       }
 
       // renderLevel: positions items at absolute (xBase+item.x, yBase+item.y)
-      function renderLevel(items, depth, xBase, yBase, parentCode) {
+      function levelLabel(abs, y) {
+        const ci = Math.min(abs, EXP_FILLS.length - 1);
+        parts.levelTags.push({ x: S.PAD - 50, y: y + S.NH / 2 - 10, w: 40, h: 20, text: 'L' + abs, color: EXP_FILLS[ci] });
+        parts.labels.push(
+          '<text x="' + (S.PAD - 10) + '" y="' + (y + S.NH / 2 + 4) + '" text-anchor="end"' +
+          ' fill="' + EXP_FILLS[ci] + '"' +
+          ' font-size="11" font-weight="700" letter-spacing="0.5" font-family="' + FF + '">' +
+          'L' + abs + '</text>'
+        );
+      }
+
+      function renderLevel(items, depth, xBase, yBase, parentCode, parentPath) {
         const absLevelBase = exportRootAbsDepth + depth;
         const placed = [];
         items.forEach((item, idx) => {
@@ -8518,18 +8711,11 @@
 
           if (!labeledLevels.has(depth)) {
             labeledLevels.add(depth);
-            const ci = Math.min(absLevelBase, EXP_FILLS.length - 1);
-            parts.levelTags.push({ x: S.PAD - 50, y: nodeY + nodeH / 2 - 10, w: 40, h: 20,
-              text: 'L' + absLevelBase, color: EXP_FILLS[ci] });
-            parts.labels.push(
-              '<text x="' + (S.PAD - 10) + '" y="' + (nodeY + nodeH / 2 + 4) + '" text-anchor="end"' +
-              ' fill="' + EXP_FILLS[ci] + '"' +
-              ' font-size="11" font-weight="700" letter-spacing="0.5" font-family="' + FF + '">' +
-              'L' + absLevelBase + '</text>'
-            );
+            levelLabel(absLevelBase, nodeY);
           }
 
-          const code = codeFor(item.nodeObj, parentCode, idx);
+          const path = parentPath.concat(item.key);
+          const code = codeFor(item.nodeObj, parentCode, idx, path);
           const shapeIdx = drawNode(nodeX, nodeY, nodeW, nodeH, cx, item.key, absLevelBase, item.nodeObj, code);
           placed.push({ shapeIdx, x: nodeX, y: nodeY, w: nodeW, subtreeH: item.subtreeH,
                         hasKids: item.child.items.length > 0 });
@@ -8538,7 +8724,7 @@
             // Children start at the same x as the parent — they already fill that space
             const childXBase = absX;
             const childYBase = absY + S.NH + S.VGAP;
-            renderLevel(item.child.items, depth + 1, childXBase, childYBase, code);
+            renderLevel(item.child.items, depth + 1, childXBase, childYBase, code, path);
           }
         });
 
@@ -8557,15 +8743,25 @@
       }
 
       const measured = measure(subtree, 0);
+      // Optional parent chain (direct ancestors of the diagram root), drawn as
+      // full-width bars above the diagram: [{ key, nodeObj, abs, path }]
+      const chain = opts.parentChain || [];
+      const chainH = chain.length * (S.NH + S.VGAP);
       svgW = measured.totalW + S.PAD * 2;
-      svgH = measured.totalH + S.PAD * 2;
-      renderLevel(measured.items, 0, S.PAD, S.PAD, '');
+      svgH = measured.totalH + chainH + S.PAD * 2;
+      chain.forEach((p, i) => {
+        const y = S.PAD + i * (S.NH + S.VGAP);
+        levelLabel(p.abs, y);
+        drawNode(S.PAD, y, measured.totalW, S.NH, S.PAD + measured.totalW / 2, p.key, p.abs, p.nodeObj,
+                 codeFor(p.nodeObj, '', 0, p.path));
+      });
+      renderLevel(measured.items, 0, S.PAD, S.PAD + chainH, '', usePath.slice(0, -1));
 
       // Legend for activity types actually used
       if (opts.typeShapes) {
         const used = EXP_TYPE_STYLES.filter(st => parts.shapes.some(sh => sh.typeKey === st.key));
         if (used.length) {
-          const ly = measured.totalH + S.PAD + 24;
+          const ly = measured.totalH + chainH + S.PAD + 24;
           parts.levelTags.push({ x: S.PAD, y: ly, w: 120, h: 20, text: 'Legend', color: '#3a463a', align: 'left', bold: true });
           used.forEach((st, i) => {
             const y = ly + 26 + i * 30;
@@ -8609,43 +8805,6 @@
         svgW, svgH,
         shapes: parts.shapes, levelTags: parts.levelTags, arrows: parts.arrows
       };
-    }
-
-    function exportSVG(exportPath, maxAbsLevel, orientations, opts) {
-      const usePath   = exportPath !== undefined ? exportPath : [...currentPath];
-      const useMaxAbs = maxAbsLevel !== undefined ? maxAbsLevel : 5;
-      const result    = buildSvgString(usePath, useMaxAbs, orientations, opts);
-      if (!result) return;
-      const { svg, svgW, svgH } = result;
-
-      const label    = usePath.length ? usePath[usePath.length-1] : 'All';
-      const fileBase = 'processflow-' + label.replace(/[^a-z0-9]/gi,'-').toLowerCase();
-
-      const fmtEl = exportModal.querySelector('input[name="expFmt"]:checked');
-      const fmt   = fmtEl ? fmtEl.value : 'svg';
-
-      if (fmt === 'jpeg') {
-        downloadJPEG(svg, svgW, svgH, fileBase + '.jpg');
-      } else if (fmt === 'drawio') {
-        exportModal.classList.add('hidden');
-        showDrawioModal(buildDrawioXml(result, label), fileBase + '.drawio');
-      } else if (fmt === 'vsdx') {
-        const blob = buildVsdxBlob(result, label);
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href = url; a.download = fileBase + '.vsdx';
-        document.body.appendChild(a); a.click();
-        document.body.removeChild(a); URL.revokeObjectURL(url);
-        showExportToast('Exported Visio file');
-      } else {
-        const blob = new Blob([svg], { type:'image/svg+xml' });
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href = url; a.download = fileBase + '.svg';
-        document.body.appendChild(a); a.click();
-        document.body.removeChild(a); URL.revokeObjectURL(url);
-        showExportToast('Exported SVG');
-      }
     }
 
     // ── VISIO (.VSDX) EXPORT ──────────────────────────────────────────────────
@@ -8920,7 +9079,7 @@
       const geo = (o) => '<mxGeometry x="' + r1(o.x) + '" y="' + r1(o.y) + '" width="' + r1(o.w) +
         '" height="' + r1(o.h) + '" as="geometry"/>';
       // Labels are rendered as HTML (html=1, needed for wrapping), so escape twice.
-      const label = t => vsdxEsc(escHtml(t));
+      const label = t => vsdxEsc(String(t).split('\n').map(escHtml).join('<br>'));
       const cells = [];
       let id = 2;
       (result.levelTags || []).forEach(t => {
@@ -9036,298 +9195,6 @@
       const out = new Uint8Array(all.reduce((s, b) => s + b.length, 0));
       let p = 0; all.forEach(b => { out.set(b, p); p += b.length; });
       return out;
-    }
-
-    function svgToJpegBlob(svgStr, svgW, svgH) {
-      return new Promise(resolve => {
-        const scale = 300 / 96;
-        const cw = Math.round(svgW * scale), ch = Math.round(svgH * scale);
-        const canvas = document.createElement('canvas');
-        canvas.width = cw; canvas.height = ch;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cw, ch);
-        const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
-        const url  = URL.createObjectURL(blob);
-        const img  = new Image();
-        img.onload  = () => { ctx.drawImage(img, 0, 0, cw, ch); URL.revokeObjectURL(url); canvas.toBlob(resolve, 'image/jpeg', 0.95); };
-        img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
-        img.src = url;
-      });
-    }
-
-
-    // ── BULK EXPORT CONFIG ─────────────────────────────────────────────────────
-    const BEC_ROWS     = 5;
-    const BEC_LEVELS   = ['L1','L2','L3','L4','L5'];
-    const becOverlay   = $('becOverlay');
-    const becBody      = $('becBody');
-
-    function becAbsLevels() {
-      // Returns absolute level numbers present in the tree (e.g. [0,1,2,3,4])
-      const maxAbs = 4;
-      const present = [];
-      for (let i = 0; i <= maxAbs; i++) {
-        const lKey = 'L' + i;
-        if (_sessionData || window.__PF_EMBED__) {
-          // derive from levelOffset + tree depth
-        }
-        present.push(i);
-      }
-      // Trim to actually-used levels based on current tree depth
-      function treeDepth(node, d) {
-        let max = d;
-        for (const k of Object.keys(node)) max = Math.max(max, treeDepth(node[k]._children, d + 1));
-        return max;
-      }
-      const depth = Object.keys(tree).length ? treeDepth(tree, levelOffset) : 4;
-      return present.filter(i => i >= levelOffset && i <= Math.min(depth, 4));
-    }
-
-    function becBuildRows() {
-      const levels = becAbsLevels();
-      becBody.innerHTML = '';
-      for (let r = 0; r < BEC_ROWS; r++) {
-        const tr = document.createElement('tr');
-
-        // Row number
-        const tdNum = document.createElement('td');
-        tdNum.className = 'bec-row-num';
-        tdNum.textContent = r + 1;
-        tr.appendChild(tdNum);
-
-        // L0 filter dropdown
-        const tdL0 = document.createElement('td');
-        tdL0.className = 'bec-l0-cell';
-        const l0Sel = document.createElement('select');
-        l0Sel.dataset.row = r;
-        const allOpt = document.createElement('option');
-        allOpt.value = ''; allOpt.textContent = 'All';
-        l0Sel.appendChild(allOpt);
-        Object.keys(tree).forEach(key => {
-          const opt = document.createElement('option');
-          opt.value = key; opt.textContent = key;
-          l0Sel.appendChild(opt);
-        });
-        tdL0.appendChild(l0Sel);
-        tr.appendChild(tdL0);
-
-        // Combined level pills: each pill has a checkbox + inline H/V toggle
-        const tdLevels = document.createElement('td');
-        tdLevels.className = 'bec-levels-cell';
-        levels.forEach(abs => {
-          const cbId  = 'bec_r' + r + '_l' + abs;
-          const hId   = 'bec_r' + r + '_l' + abs + '_h';
-          const vId   = 'bec_r' + r + '_l' + abs + '_v';
-
-          const pill = document.createElement('span');
-          pill.className = 'bec-level-pill';
-          pill.dataset.row = r; pill.dataset.abs = abs;
-
-          // Checkbox (hidden) + label as the level name toggle
-          const cb = document.createElement('input');
-          cb.type = 'checkbox'; cb.className = 'bec-level-cb';
-          cb.id = cbId; cb.dataset.row = r; cb.dataset.abs = abs;
-          cb.addEventListener('change', () => {
-            pill.classList.toggle('active', cb.checked);
-          });
-
-          const lbl = document.createElement('label');
-          lbl.htmlFor = cbId; lbl.className = 'bec-level-label';
-          lbl.textContent = 'L' + abs;
-
-          // Inline H/V segmented control
-          const orient = document.createElement('span');
-          orient.className = 'bec-pill-orient';
-          orient.innerHTML =
-            '<input type="radio" name="bec_orient_r' + r + '_l' + abs + '" id="' + hId + '" value="h" checked>' +
-            '<label for="' + hId + '">H</label>' +
-            '<input type="radio" name="bec_orient_r' + r + '_l' + abs + '" id="' + vId + '" value="v">' +
-            '<label for="' + vId + '">V</label>';
-
-          pill.appendChild(cb);
-          pill.appendChild(lbl);
-          pill.appendChild(orient);
-          tdLevels.appendChild(pill);
-        });
-        tr.appendChild(tdLevels);
-
-        // Format selector
-        const tdFmt = document.createElement('td');
-        tdFmt.className = 'bec-fmt-cell';
-        const sel = document.createElement('select');
-        sel.dataset.row = r;
-        [['jpeg','JPEG'],['svg','SVG'],['png','PNG'],['vsdx','Visio'],['drawio','draw.io']].forEach(([v, f]) => {
-          const opt = document.createElement('option');
-          opt.value = v; opt.textContent = f;
-          sel.appendChild(opt);
-        });
-        tdFmt.appendChild(sel);
-        tr.appendChild(tdFmt);
-
-        becBody.appendChild(tr);
-      }
-    }
-
-    function becGetConfig(rowIdx) {
-      // Returns { levels: [abs,...], orientations: {abs: 'h'|'v'}, format: 'jpeg'|'svg'|'png'|'vsdx'|'drawio' }
-      // or null if no levels checked
-      const levels = [];
-      const orientations = {};
-      becBody.querySelectorAll('.bec-level-pill[data-row="' + rowIdx + '"]').forEach(pill => {
-        const abs = parseInt(pill.dataset.abs);
-        const cb  = pill.querySelector('.bec-level-cb');
-        if (cb && cb.checked) levels.push(abs);
-        const checkedOrient = pill.querySelector('input[type="radio"]:checked');
-        orientations[abs] = checkedOrient ? checkedOrient.value : 'h';
-      });
-      if (!levels.length) return null;
-      const selects = becBody.querySelectorAll('select[data-row="' + rowIdx + '"]');
-      const l0SelEl = selects[0];
-      const fmtSel = selects[1];
-      const l0Filter = (l0SelEl && l0SelEl.value) ? l0SelEl.value : null;
-      const format = fmtSel ? fmtSel.value : 'jpeg';
-      return { levels, orientations, format, l0Filter };
-    }
-
-    function becGetAllPathsAtAbsLevel(absLevel) {
-      // Returns all paths whose final node sits at the given absolute level
-      const paths = [];
-      function walk(node, path) {
-        const curAbs = levelOffset + path.length;
-        if (curAbs === absLevel) { paths.push([...path]); return; }
-        if (curAbs > absLevel) return;
-        for (const key of Object.keys(node)) walk(node[key]._children, path.concat(key));
-      }
-      walk(tree, []);
-      return paths;
-    }
-
-    async function becSvgToBlob(result, format, pageName) {
-      if (format === 'vsdx') return buildVsdxBlob(result, pageName);
-      if (format === 'drawio') return new Blob([buildDrawioXml(result, pageName)], { type: 'application/xml' });
-      if (format === 'svg') return new Blob([result.svg], { type: 'image/svg+xml' });
-      if (format === 'jpeg') return await svgToJpegBlob(result.svg, result.svgW, result.svgH);
-      if (format === 'png') {
-        const scale = 2;
-        return await new Promise(resolve => {
-          const canvas = document.createElement('canvas');
-          canvas.width = Math.round(result.svgW * scale);
-          canvas.height = Math.round(result.svgH * scale);
-          const ctx = canvas.getContext('2d');
-          ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-          const svgBlob = new Blob([result.svg], { type: 'image/svg+xml;charset=utf-8' });
-          const url = URL.createObjectURL(svgBlob);
-          const img = new Image();
-          img.onload = () => { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); URL.revokeObjectURL(url); canvas.toBlob(resolve, 'image/png'); };
-          img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
-          img.src = url;
-        });
-      }
-      return null;
-    }
-
-    async function becRunExport() {
-      const configs = [];
-      for (let r = 0; r < BEC_ROWS; r++) {
-        const cfg = becGetConfig(r);
-        if (cfg) configs.push({ rowIdx: r + 1, ...cfg });
-      }
-      if (!configs.length) { showExportToast('No rows configured'); return; }
-
-      // Ask user to pick a folder
-      let dirHandle;
-      try {
-        dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-      } catch (e) {
-        // User cancelled
-        return;
-      }
-
-      const btnRun = $('becRun');
-      btnRun.disabled = true;
-      showExportToast('Exporting…');
-
-      const sanitize = s => String(s).replace(/[^a-z0-9 _-]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-      const extMap = { svg: '.svg', jpeg: '.jpg', png: '.png', vsdx: '.vsdx', drawio: '.drawio' };
-      let count = 0;
-
-      for (const cfg of configs) {
-        const maxAbsLevel = Math.max(...cfg.levels);
-        const minAbsLevel = Math.min(...cfg.levels);
-        // Collect paths one level deeper so buildSvgString roots the diagram
-        // exactly at minAbsLevel (not at its parent).
-        let paths = becGetAllPathsAtAbsLevel(minAbsLevel + 1);
-        if (cfg.l0Filter) paths = paths.filter(p => p[0] === cfg.l0Filter);
-        if (!paths.length) continue;
-
-        const rowPrefix = 'R' + String(cfg.rowIdx).padStart(2, '0') + ' - ';
-
-        // Write files directly into chosen directory
-        for (const path of paths) {
-          // Pass the full orientations map so every selected level uses its own H/V setting
-          const result = buildSvgString(path, maxAbsLevel, cfg.orientations);
-          if (!result) continue;
-
-          const nameParts = path.map(sanitize);
-          const fname = rowPrefix + (nameParts.join(' - ') || 'export') + extMap[cfg.format];
-          const blob = await becSvgToBlob(result, cfg.format, path[path.length - 1]);
-          if (!blob) continue;
-
-          const fileHandle = await dirHandle.getFileHandle(fname, { create: true });
-          const writable  = await fileHandle.createWritable();
-          await writable.write(blob);
-          await writable.close();
-          count++;
-        }
-      }
-
-      showExportToast('Exported ' + count + ' files');
-      btnRun.disabled = false;
-      becOverlay.classList.add('hidden');
-    }
-
-    function openBulkExportConfig() {
-      if (!Object.keys(tree).length) { showExportToast('No data loaded'); return; }
-      becBuildRows();
-      becOverlay.classList.remove('hidden');
-    }
-
-    $('btnBulkExport').addEventListener('click', openBulkExportConfig);
-    $('becClose').addEventListener('click', () => becOverlay.classList.add('hidden'));
-    $('becCancel').addEventListener('click', () => becOverlay.classList.add('hidden'));
-    $('becRun').addEventListener('click', becRunExport);
-    becOverlay.addEventListener('click', e => { if (e.target === becOverlay) becOverlay.classList.add('hidden'); });
-
-    function downloadJPEG(svgString, svgW, svgH, filename) {
-      const scale = 300 / 96;   // 300 PPI based on 96 PPI screen baseline
-      const cw = Math.round(svgW * scale);
-      const ch = Math.round(svgH * scale);
-
-      const canvas = document.createElement('canvas');
-      canvas.width  = cw;
-      canvas.height = ch;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, cw, ch);
-
-      const blob = new Blob([svgString], { type:'image/svg+xml;charset=utf-8' });
-      const url  = URL.createObjectURL(blob);
-      const img  = new Image();
-      img.onload = () => {
-        ctx.drawImage(img, 0, 0, cw, ch);
-        URL.revokeObjectURL(url);
-        canvas.toBlob(jpgBlob => {
-          const a = document.createElement('a');
-          a.href = URL.createObjectURL(jpgBlob);
-          a.download = filename;
-          document.body.appendChild(a); a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(a.href);
-          showExportToast('Exported JPEG');
-        }, 'image/jpeg', 0.95);
-      };
-      img.onerror = () => URL.revokeObjectURL(url);
-      img.src = url;
     }
 
     function showExportToast(msg) {
