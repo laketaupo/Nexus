@@ -2787,7 +2787,6 @@
               </select>
               <label class="exp-opt" title="Number given to the starting process">Start at <input type="number" id="expCodeStart" class="exp-opt-input exp-opt-num" min="0" value="1"></label>
             </div>
-            <label class="exp-opt"><input type="checkbox" id="expTypeShapes"> Shape by activity type (human / system / meeting) + legend</label>
           </div>
         </div>
         <div class="exp-section">
@@ -8076,7 +8075,7 @@
     const EXP_DEFAULTS = {
       split: 'one', parents: false, deepest: 4,
       levels: { 1: { o: 'h', a: true }, 2: { o: 'h', a: true }, 3: { o: 'h', a: true }, 4: { o: 'v', a: false } },
-      showCodes: false, codeMode: 'auto', codePos: 'inline', typeShapes: false, fmt: 'svg',
+      showCodes: false, codeMode: 'auto', codePos: 'inline', fmt: 'svg',
     };
 
     function expMergeDefaults(saved) {
@@ -8331,7 +8330,6 @@
       $('expShowCodes').checked = !!expSettings.showCodes;
       $('expCodeMode').value = expSettings.codeMode;
       $('expCodePos').value = expSettings.codePos;
-      $('expTypeShapes').checked = !!expSettings.typeShapes;
       $('expParents').checked = !!expSettings.parents;
       exportModal.querySelectorAll('input[name="expFmt"]').forEach(r => { r.checked = r.value === expSettings.fmt; });
       ['expCodeMode', 'expCodePos', 'expCodeStart'].forEach(id => { $(id).disabled = !expSettings.showCodes; });
@@ -8370,7 +8368,6 @@
     $('expShowCodes').addEventListener('change', e => { expSettings.showCodes = e.target.checked; expSaveSettings(); expSyncLabelControls(); });
     $('expCodeMode').addEventListener('change', e => { expSettings.codeMode = e.target.value; expSaveSettings(); });
     $('expCodePos').addEventListener('change', e => { expSettings.codePos = e.target.value; expSaveSettings(); });
-    $('expTypeShapes').addEventListener('change', e => { expSettings.typeShapes = e.target.checked; expSaveSettings(); });
     exportModal.querySelectorAll('input[name="expFmt"]').forEach(r => r.addEventListener('change', () => {
       if (r.checked) { expSettings.fmt = r.value; expSaveSettings(); expUpdateSummary(); }
     }));
@@ -8396,7 +8393,7 @@
       expDiagramPaths().forEach(path => {
         const result = buildSvgString(path, s.deepest, orientations, {
           arrowLevels, showCodes: s.showCodes, codeOwnLine: s.codePos === 'line',
-          typeShapes: s.typeShapes, codeOf: codeOf || undefined,
+          codeOf: codeOf || undefined,
           parentChain: s.parents ? expParentChain(path) : [],
         });
         if (result) items.push({ result, base: expFileBase(path, codeOf),
@@ -8528,21 +8525,10 @@
       };
     }
 
-    // Activity-type styling for the export (option "Shape by activity type").
-    // 'rounded' keeps the level colours; the others get their own colours.
-    const EXP_TYPE_STYLES = [
-      { key: 'system',  label: 'System activity', kind: 'rect', fill: '#DCEAF7', stroke: '#4F81BD', color: '#1F3B57' },
-      { key: 'meeting', label: 'Meeting',         kind: 'pill', fill: '#FBEBC8', stroke: '#C9962B', color: '#4A3510' },
-      { key: 'human',   label: 'Human activity',  kind: 'rounded' },
-    ];
-    function expTypeStyle(type) {
-      const t = String(type || '').toLowerCase();
-      return t ? EXP_TYPE_STYLES.find(st => t.includes(st.key)) || null : null;
-    }
     const EXP_ARROW_COLOR = '#5f6f5f';
 
     // opts (all optional): { arrowLevels: [abs,...], showCodes, codeMode: 'auto'|'data',
-    //                        codeStart: number, typeShapes }
+    //                        codeStart: number }
     function buildSvgString(exportPath, maxAbsLevel, leafHorizontalOrOrientations, opts) {
       opts = opts || {};
       const arrowLevels = new Set(opts.arrowLevels || []);
@@ -8632,26 +8618,19 @@
       // Pushes the shape model (used by every exporter) and its SVG; returns its index.
       function drawNode(nodeX, nodeY, nodeW, nodeH, cx, key, absLevel, nodeObj, code) {
         const ci = Math.min(absLevel, EXP_FILLS.length - 1);
-        const ts = opts.typeShapes && nodeObj && nodeObj._meta ? expTypeStyle(nodeObj._meta.Type) : null;
         const sh = { x: nodeX, y: nodeY, w: nodeW, h: nodeH, name: key, level: absLevel,
           text: (opts.showCodes && code) ? code + (opts.codeOwnLine ? '\n' : ' ') + key : key,
-          kind: ts ? ts.kind : 'rounded',
-          fill: (ts && ts.fill) || EXP_FILLS[ci], stroke: (ts && ts.stroke) || EXP_STROKES[ci],
-          color: (ts && ts.color) || EXP_TEXTS[ci],
+          fill: EXP_FILLS[ci], stroke: EXP_STROKES[ci], color: EXP_TEXTS[ci],
           code: code || '', desc: (nodeObj && nodeObj._desc) || '',
           meta: (nodeObj && nodeObj._meta) || null };
-        if (ts) sh.typeKey = ts.key;
         svgW = Math.max(svgW, nodeX + nodeW + S.PAD);
         svgH = Math.max(svgH, nodeY + nodeH + S.PAD);
         return pushShape(sh);
       }
 
-      function shapeRadius(sh) {
-        return sh.kind === 'rect' ? 0 : sh.kind === 'pill' ? sh.h / 2 : S.CORNER;
-      }
       function pushShape(sh) {
         parts.shapes.push(sh);
-        const r = shapeRadius(sh);
+        const r = S.CORNER;
         parts.rects.push(
           '<rect x="' + sh.x + '" y="' + sh.y + '" width="' + sh.w + '" height="' + sh.h +
           '" rx="' + r + '" ry="' + r +
@@ -8757,25 +8736,6 @@
       });
       renderLevel(measured.items, 0, S.PAD, S.PAD + chainH, '', usePath.slice(0, -1));
 
-      // Legend for activity types actually used
-      if (opts.typeShapes) {
-        const used = EXP_TYPE_STYLES.filter(st => parts.shapes.some(sh => sh.typeKey === st.key));
-        if (used.length) {
-          const ly = measured.totalH + chainH + S.PAD + 24;
-          parts.levelTags.push({ x: S.PAD, y: ly, w: 120, h: 20, text: 'Legend', color: '#3a463a', align: 'left', bold: true });
-          used.forEach((st, i) => {
-            const y = ly + 26 + i * 30;
-            const human = parts.shapes.find(sh => sh.typeKey === 'human');
-            pushShape({ x: S.PAD, y, w: 44, h: 22, kind: st.kind, legend: true, text: '',
-              fill: st.fill || (human ? human.fill : EXP_FILLS[4]),
-              stroke: st.stroke || (human ? human.stroke : EXP_STROKES[4]), color: '#000000' });
-            parts.levelTags.push({ x: S.PAD + 54, y: y + 1, w: 160, h: 20, text: st.label, color: '#3a463a', align: 'left' });
-          });
-          svgH = Math.max(svgH, ly + 26 + used.length * 30 + S.PAD / 2);
-          svgW = Math.max(svgW, S.PAD + 240);
-        }
-      }
-
       const arrowSvg = parts.arrows.map(a => {
         if (a.vertical || a.y1 === a.y2) {
           return '<line x1="' + a.x1 + '" y1="' + a.y1 + '" x2="' + a.x2 + '" y2="' + (a.y2 - 1) + '" stroke="' + EXP_ARROW_COLOR +
@@ -8785,10 +8745,6 @@
         return '<polyline points="' + a.x1 + ',' + a.y1 + ' ' + mx + ',' + a.y1 + ' ' + mx + ',' + a.y2 + ' ' + (a.x2 - 1) + ',' + a.y2 +
           '" fill="none" stroke="' + EXP_ARROW_COLOR + '" stroke-width="1.5" marker-end="url(#expArrow)"/>';
       });
-      const extraText = parts.levelTags.filter(t => t.align === 'left').map(t =>
-        '<text x="' + t.x + '" y="' + (t.y + t.h / 2 + 4) + '" fill="' + t.color + '" font-size="12"' +
-        (t.bold ? ' font-weight="700"' : '') + ' font-family="' + FF + '">' + escHtml(t.text) + '</text>');
-
       return {
         svg: '<?xml version="1.0" encoding="UTF-8"?>\n' +
           '<svg xmlns="http://www.w3.org/2000/svg" width="' + svgW + '" height="' + svgH + '"' +
@@ -8800,7 +8756,6 @@
           parts.rects.map(s => '  ' + s).join('\n') + '\n' +
           parts.texts.map(s => '  ' + s).join('\n') + '\n' +
           arrowSvg.map(s => '  ' + s).join('\n') + '\n' +
-          extraText.map(s => '  ' + s).join('\n') + '\n' +
           '</svg>',
         svgW, svgH,
         shapes: parts.shapes, levelTags: parts.levelTags, arrows: parts.arrows
@@ -8830,7 +8785,6 @@
     // Process data attached to an exported node, as [key, label, value]
     // (empty values skipped). Shared by the Visio and draw.io exporters.
     function exportDataRows(sh) {
-      if (sh.legend) return [];
       const rows = [
         ['Level', 'Level', 'L' + sh.level],
         ['Code', 'Code', sh.code],
@@ -8875,7 +8829,7 @@
       const w = sh.w / VSDX_DPI, h = sh.h / VSDX_DPI;
       const pinX = (sh.x + sh.w / 2) / VSDX_DPI;
       const pinY = (pageH - (sh.y + sh.h / 2)) / VSDX_DPI;
-      return '<Shape ID="' + id + '" NameU="' + (sh.legend ? 'Legend.' : 'Process.') + id + '" Name="' + vsdxEsc(sh.legend ? 'Legend ' + id : (sh.code ? sh.code + ' ' + (sh.name || sh.text) : sh.text)) +
+      return '<Shape ID="' + id + '" NameU="Process.' + id + '" Name="' + vsdxEsc(sh.code ? sh.code + ' ' + (sh.name || sh.text) : sh.text) +
         '" Type="Shape" LineStyle="0" FillStyle="0" TextStyle="0">' +
         '<Cell N="PinX" V="' + vsdxNum(pinX) + '"/><Cell N="PinY" V="' + vsdxNum(pinY) + '"/>' +
         '<Cell N="Width" V="' + vsdxNum(w) + '"/><Cell N="Height" V="' + vsdxNum(h) + '"/>' +
@@ -8884,7 +8838,7 @@
         '<Cell N="FillForegnd" V="' + sh.fill + '"/><Cell N="FillPattern" V="1"/>' +
         '<Cell N="LineColor" V="' + sh.stroke + '"/><Cell N="LinePattern" V="1"/>' +
         '<Cell N="LineWeight" V="' + vsdxNum(1.5 / VSDX_DPI) + '" U="PT"/>' +
-        '<Cell N="Rounding" V="' + vsdxIn(sh.kind === 'rect' ? 0 : sh.kind === 'pill' ? sh.h / 2 : SVG_LAYOUT.CORNER) + '" U="IN"/>' +
+        '<Cell N="Rounding" V="' + vsdxIn(SVG_LAYOUT.CORNER) + '" U="IN"/>' +
         '<Cell N="VerticalAlign" V="1"/>' +
         '<Cell N="LeftMargin" V="' + vsdxIn(10) + '" U="IN"/><Cell N="RightMargin" V="' + vsdxIn(10) + '" U="IN"/>' +
         '<Cell N="TopMargin" V="' + vsdxIn(4) + '" U="IN"/><Cell N="BottomMargin" V="' + vsdxIn(4) + '" U="IN"/>' +
@@ -8913,9 +8867,9 @@
         '<Cell N="FillPattern" V="0"/><Cell N="LinePattern" V="0"/><Cell N="VerticalAlign" V="1"/>' +
         vsdxTextCells(w, h) +
         '<Section N="Character"><Row IX="0"><Cell N="Color" V="' + tag.color + '"/>' +
-        '<Cell N="Size" V="' + vsdxIn(tag.align === 'left' ? 12 : 11) + '" U="PT"/>' +
-        '<Cell N="Style" V="' + (tag.align === 'left' && !tag.bold ? 0 : 1) + '"/></Row></Section>' +
-        '<Section N="Paragraph"><Row IX="0"><Cell N="HorzAlign" V="' + (tag.align === 'left' ? 0 : 2) + '"/></Row></Section>' +
+        '<Cell N="Size" V="' + vsdxIn(11) + '" U="PT"/>' +
+        '<Cell N="Style" V="1"/></Row></Section>' +
+        '<Section N="Paragraph"><Row IX="0"><Cell N="HorzAlign" V="2"/></Row></Section>' +
         '<Text>' + vsdxEsc(tag.text) + '</Text></Shape>';
     }
 
@@ -9083,14 +9037,12 @@
       const cells = [];
       let id = 2;
       (result.levelTags || []).forEach(t => {
-        const left = t.align === 'left';
-        cells.push('<mxCell id="n' + (id++) + '" value="' + label(t.text) + '" style="text;html=1;align=' + (left ? 'left' : 'right') + ';' +
-          'verticalAlign=middle;fontStyle=' + (left && !t.bold ? 0 : 1) + ';fontSize=' + (left ? 12 : 11) + ';fontColor=' + t.color + ';" vertex="1" parent="1">' +
+        cells.push('<mxCell id="n' + (id++) + '" value="' + label(t.text) + '" style="text;html=1;align=right;' +
+          'verticalAlign=middle;fontStyle=1;fontSize=11;fontColor=' + t.color + ';" vertex="1" parent="1">' +
           geo(t) + '</mxCell>');
       });
       (result.shapes || []).forEach((sh, i) => {
-        const shapeStyle = sh.kind === 'rect' ? 'rounded=0;'
-          : 'rounded=1;absoluteArcSize=1;arcSize=' + (sh.kind === 'pill' ? sh.h : SVG_LAYOUT.CORNER * 2) + ';';
+        const shapeStyle = 'rounded=1;absoluteArcSize=1;arcSize=' + (SVG_LAYOUT.CORNER * 2) + ';';
         const attrs = exportDataRows(sh)
           .filter(([k]) => k !== 'Name')
           .map(([k, , v]) => ' ' + k.replace(/[^A-Za-z0-9_]/g, '_') + '="' + vsdxEsc(String(v).trim()) + '"').join('');
