@@ -1139,6 +1139,22 @@
       border-radius: 6px; cursor: pointer; transition: background .12s;
     }
     .exp-level-row:hover { background: var(--bdr-xs); }
+    .exp-lv-main { display: flex; align-items: center; gap: .6rem; cursor: pointer; flex: 1; min-width: 0; }
+    .exp-lv-main input[type="checkbox"] { accent-color: var(--acc); width: 15px; height: 15px; cursor: pointer; }
+    .exp-lv-opts { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; }
+    .exp-lv-orient { display: inline-flex; border: 1px solid var(--bdr-s); border-radius: 6px; overflow: hidden; }
+    .exp-lv-orient button { background: none; border: none; padding: .15rem .5rem; font-size: .72rem;
+      color: var(--txt4); cursor: pointer; }
+    .exp-lv-orient button.active { background: var(--acc-10); color: var(--acc-t); font-weight: 600; }
+    .exp-lv-arrows { font-size: .76rem; color: var(--txt3); display: flex; align-items: center; gap: .25rem; cursor: pointer; }
+    .exp-lv-arrows input { accent-color: var(--acc); cursor: pointer; }
+    .exp-options { display: flex; flex-direction: column; gap: .5rem; }
+    .exp-opt-line { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; }
+    .exp-opt { display: flex; align-items: center; gap: .4rem; font-size: .85rem; color: var(--txt2); cursor: pointer; }
+    .exp-opt input[type="checkbox"] { accent-color: var(--acc); width: 15px; height: 15px; cursor: pointer; }
+    .exp-opt-input { font-size: .8rem; padding: .2rem .4rem; border-radius: 6px; border: 1px solid var(--bdr-s);
+      background: var(--surf); color: var(--txt2); }
+    .exp-opt-num { width: 4.2rem; }
     .exp-level-row input[type="checkbox"] { accent-color: var(--acc); width: 15px; height: 15px; cursor: pointer; }
     .exp-level-row .exp-lv-label { font-size: .75rem; font-weight: 700; color: var(--acc); min-width: 24px; }
     .exp-level-row .exp-lv-name  { font-size: .85rem; color: var(--txt2); }
@@ -2816,6 +2832,20 @@
       <div class="exp-section">
         <div class="exp-label">Levels to include</div>
         <div id="expLevelChecks" class="exp-level-checks"></div>
+      </div>
+      <div class="exp-section">
+        <div class="exp-label">Options</div>
+        <div class="exp-options">
+          <div class="exp-opt-line">
+            <label class="exp-opt"><input type="checkbox" id="expShowCodes"> Show codes</label>
+            <select id="expCodeMode" class="exp-opt-input" title="Where codes come from">
+              <option value="auto">Number from structure</option>
+              <option value="data">Use codes from CSV (number missing ones)</option>
+            </select>
+            <label class="exp-opt">Start at <input type="number" id="expCodeStart" class="exp-opt-input exp-opt-num" min="0" value="1"></label>
+          </div>
+          <label class="exp-opt"><input type="checkbox" id="expTypeShapes"> Shape by activity type (human / system / meeting) + legend</label>
+        </div>
       </div>
       <div class="exp-section">
         <div class="exp-label">Format</div>
@@ -8194,17 +8224,19 @@
       const startAbsLevel = levelOffset + expPath.length;
       const maxAbs = 4;   // absolute L4 is always the ceiling
       for (let abs = startAbsLevel; abs <= maxAbs; abs++) {
-        const row = document.createElement('label');
+        const row = document.createElement('div');
         row.className = 'exp-level-row';
+        const main = document.createElement('label');
+        main.className = 'exp-lv-main';
         const cb = document.createElement('input');
         cb.type = 'checkbox'; cb.checked = true; cb.dataset.abs = abs;
         cb.addEventListener('change', () => {
           if (!cb.checked) {
-            expLvlChecks.querySelectorAll('input[type=checkbox]').forEach(c => {
+            expLvlChecks.querySelectorAll('input[type=checkbox][data-abs]').forEach(c => {
               if (parseInt(c.dataset.abs) > abs) c.checked = false;
             });
           } else {
-            expLvlChecks.querySelectorAll('input[type=checkbox]').forEach(c => {
+            expLvlChecks.querySelectorAll('input[type=checkbox][data-abs]').forEach(c => {
               if (parseInt(c.dataset.abs) < abs) c.checked = true;
             });
           }
@@ -8217,9 +8249,62 @@
         nameSpan.textContent = abs === startAbsLevel
           ? (expPath.length ? expPath[expPath.length - 1] : 'All processes')
           : '';
-        row.appendChild(cb); row.appendChild(lvlSpan); row.appendChild(nameSpan);
+        main.appendChild(cb); main.appendChild(lvlSpan); main.appendChild(nameSpan);
+        row.appendChild(main);
+
+        // Per-level layout options: orientation and flow arrows between siblings
+        const optsEl = document.createElement('span');
+        optsEl.className = 'exp-lv-opts';
+        const orient = document.createElement('span');
+        orient.className = 'exp-lv-orient';
+        [['h', 'Horizontal'], ['v', 'Vertical']].forEach(([v, t]) => {
+          const b = document.createElement('button');
+          b.type = 'button'; b.textContent = v === 'h' ? '⇆ H' : '⇅ V'; b.title = t + ' layout for L' + abs;
+          b.dataset.abs = abs; b.dataset.orient = v;
+          if (v === 'h') b.classList.add('active');
+          b.addEventListener('click', () => {
+            orient.querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+          });
+          orient.appendChild(b);
+        });
+        const arrLbl = document.createElement('label');
+        arrLbl.className = 'exp-lv-arrows';
+        arrLbl.title = 'Arrows between consecutive shapes on L' + abs;
+        const arrCb = document.createElement('input');
+        arrCb.type = 'checkbox'; arrCb.dataset.arrowAbs = abs;
+        arrLbl.appendChild(arrCb); arrLbl.appendChild(document.createTextNode(' Arrows'));
+        optsEl.appendChild(orient); optsEl.appendChild(arrLbl);
+        row.appendChild(optsEl);
         expLvlChecks.appendChild(row);
       }
+      // Default code start number = first segment of the first exported node's code
+      const rootNodes = expPath.length ? getNodesAtPath(expPath.slice(0, -1)) : tree;
+      const firstKey  = expPath.length ? expPath[expPath.length - 1] : Object.keys(tree)[0];
+      const firstCode = firstKey && rootNodes[firstKey] ? String(rootNodes[firstKey]._code || '') : '';
+      const firstNum  = parseInt(firstCode.split('.').pop(), 10);
+      $('expCodeStart').value = Number.isFinite(firstNum) ? firstNum : 1;
+    }
+
+    function getExportOptions() {
+      const orientations = {};
+      expLvlChecks.querySelectorAll('.exp-lv-orient button.active').forEach(b => {
+        orientations[parseInt(b.dataset.abs)] = b.dataset.orient;
+      });
+      const arrowLevels = [];
+      expLvlChecks.querySelectorAll('input[data-arrow-abs]').forEach(c => {
+        if (c.checked) arrowLevels.push(parseInt(c.dataset.arrowAbs));
+      });
+      const start = parseInt($('expCodeStart').value, 10);
+      return {
+        orientations,
+        opts: {
+          arrowLevels,
+          showCodes: $('expShowCodes').checked,
+          codeMode: $('expCodeMode').value,
+          codeStart: Number.isFinite(start) ? start : 1,
+          typeShapes: $('expTypeShapes').checked,
+        },
+      };
     }
 
     function openExportModal() {
@@ -8239,11 +8324,12 @@
 
     $('btnExpGo').addEventListener('click', () => {
       let maxCheckedAbs = levelOffset + expPath.length;
-      expLvlChecks.querySelectorAll('input[type=checkbox]').forEach(c => {
+      expLvlChecks.querySelectorAll('input[type=checkbox][data-abs]').forEach(c => {
         if (c.checked) maxCheckedAbs = Math.max(maxCheckedAbs, parseInt(c.dataset.abs));
       });
       exportModal.classList.add('hidden');
-      exportSVG(expPath, maxCheckedAbs);
+      const { orientations, opts } = getExportOptions();
+      exportSVG(expPath, maxCheckedAbs, orientations, opts);
     });
 
     // ── SVG EXPORT ─────────────────────────────────────────────────────────
@@ -8263,7 +8349,24 @@
       };
     }
 
-    function buildSvgString(exportPath, maxAbsLevel, leafHorizontalOrOrientations) {
+    // Activity-type styling for the export (option "Shape by activity type").
+    // 'rounded' keeps the level colours; the others get their own colours.
+    const EXP_TYPE_STYLES = [
+      { key: 'system',  label: 'System activity', kind: 'rect', fill: '#DCEAF7', stroke: '#4F81BD', color: '#1F3B57' },
+      { key: 'meeting', label: 'Meeting',         kind: 'pill', fill: '#FBEBC8', stroke: '#C9962B', color: '#4A3510' },
+      { key: 'human',   label: 'Human activity',  kind: 'rounded' },
+    ];
+    function expTypeStyle(type) {
+      const t = String(type || '').toLowerCase();
+      return t ? EXP_TYPE_STYLES.find(st => t.includes(st.key)) || null : null;
+    }
+    const EXP_ARROW_COLOR = '#5f6f5f';
+
+    // opts (all optional): { arrowLevels: [abs,...], showCodes, codeMode: 'auto'|'data',
+    //                        codeStart: number, typeShapes }
+    function buildSvgString(exportPath, maxAbsLevel, leafHorizontalOrOrientations, opts) {
+      opts = opts || {};
+      const arrowLevels = new Set(opts.arrowLevels || []);
       const usePath   = exportPath  !== undefined ? exportPath  : [...currentPath];
       const useMaxAbs = maxAbsLevel !== undefined ? maxAbsLevel : 5;
 
@@ -8282,7 +8385,7 @@
         let cur = tree;
         for (let j = 0; j < i; j++) cur = cur[usePath[j]]._children;
         const nodeObj = cur[usePath[i]];
-        subtree = { [usePath[i]]: { _children: subtree, _meta: nodeObj._meta, _desc: nodeObj._desc } };
+        subtree = { [usePath[i]]: { _children: subtree, _meta: nodeObj._meta, _desc: nodeObj._desc, _code: nodeObj._code } };
       }
       if (!Object.keys(subtree).length) return null;
       const S = SVG_LAYOUT;
@@ -8342,42 +8445,69 @@
         }
       }
 
-      const parts = { rects: [], texts: [], labels: [], shapes: [], levelTags: [] };
+      const parts = { rects: [], texts: [], labels: [], shapes: [], levelTags: [], arrows: [] };
       let svgW = 0, svgH = 0;
       const labeledLevels = new Set();
       const FF = "-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif";
 
-      function drawNode(nodeX, nodeY, nodeW, nodeH, cx, key, absLevel, nodeObj) {
+      // Pushes the shape model (used by every exporter) and its SVG; returns its index.
+      function drawNode(nodeX, nodeY, nodeW, nodeH, cx, key, absLevel, nodeObj, code) {
         const ci = Math.min(absLevel, EXP_FILLS.length - 1);
-        // Structured copy of the node for non-SVG exporters (e.g. Visio .vsdx)
-        parts.shapes.push({ x: nodeX, y: nodeY, w: nodeW, h: nodeH, text: key, level: absLevel,
-          fill: EXP_FILLS[ci], stroke: EXP_STROKES[ci], color: EXP_TEXTS[ci],
-          code: (nodeObj && nodeObj._code) || '', desc: (nodeObj && nodeObj._desc) || '',
-          meta: (nodeObj && nodeObj._meta) || null });
+        const ts = opts.typeShapes && nodeObj && nodeObj._meta ? expTypeStyle(nodeObj._meta.Type) : null;
+        const sh = { x: nodeX, y: nodeY, w: nodeW, h: nodeH, name: key, level: absLevel,
+          text: (opts.showCodes && code) ? code + ' ' + key : key,
+          kind: ts ? ts.kind : 'rounded',
+          fill: (ts && ts.fill) || EXP_FILLS[ci], stroke: (ts && ts.stroke) || EXP_STROKES[ci],
+          color: (ts && ts.color) || EXP_TEXTS[ci],
+          code: code || '', desc: (nodeObj && nodeObj._desc) || '',
+          meta: (nodeObj && nodeObj._meta) || null };
+        if (ts) sh.typeKey = ts.key;
         svgW = Math.max(svgW, nodeX + nodeW + S.PAD);
         svgH = Math.max(svgH, nodeY + nodeH + S.PAD);
+        return pushShape(sh);
+      }
+
+      function shapeRadius(sh) {
+        return sh.kind === 'rect' ? 0 : sh.kind === 'pill' ? sh.h / 2 : S.CORNER;
+      }
+      function pushShape(sh) {
+        parts.shapes.push(sh);
+        const r = shapeRadius(sh);
         parts.rects.push(
-          '<rect x="' + nodeX + '" y="' + nodeY + '" width="' + nodeW + '" height="' + nodeH +
-          '" rx="' + S.CORNER + '" ry="' + S.CORNER +
-          '" fill="' + EXP_FILLS[ci] + '" stroke="' + EXP_STROKES[ci] + '" stroke-width="1.5"/>'
+          '<rect x="' + sh.x + '" y="' + sh.y + '" width="' + sh.w + '" height="' + sh.h +
+          '" rx="' + r + '" ry="' + r +
+          '" fill="' + sh.fill + '" stroke="' + sh.stroke + '" stroke-width="1.5"/>'
         );
-        const textColor = EXP_TEXTS[ci];
-        const lines = wrapText(key, nodeW - 20, S.FONT);
-        const lh = S.FONT * 1.4;
-        const textStartY = nodeY + nodeH / 2 - (lines.length * lh) / 2 + S.FONT;
-        lines.forEach((ln, li) => {
-          parts.texts.push(
-            '<text x="' + cx + '" y="' + (textStartY + li * lh) + '" text-anchor="middle"' +
-            ' fill="' + textColor + '" font-size="' + S.FONT + '" font-family="' + FF + '">' +
-            escHtml(ln) + '</text>'
-          );
-        });
+        if (sh.text) {
+          const fs = sh.fontSize || S.FONT;
+          const lines = wrapText(sh.text, sh.w - 20, fs);
+          const lh = fs * 1.4;
+          const textStartY = sh.y + sh.h / 2 - (lines.length * lh) / 2 + fs;
+          lines.forEach((ln, li) => {
+            parts.texts.push(
+              '<text x="' + (sh.x + sh.w / 2) + '" y="' + (textStartY + li * lh) + '" text-anchor="middle"' +
+              ' fill="' + sh.color + '" font-size="' + fs + '" font-family="' + FF + '">' +
+              escHtml(ln) + '</text>'
+            );
+          });
+        }
+        return parts.shapes.length - 1;
+      }
+
+      // Generated code for the i-th sibling under parentCode (data code wins in 'data' mode)
+      function codeFor(nodeObj, parentCode, i) {
+        const dataCode = nodeObj && nodeObj._code ? String(nodeObj._code) : '';
+        if (!opts.showCodes) return dataCode;
+        if (opts.codeMode === 'data' && dataCode) return dataCode;
+        const start = Number.isFinite(opts.codeStart) ? opts.codeStart : 1;
+        return parentCode ? parentCode + '.' + (i + 1) : String(start + i);
       }
 
       // renderLevel: positions items at absolute (xBase+item.x, yBase+item.y)
-      function renderLevel(items, depth, xBase, yBase) {
+      function renderLevel(items, depth, xBase, yBase, parentCode) {
         const absLevelBase = exportRootAbsDepth + depth;
-        items.forEach(item => {
+        const placed = [];
+        items.forEach((item, idx) => {
           const absX  = xBase + item.x;
           const absY  = yBase + item.y;
           const nodeW = item.subtreeW;   // fill the full allocated width
@@ -8399,40 +8529,92 @@
             );
           }
 
-          drawNode(nodeX, nodeY, nodeW, nodeH, cx, item.key, absLevelBase, item.nodeObj);
+          const code = codeFor(item.nodeObj, parentCode, idx);
+          const shapeIdx = drawNode(nodeX, nodeY, nodeW, nodeH, cx, item.key, absLevelBase, item.nodeObj, code);
+          placed.push({ shapeIdx, x: nodeX, y: nodeY, w: nodeW, subtreeH: item.subtreeH,
+                        hasKids: item.child.items.length > 0 });
 
           if (item.child.items.length > 0) {
             // Children start at the same x as the parent — they already fill that space
             const childXBase = absX;
             const childYBase = absY + S.NH + S.VGAP;
-            renderLevel(item.child.items, depth + 1, childXBase, childYBase);
+            renderLevel(item.child.items, depth + 1, childXBase, childYBase, code);
           }
         });
+
+        // Flow arrows between consecutive siblings at this level
+        if (arrowLevels.has(absLevelBase)) {
+          const vertical = isVertical(depth);
+          for (let k = 0; k + 1 < placed.length; k++) {
+            const a = placed[k], b = placed[k + 1];
+            const ar = vertical
+              ? { x1: a.x + a.w / 2, y1: a.y + (a.hasKids ? a.subtreeH : S.NH), x2: b.x + b.w / 2, y2: b.y }
+              : { x1: a.x + a.w, y1: a.y + S.NH / 2, x2: b.x, y2: b.y + S.NH / 2 };
+            ar.from = a.shapeIdx; ar.to = b.shapeIdx; ar.vertical = vertical; ar.fromHasKids = a.hasKids;
+            parts.arrows.push(ar);
+          }
+        }
       }
 
       const measured = measure(subtree, 0);
       svgW = measured.totalW + S.PAD * 2;
       svgH = measured.totalH + S.PAD * 2;
-      renderLevel(measured.items, 0, S.PAD, S.PAD);
+      renderLevel(measured.items, 0, S.PAD, S.PAD, '');
+
+      // Legend for activity types actually used
+      if (opts.typeShapes) {
+        const used = EXP_TYPE_STYLES.filter(st => parts.shapes.some(sh => sh.typeKey === st.key));
+        if (used.length) {
+          const ly = measured.totalH + S.PAD + 24;
+          parts.levelTags.push({ x: S.PAD, y: ly, w: 120, h: 20, text: 'Legend', color: '#3a463a', align: 'left', bold: true });
+          used.forEach((st, i) => {
+            const y = ly + 26 + i * 30;
+            const human = parts.shapes.find(sh => sh.typeKey === 'human');
+            pushShape({ x: S.PAD, y, w: 44, h: 22, kind: st.kind, legend: true, text: '',
+              fill: st.fill || (human ? human.fill : EXP_FILLS[4]),
+              stroke: st.stroke || (human ? human.stroke : EXP_STROKES[4]), color: '#000000' });
+            parts.levelTags.push({ x: S.PAD + 54, y: y + 1, w: 160, h: 20, text: st.label, color: '#3a463a', align: 'left' });
+          });
+          svgH = Math.max(svgH, ly + 26 + used.length * 30 + S.PAD / 2);
+          svgW = Math.max(svgW, S.PAD + 240);
+        }
+      }
+
+      const arrowSvg = parts.arrows.map(a => {
+        if (a.vertical || a.y1 === a.y2) {
+          return '<line x1="' + a.x1 + '" y1="' + a.y1 + '" x2="' + a.x2 + '" y2="' + (a.y2 - 1) + '" stroke="' + EXP_ARROW_COLOR +
+            '" stroke-width="1.5" marker-end="url(#expArrow)"/>';
+        }
+        const mx = (a.x1 + a.x2) / 2;
+        return '<polyline points="' + a.x1 + ',' + a.y1 + ' ' + mx + ',' + a.y1 + ' ' + mx + ',' + a.y2 + ' ' + (a.x2 - 1) + ',' + a.y2 +
+          '" fill="none" stroke="' + EXP_ARROW_COLOR + '" stroke-width="1.5" marker-end="url(#expArrow)"/>';
+      });
+      const extraText = parts.levelTags.filter(t => t.align === 'left').map(t =>
+        '<text x="' + t.x + '" y="' + (t.y + t.h / 2 + 4) + '" fill="' + t.color + '" font-size="12"' +
+        (t.bold ? ' font-weight="700"' : '') + ' font-family="' + FF + '">' + escHtml(t.text) + '</text>');
 
       return {
         svg: '<?xml version="1.0" encoding="UTF-8"?>\n' +
           '<svg xmlns="http://www.w3.org/2000/svg" width="' + svgW + '" height="' + svgH + '"' +
           ' viewBox="0 0 ' + svgW + ' ' + svgH + '">\n' +
           '  <rect width="' + svgW + '" height="' + svgH + '" fill="none"/>\n' +
+          (arrowSvg.length ? '  <defs><marker id="expArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"' +
+            ' orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="' + EXP_ARROW_COLOR + '"/></marker></defs>\n' : '') +
           parts.labels.map(s => '  ' + s).join('\n') + '\n' +
           parts.rects.map(s => '  ' + s).join('\n') + '\n' +
           parts.texts.map(s => '  ' + s).join('\n') + '\n' +
+          arrowSvg.map(s => '  ' + s).join('\n') + '\n' +
+          extraText.map(s => '  ' + s).join('\n') + '\n' +
           '</svg>',
         svgW, svgH,
-        shapes: parts.shapes, levelTags: parts.levelTags
+        shapes: parts.shapes, levelTags: parts.levelTags, arrows: parts.arrows
       };
     }
 
-    function exportSVG(exportPath, maxAbsLevel) {
+    function exportSVG(exportPath, maxAbsLevel, orientations, opts) {
       const usePath   = exportPath !== undefined ? exportPath : [...currentPath];
       const useMaxAbs = maxAbsLevel !== undefined ? maxAbsLevel : 5;
-      const result    = buildSvgString(usePath, useMaxAbs);
+      const result    = buildSvgString(usePath, useMaxAbs, orientations, opts);
       if (!result) return;
       const { svg, svgW, svgH } = result;
 
@@ -8489,10 +8671,11 @@
     // Process data attached to an exported node, as [key, label, value]
     // (empty values skipped). Shared by the Visio and draw.io exporters.
     function exportDataRows(sh) {
+      if (sh.legend) return [];
       const rows = [
         ['Level', 'Level', 'L' + sh.level],
         ['Code', 'Code', sh.code],
-        ['Name', 'Name', sh.text],
+        ['Name', 'Name', sh.name || sh.text],
         ['Description', 'Description', sh.desc],
       ];
       const m = sh.meta;
@@ -8533,7 +8716,7 @@
       const w = sh.w / VSDX_DPI, h = sh.h / VSDX_DPI;
       const pinX = (sh.x + sh.w / 2) / VSDX_DPI;
       const pinY = (pageH - (sh.y + sh.h / 2)) / VSDX_DPI;
-      return '<Shape ID="' + id + '" NameU="Process.' + id + '" Name="' + vsdxEsc(sh.code ? sh.code + ' ' + sh.text : sh.text) +
+      return '<Shape ID="' + id + '" NameU="' + (sh.legend ? 'Legend.' : 'Process.') + id + '" Name="' + vsdxEsc(sh.legend ? 'Legend ' + id : (sh.code ? sh.code + ' ' + (sh.name || sh.text) : sh.text)) +
         '" Type="Shape" LineStyle="0" FillStyle="0" TextStyle="0">' +
         '<Cell N="PinX" V="' + vsdxNum(pinX) + '"/><Cell N="PinY" V="' + vsdxNum(pinY) + '"/>' +
         '<Cell N="Width" V="' + vsdxNum(w) + '"/><Cell N="Height" V="' + vsdxNum(h) + '"/>' +
@@ -8542,7 +8725,7 @@
         '<Cell N="FillForegnd" V="' + sh.fill + '"/><Cell N="FillPattern" V="1"/>' +
         '<Cell N="LineColor" V="' + sh.stroke + '"/><Cell N="LinePattern" V="1"/>' +
         '<Cell N="LineWeight" V="' + vsdxNum(1.5 / VSDX_DPI) + '" U="PT"/>' +
-        '<Cell N="Rounding" V="' + vsdxIn(SVG_LAYOUT.CORNER) + '" U="IN"/>' +
+        '<Cell N="Rounding" V="' + vsdxIn(sh.kind === 'rect' ? 0 : sh.kind === 'pill' ? sh.h / 2 : SVG_LAYOUT.CORNER) + '" U="IN"/>' +
         '<Cell N="VerticalAlign" V="1"/>' +
         '<Cell N="LeftMargin" V="' + vsdxIn(10) + '" U="IN"/><Cell N="RightMargin" V="' + vsdxIn(10) + '" U="IN"/>' +
         '<Cell N="TopMargin" V="' + vsdxIn(4) + '" U="IN"/><Cell N="BottomMargin" V="' + vsdxIn(4) + '" U="IN"/>' +
@@ -8557,7 +8740,7 @@
         '<Row T="RelLineTo" IX="3"><Cell N="X" V="1"/><Cell N="Y" V="1"/></Row>' +
         '<Row T="RelLineTo" IX="4"><Cell N="X" V="0"/><Cell N="Y" V="1"/></Row>' +
         '<Row T="RelLineTo" IX="5"><Cell N="X" V="0"/><Cell N="Y" V="0"/></Row></Section>' +
-        '<Text>' + vsdxEsc(sh.text) + '</Text></Shape>';
+        (sh.text ? '<Text>' + vsdxEsc(sh.text) + '</Text>' : '') + '</Shape>';
     }
 
     function vsdxLabelXml(id, tag, pageH) {
@@ -8571,9 +8754,39 @@
         '<Cell N="FillPattern" V="0"/><Cell N="LinePattern" V="0"/><Cell N="VerticalAlign" V="1"/>' +
         vsdxTextCells(w, h) +
         '<Section N="Character"><Row IX="0"><Cell N="Color" V="' + tag.color + '"/>' +
-        '<Cell N="Size" V="' + vsdxIn(11) + '" U="PT"/><Cell N="Style" V="1"/></Row></Section>' +
-        '<Section N="Paragraph"><Row IX="0"><Cell N="HorzAlign" V="2"/></Row></Section>' +
+        '<Cell N="Size" V="' + vsdxIn(tag.align === 'left' ? 12 : 11) + '" U="PT"/>' +
+        '<Cell N="Style" V="' + (tag.align === 'left' && !tag.bold ? 0 : 1) + '"/></Row></Section>' +
+        '<Section N="Paragraph"><Row IX="0"><Cell N="HorzAlign" V="' + (tag.align === 'left' ? 0 : 2) + '"/></Row></Section>' +
         '<Text>' + vsdxEsc(tag.text) + '</Text></Shape>';
+    }
+
+    // 1-D dynamic connector from shape `fromId` to `toId` with an arrow head.
+    function vsdxConnectorXml(id, a, fromId, toId, pageH) {
+      const bx = a.x1 / VSDX_DPI, by = (pageH - a.y1) / VSDX_DPI;
+      const ex = a.x2 / VSDX_DPI, ey = (pageH - a.y2) / VSDX_DPI;
+      const w = ex - bx, h = ey - by;
+      return '<Shape ID="' + id + '" NameU="Dynamic connector.' + id + '" Name="Dynamic connector" Type="Shape" LineStyle="0" FillStyle="0" TextStyle="0">' +
+        '<Cell N="PinX" V="' + vsdxNum((bx + ex) / 2) + '" F="GUARD((BeginX+EndX)/2)"/>' +
+        '<Cell N="PinY" V="' + vsdxNum((by + ey) / 2) + '" F="GUARD((BeginY+EndY)/2)"/>' +
+        '<Cell N="Width" V="' + vsdxNum(w) + '" F="GUARD(EndX-BeginX)"/>' +
+        '<Cell N="Height" V="' + vsdxNum(h) + '" F="GUARD(EndY-BeginY)"/>' +
+        '<Cell N="LocPinX" V="' + vsdxNum(w / 2) + '" F="GUARD(Width*0.5)"/>' +
+        '<Cell N="LocPinY" V="' + vsdxNum(h / 2) + '" F="GUARD(Height*0.5)"/>' +
+        '<Cell N="BeginX" V="' + vsdxNum(bx) + '" F="_WALKGLUE(BegTrigger,EndTrigger,WalkPreference)"/>' +
+        '<Cell N="BeginY" V="' + vsdxNum(by) + '" F="_WALKGLUE(BegTrigger,EndTrigger,WalkPreference)"/>' +
+        '<Cell N="EndX" V="' + vsdxNum(ex) + '" F="_WALKGLUE(EndTrigger,BegTrigger,WalkPreference)"/>' +
+        '<Cell N="EndY" V="' + vsdxNum(ey) + '" F="_WALKGLUE(EndTrigger,BegTrigger,WalkPreference)"/>' +
+        '<Cell N="BegTrigger" V="2" F="_XFTRIGGER(Sheet.' + fromId + '!EventXFMod)"/>' +
+        '<Cell N="EndTrigger" V="2" F="_XFTRIGGER(Sheet.' + toId + '!EventXFMod)"/>' +
+        '<Cell N="ObjType" V="2"/><Cell N="ShapeRouteStyle" V="' + (a.vertical ? 2 : 1) + '"/>' +
+        '<Cell N="LineColor" V="' + EXP_ARROW_COLOR + '"/><Cell N="LinePattern" V="1"/>' +
+        '<Cell N="LineWeight" V="' + vsdxNum(1.5 / VSDX_DPI) + '" U="PT"/>' +
+        '<Cell N="EndArrow" V="4"/><Cell N="EndArrowSize" V="1"/><Cell N="BeginArrow" V="0"/>' +
+        '<Cell N="FillPattern" V="0"/>' +
+        '<Section N="Geometry" IX="0"><Cell N="NoFill" V="1"/><Cell N="NoLine" V="0"/><Cell N="NoShow" V="0"/><Cell N="NoSnap" V="0"/>' +
+        '<Row T="MoveTo" IX="1"><Cell N="X" V="0"/><Cell N="Y" V="0"/></Row>' +
+        '<Row T="LineTo" IX="2"><Cell N="X" V="' + vsdxNum(w) + '" F="Width"/><Cell N="Y" V="' + vsdxNum(h) + '" F="Height"/></Row>' +
+        '</Section></Shape>';
     }
 
     function vsdxDocumentXml() {
@@ -8614,8 +8827,18 @@
       const pageH = result.svgH;
       const name  = vsdxEsc(String(pageName || 'Process').slice(0, 31));
       let id = 1;
+      const shapeIds = [];
       const shapeXml = (result.levelTags || []).map(t => vsdxLabelXml(id++, t, pageH))
-        .concat((result.shapes || []).map(sh => vsdxShapeXml(id++, sh, pageH))).join('');
+        .concat((result.shapes || []).map((sh, i) => { shapeIds[i] = id; return vsdxShapeXml(id++, sh, pageH); }))
+        .concat((result.arrows || []).map(a => vsdxConnectorXml(id++, a, shapeIds[a.from], shapeIds[a.to], pageH)))
+        .join('');
+      // Glue connectors to their shapes so they follow when shapes are moved
+      let cid = id - (result.arrows || []).length;
+      const connects = (result.arrows || []).map(a => {
+        const c = cid++;
+        return '<Connect FromSheet="' + c + '" FromCell="BeginX" FromPart="9" ToSheet="' + shapeIds[a.from] + '" ToCell="PinX" ToPart="3"/>' +
+               '<Connect FromSheet="' + c + '" FromCell="EndX" FromPart="12" ToSheet="' + shapeIds[a.to] + '" ToCell="PinX" ToPart="3"/>';
+      }).join('');
 
       const xmlHead = '<?xml version="1.0" encoding="utf-8" standalone="yes"?>\n';
       const pageW = vsdxIn(result.svgW), pageHIn = vsdxIn(result.svgH);
@@ -8683,7 +8906,7 @@
           '</PageSheet><Rel r:id="rId1"/></Page></Pages>'],
         ['visio/pages/page1.xml', xmlHead +
           '<PageContents xmlns="' + VSDX_NS + '" xmlns:r="' + VSDX_RNS + '" xml:space="preserve">' +
-          '<Shapes>' + shapeXml + '</Shapes></PageContents>'],
+          '<Shapes>' + shapeXml + '</Shapes>' + (connects ? '<Connects>' + connects + '</Connects>' : '') + '</PageContents>'],
       ];
       return new Blob([zipStore(files)], { type: 'application/vnd.ms-visio.drawing' });
     }
@@ -8701,18 +8924,30 @@
       const cells = [];
       let id = 2;
       (result.levelTags || []).forEach(t => {
-        cells.push('<mxCell id="n' + (id++) + '" value="' + label(t.text) + '" style="text;html=1;align=right;' +
-          'verticalAlign=middle;fontStyle=1;fontSize=11;fontColor=' + t.color + ';" vertex="1" parent="1">' +
+        const left = t.align === 'left';
+        cells.push('<mxCell id="n' + (id++) + '" value="' + label(t.text) + '" style="text;html=1;align=' + (left ? 'left' : 'right') + ';' +
+          'verticalAlign=middle;fontStyle=' + (left && !t.bold ? 0 : 1) + ';fontSize=' + (left ? 12 : 11) + ';fontColor=' + t.color + ';" vertex="1" parent="1">' +
           geo(t) + '</mxCell>');
       });
-      (result.shapes || []).forEach(sh => {
+      (result.shapes || []).forEach((sh, i) => {
+        const shapeStyle = sh.kind === 'rect' ? 'rounded=0;'
+          : 'rounded=1;absoluteArcSize=1;arcSize=' + (sh.kind === 'pill' ? sh.h : SVG_LAYOUT.CORNER * 2) + ';';
         const attrs = exportDataRows(sh)
           .filter(([k]) => k !== 'Name')
           .map(([k, , v]) => ' ' + k.replace(/[^A-Za-z0-9_]/g, '_') + '="' + vsdxEsc(String(v).trim()) + '"').join('');
-        cells.push('<object id="n' + (id++) + '" label="' + label(sh.text) + '"' + attrs + '>' +
-          '<mxCell style="rounded=1;absoluteArcSize=1;arcSize=' + (SVG_LAYOUT.CORNER * 2) + ';whiteSpace=wrap;html=1;' +
+        cells.push('<object id="s' + i + '" label="' + label(sh.text) + '"' + attrs + '>' +
+          '<mxCell style="' + shapeStyle + 'whiteSpace=wrap;html=1;' +
           'fillColor=' + sh.fill + ';strokeColor=' + sh.stroke + ';strokeWidth=1.5;fontColor=' + sh.color +
           ';fontSize=' + SVG_LAYOUT.FONT + ';spacing=10;" vertex="1" parent="1">' + geo(sh) + '</mxCell></object>');
+      });
+      (result.arrows || []).forEach((a, i) => {
+        // Vertical arrow from a block with children goes round the left side
+        const ports = !a.vertical ? 'exitX=1;exitY=0.5;entryX=0;entryY=0.5;'
+          : a.fromHasKids ? 'exitX=0;exitY=0.5;entryX=0;entryY=0.5;'
+          : 'exitX=0.5;exitY=1;entryX=0.5;entryY=0;';
+        cells.push('<mxCell id="e' + i + '" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;' +
+          ports + 'strokeColor=' + EXP_ARROW_COLOR + ';strokeWidth=1.5;" edge="1" parent="1" source="s' + a.from +
+          '" target="s' + a.to + '"><mxGeometry relative="1" as="geometry"/></mxCell>');
       });
       const name = vsdxEsc(pageName || 'Process');
       return '<mxfile host="Nexus" type="device">\n' +
