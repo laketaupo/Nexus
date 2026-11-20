@@ -2813,6 +2813,7 @@
         <div class="exp-format-opts">
           <label class="exp-format-opt"><input type="radio" name="expFmt" value="svg" checked> SVG</label>
           <label class="exp-format-opt"><input type="radio" name="expFmt" value="jpeg"> JPEG &middot; 300 PPI</label>
+          <label class="exp-format-opt"><input type="radio" name="expFmt" value="vsdx"> Visio (.vsdx)</label>
         </div>
       </div>
       <div class="exp-actions">
@@ -8316,13 +8317,18 @@
         }
       }
 
-      const parts = { rects: [], texts: [], labels: [] };
+      const parts = { rects: [], texts: [], labels: [], shapes: [], levelTags: [] };
       let svgW = 0, svgH = 0;
       const labeledLevels = new Set();
       const FF = "-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif";
 
-      function drawNode(nodeX, nodeY, nodeW, nodeH, cx, key, absLevel) {
+      function drawNode(nodeX, nodeY, nodeW, nodeH, cx, key, absLevel, nodeObj) {
         const ci = Math.min(absLevel, EXP_FILLS.length - 1);
+        // Structured copy of the node for non-SVG exporters (e.g. Visio .vsdx)
+        parts.shapes.push({ x: nodeX, y: nodeY, w: nodeW, h: nodeH, text: key, level: absLevel,
+          fill: EXP_FILLS[ci], stroke: EXP_STROKES[ci], color: EXP_TEXTS[ci],
+          code: (nodeObj && nodeObj._code) || '', desc: (nodeObj && nodeObj._desc) || '',
+          meta: (nodeObj && nodeObj._meta) || null });
         svgW = Math.max(svgW, nodeX + nodeW + S.PAD);
         svgH = Math.max(svgH, nodeY + nodeH + S.PAD);
         parts.rects.push(
@@ -8358,6 +8364,8 @@
           if (!labeledLevels.has(depth)) {
             labeledLevels.add(depth);
             const ci = Math.min(absLevelBase, EXP_FILLS.length - 1);
+            parts.levelTags.push({ x: S.PAD - 50, y: nodeY + nodeH / 2 - 10, w: 40, h: 20,
+              text: 'L' + absLevelBase, color: EXP_FILLS[ci] });
             parts.labels.push(
               '<text x="' + (S.PAD - 10) + '" y="' + (nodeY + nodeH / 2 + 4) + '" text-anchor="end"' +
               ' fill="' + EXP_FILLS[ci] + '"' +
@@ -8366,7 +8374,7 @@
             );
           }
 
-          drawNode(nodeX, nodeY, nodeW, nodeH, cx, item.key, absLevelBase);
+          drawNode(nodeX, nodeY, nodeW, nodeH, cx, item.key, absLevelBase, item.nodeObj);
 
           if (item.child.items.length > 0) {
             // Children start at the same x as the parent — they already fill that space
@@ -8391,7 +8399,8 @@
           parts.rects.map(s => '  ' + s).join('\n') + '\n' +
           parts.texts.map(s => '  ' + s).join('\n') + '\n' +
           '</svg>',
-        svgW, svgH
+        svgW, svgH,
+        shapes: parts.shapes, levelTags: parts.levelTags
       };
     }
 
@@ -8410,6 +8419,14 @@
 
       if (fmt === 'jpeg') {
         downloadJPEG(svg, svgW, svgH, fileBase + '.jpg');
+      } else if (fmt === 'vsdx') {
+        const blob = buildVsdxBlob(result, label);
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url; a.download = fileBase + '.vsdx';
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a); URL.revokeObjectURL(url);
+        showExportToast('Exported Visio file');
       } else {
         const blob = new Blob([svg], { type:'image/svg+xml' });
         const url  = URL.createObjectURL(blob);
@@ -8419,6 +8436,274 @@
         document.body.removeChild(a); URL.revokeObjectURL(url);
         showExportToast('Exported SVG');
       }
+    }
+
+    // ── VISIO (.VSDX) EXPORT ──────────────────────────────────────────────────
+    // Builds a native Visio file from the layout produced by buildSvgString().
+    // Every node becomes an editable Visio shape (same position, colours and
+    // text) with the process data attached as Shape Data. No dependencies:
+    // the package is written with a small store-only ZIP writer below.
+
+    const VSDX_NS  = 'http://schemas.microsoft.com/office/visio/2012/main';
+    const VSDX_RNS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+    const VSDX_REL = 'http://schemas.microsoft.com/visio/2010/relationships/';
+    const VSDX_DPI = 96; // SVG px → Visio inches
+
+    function vsdxEsc(v) {
+      return String(v == null ? '' : v)
+        .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+    const vsdxNum = n => String(Math.round(n * 1e6) / 1e6);
+    const vsdxIn  = px => vsdxNum(px / VSDX_DPI);
+
+    function vsdxShapeData(sh) {
+      const rows = [
+        ['Level', 'Level', 'L' + sh.level],
+        ['Code', 'Code', sh.code],
+        ['Name', 'Name', sh.text],
+        ['Description', 'Description', sh.desc],
+      ];
+      const m = sh.meta;
+      if (m) {
+        [['Type','Type'],['Frequency','Frequency'],['Time_UoM','Time unit'],['Start','Start'],['End','End'],
+         ['R','Responsible'],['A','Accountable'],['S','Support'],['C','Consulted'],['I','Informed'],
+         ['BPO','BPO'],['BPE','BPE'],['SME','SME'],
+         ['Supplier','Supplier'],['Input','Input'],['Output','Output'],['Customer','Customer'],
+         ['KPI','KPI'],['Goal','Goal'],['Tool','Tool'],['Tool_function','Tool function'],['Tool_desc','Tool description'],
+         ['Documentation','Documentation'],['Tool_link','Tool link'],['TestScript_link','Test script link']]
+          .forEach(([k, label]) => rows.push([k, label, m[k]]));
+      }
+      const cells = rows
+        .filter(([, , v]) => v !== null && v !== undefined && String(v).trim() !== '')
+        .map(([k, label, v], i) =>
+          '<Row N="' + k.replace(/[^A-Za-z0-9_]/g, '_') + '">' +
+          '<Cell N="Value" V="' + vsdxEsc(String(v).trim()) + '" U="STR"/>' +
+          '<Cell N="Prompt" V=""/><Cell N="Label" V="' + vsdxEsc(label) + '"/>' +
+          '<Cell N="Format" V=""/><Cell N="SortKey" V="' + String(i).padStart(2, '0') + '"/>' +
+          '<Cell N="Type" V="0"/><Cell N="Invisible" V="0"/><Cell N="Verify" V="0"/>' +
+          '<Cell N="DataLinked" V="0"/><Cell N="LangID" V="nl-NL"/><Cell N="Calendar" V="0"/></Row>');
+      return cells.length ? '<Section N="Property">' + cells.join('') + '</Section>' : '';
+    }
+
+    // Values are written out (not only formulas) so viewers that don't
+    // evaluate ShapeSheet formulas still lay the text out correctly.
+    function vsdxTextCells(w, h) {
+      return '<Cell N="TxtPinX" V="' + vsdxNum(w / 2) + '" F="Width*0.5"/><Cell N="TxtPinY" V="' + vsdxNum(h / 2) + '" F="Height*0.5"/>' +
+        '<Cell N="TxtWidth" V="' + vsdxNum(w) + '" F="Width*1"/><Cell N="TxtHeight" V="' + vsdxNum(h) + '" F="Height*1"/>' +
+        '<Cell N="TxtLocPinX" V="' + vsdxNum(w / 2) + '" F="TxtWidth*0.5"/><Cell N="TxtLocPinY" V="' + vsdxNum(h / 2) + '" F="TxtHeight*0.5"/>' +
+        '<Cell N="TxtAngle" V="0"/>';
+    }
+
+    function vsdxShapeXml(id, sh, pageH) {
+      const w = sh.w / VSDX_DPI, h = sh.h / VSDX_DPI;
+      const pinX = (sh.x + sh.w / 2) / VSDX_DPI;
+      const pinY = (pageH - (sh.y + sh.h / 2)) / VSDX_DPI;
+      return '<Shape ID="' + id + '" NameU="Process.' + id + '" Name="' + vsdxEsc(sh.code ? sh.code + ' ' + sh.text : sh.text) +
+        '" Type="Shape" LineStyle="0" FillStyle="0" TextStyle="0">' +
+        '<Cell N="PinX" V="' + vsdxNum(pinX) + '"/><Cell N="PinY" V="' + vsdxNum(pinY) + '"/>' +
+        '<Cell N="Width" V="' + vsdxNum(w) + '"/><Cell N="Height" V="' + vsdxNum(h) + '"/>' +
+        '<Cell N="LocPinX" V="' + vsdxNum(w / 2) + '" F="Width*0.5"/><Cell N="LocPinY" V="' + vsdxNum(h / 2) + '" F="Height*0.5"/>' +
+        '<Cell N="Angle" V="0"/><Cell N="FlipX" V="0"/><Cell N="FlipY" V="0"/>' +
+        '<Cell N="FillForegnd" V="' + sh.fill + '"/><Cell N="FillPattern" V="1"/>' +
+        '<Cell N="LineColor" V="' + sh.stroke + '"/><Cell N="LinePattern" V="1"/>' +
+        '<Cell N="LineWeight" V="' + vsdxNum(1.5 / VSDX_DPI) + '" U="PT"/>' +
+        '<Cell N="Rounding" V="' + vsdxIn(SVG_LAYOUT.CORNER) + '" U="IN"/>' +
+        '<Cell N="VerticalAlign" V="1"/>' +
+        '<Cell N="LeftMargin" V="' + vsdxIn(10) + '" U="IN"/><Cell N="RightMargin" V="' + vsdxIn(10) + '" U="IN"/>' +
+        '<Cell N="TopMargin" V="' + vsdxIn(4) + '" U="IN"/><Cell N="BottomMargin" V="' + vsdxIn(4) + '" U="IN"/>' +
+        vsdxTextCells(w, h) +
+        '<Section N="Character"><Row IX="0"><Cell N="Color" V="' + sh.color + '"/>' +
+        '<Cell N="Size" V="' + vsdxIn(SVG_LAYOUT.FONT) + '" U="PT"/></Row></Section>' +
+        '<Section N="Paragraph"><Row IX="0"><Cell N="HorzAlign" V="1"/></Row></Section>' +
+        vsdxShapeData(sh) +
+        '<Section N="Geometry" IX="0"><Cell N="NoFill" V="0"/><Cell N="NoLine" V="0"/><Cell N="NoShow" V="0"/><Cell N="NoSnap" V="0"/>' +
+        '<Row T="RelMoveTo" IX="1"><Cell N="X" V="0"/><Cell N="Y" V="0"/></Row>' +
+        '<Row T="RelLineTo" IX="2"><Cell N="X" V="1"/><Cell N="Y" V="0"/></Row>' +
+        '<Row T="RelLineTo" IX="3"><Cell N="X" V="1"/><Cell N="Y" V="1"/></Row>' +
+        '<Row T="RelLineTo" IX="4"><Cell N="X" V="0"/><Cell N="Y" V="1"/></Row>' +
+        '<Row T="RelLineTo" IX="5"><Cell N="X" V="0"/><Cell N="Y" V="0"/></Row></Section>' +
+        '<Text>' + vsdxEsc(sh.text) + '</Text></Shape>';
+    }
+
+    function vsdxLabelXml(id, tag, pageH) {
+      const w = tag.w / VSDX_DPI, h = tag.h / VSDX_DPI;
+      return '<Shape ID="' + id + '" NameU="LevelLabel.' + id + '" Name="Level label ' + vsdxEsc(tag.text) +
+        '" Type="Shape" LineStyle="0" FillStyle="0" TextStyle="0">' +
+        '<Cell N="PinX" V="' + vsdxNum((tag.x + tag.w / 2) / VSDX_DPI) + '"/>' +
+        '<Cell N="PinY" V="' + vsdxNum((pageH - (tag.y + tag.h / 2)) / VSDX_DPI) + '"/>' +
+        '<Cell N="Width" V="' + vsdxNum(w) + '"/><Cell N="Height" V="' + vsdxNum(h) + '"/>' +
+        '<Cell N="LocPinX" V="' + vsdxNum(w / 2) + '" F="Width*0.5"/><Cell N="LocPinY" V="' + vsdxNum(h / 2) + '" F="Height*0.5"/>' +
+        '<Cell N="FillPattern" V="0"/><Cell N="LinePattern" V="0"/><Cell N="VerticalAlign" V="1"/>' +
+        vsdxTextCells(w, h) +
+        '<Section N="Character"><Row IX="0"><Cell N="Color" V="' + tag.color + '"/>' +
+        '<Cell N="Size" V="' + vsdxIn(11) + '" U="PT"/><Cell N="Style" V="1"/></Row></Section>' +
+        '<Section N="Paragraph"><Row IX="0"><Cell N="HorzAlign" V="2"/></Row></Section>' +
+        '<Text>' + vsdxEsc(tag.text) + '</Text></Shape>';
+    }
+
+    function vsdxDocumentXml() {
+      return '<?xml version="1.0" encoding="utf-8" standalone="yes"?>\n' +
+        '<VisioDocument xmlns="' + VSDX_NS + '" xmlns:r="' + VSDX_RNS + '" xml:space="preserve">' +
+        '<DocumentSettings TopPage="0" DefaultTextStyle="0" DefaultLineStyle="0" DefaultFillStyle="0" DefaultGuideStyle="0">' +
+        '<GlueSettings>9</GlueSettings><SnapSettings>65847</SnapSettings><SnapExtensions>34</SnapExtensions><SnapAngles/>' +
+        '<DynamicGridEnabled>1</DynamicGridEnabled><ProtectStyles>0</ProtectStyles><ProtectShapes>0</ProtectShapes>' +
+        '<ProtectMasters>0</ProtectMasters><ProtectBkgnds>0</ProtectBkgnds></DocumentSettings>' +
+        '<Colors><ColorEntry IX="0" RGB="#000000"/><ColorEntry IX="1" RGB="#FFFFFF"/></Colors>' +
+        '<FaceNames><FaceName NameU="Calibri" UnicodeRanges="-536859905 -1073732485 9 0" CharSets="536871423 0" Panose="2 15 5 2 2 2 4 3 2 4" Flags="325"/></FaceNames>' +
+        '<StyleSheets><StyleSheet ID="0" NameU="No Style" IsCustomNameU="1" Name="No Style" IsCustomName="1">' +
+        '<Cell N="EnableLineProps" V="1"/><Cell N="EnableFillProps" V="1"/><Cell N="EnableTextProps" V="1"/>' +
+        '<Cell N="HideForApply" V="0"/><Cell N="LineWeight" V="0.01041666666666667"/><Cell N="LineColor" V="0"/>' +
+        '<Cell N="LinePattern" V="1"/><Cell N="Rounding" V="0"/><Cell N="EndArrowSize" V="2"/><Cell N="BeginArrow" V="0"/>' +
+        '<Cell N="EndArrow" V="0"/><Cell N="LineCap" V="0"/><Cell N="BeginArrowSize" V="2"/><Cell N="LineColorTrans" V="0"/>' +
+        '<Cell N="CompoundType" V="0"/><Cell N="FillForegnd" V="1"/><Cell N="FillBkgnd" V="0"/><Cell N="FillPattern" V="1"/>' +
+        '<Cell N="ShdwForegnd" V="0"/><Cell N="ShdwPattern" V="0"/><Cell N="FillForegndTrans" V="0"/><Cell N="FillBkgndTrans" V="0"/>' +
+        '<Cell N="ShdwForegndTrans" V="0"/><Cell N="ShapeShdwType" V="0"/><Cell N="ShapeShdwOffsetX" V="0"/><Cell N="ShapeShdwOffsetY" V="0"/>' +
+        '<Cell N="ShapeShdwObliqueAngle" V="0"/><Cell N="ShapeShdwScaleFactor" V="1"/><Cell N="ShapeShdwBlur" V="0"/><Cell N="ShapeShdwShow" V="0"/>' +
+        '<Cell N="LeftMargin" V="0"/><Cell N="RightMargin" V="0"/><Cell N="TopMargin" V="0"/><Cell N="BottomMargin" V="0"/>' +
+        '<Cell N="VerticalAlign" V="1"/><Cell N="TextBkgnd" V="0"/><Cell N="DefaultTabStop" V="0.5"/><Cell N="TextDirection" V="0"/>' +
+        '<Cell N="TextBkgndTrans" V="0"/><Cell N="LockTextEdit" V="0"/><Cell N="LockVtxEdit" V="0"/>' +
+        '<Section N="Character"><Row IX="0"><Cell N="Font" V="Calibri"/><Cell N="Color" V="0"/><Cell N="Style" V="0"/>' +
+        '<Cell N="Case" V="0"/><Cell N="Pos" V="0"/><Cell N="FontScale" V="1"/><Cell N="Size" V="0.1666666666666667"/>' +
+        '<Cell N="DblUnderline" V="0"/><Cell N="Overline" V="0"/><Cell N="Strikethru" V="0"/><Cell N="DoubleStrikethrough" V="0"/>' +
+        '<Cell N="Letterspace" V="0"/><Cell N="ColorTrans" V="0"/><Cell N="AsianFont" V="0"/><Cell N="ComplexScriptFont" V="0"/>' +
+        '<Cell N="ComplexScriptSize" V="-1"/><Cell N="LangID" V="nl-NL"/></Row></Section>' +
+        '<Section N="Paragraph"><Row IX="0"><Cell N="IndFirst" V="0"/><Cell N="IndLeft" V="0"/><Cell N="IndRight" V="0"/>' +
+        '<Cell N="SpLine" V="-1.2"/><Cell N="SpBefore" V="0"/><Cell N="SpAfter" V="0"/><Cell N="HorzAlign" V="1"/>' +
+        '<Cell N="Bullet" V="0"/><Cell N="BulletStr" V=""/><Cell N="BulletFont" V="0"/><Cell N="BulletFontSize" V="-1"/>' +
+        '<Cell N="TextPosAfterBullet" V="0"/><Cell N="Flags" V="0"/></Row></Section>' +
+        '<Section N="Tabs"><Row IX="0"/></Section>' +
+        '</StyleSheet></StyleSheets></VisioDocument>';
+    }
+
+    function buildVsdxBlob(result, pageName) {
+      const pageH = result.svgH;
+      const name  = vsdxEsc(String(pageName || 'Process').slice(0, 31));
+      let id = 1;
+      const shapeXml = (result.levelTags || []).map(t => vsdxLabelXml(id++, t, pageH))
+        .concat((result.shapes || []).map(sh => vsdxShapeXml(id++, sh, pageH))).join('');
+
+      const xmlHead = '<?xml version="1.0" encoding="utf-8" standalone="yes"?>\n';
+      const pageW = vsdxIn(result.svgW), pageHIn = vsdxIn(result.svgH);
+      const files = [
+        ['[Content_Types].xml', xmlHead +
+          '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+          '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+          '<Default Extension="xml" ContentType="application/xml"/>' +
+          '<Override PartName="/visio/document.xml" ContentType="application/vnd.ms-visio.drawing.main+xml"/>' +
+          '<Override PartName="/visio/pages/pages.xml" ContentType="application/vnd.ms-visio.pages+xml"/>' +
+          '<Override PartName="/visio/pages/page1.xml" ContentType="application/vnd.ms-visio.page+xml"/>' +
+          '<Override PartName="/visio/windows.xml" ContentType="application/vnd.ms-visio.windows+xml"/>' +
+          '<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>' +
+          '<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>' +
+          '</Types>'],
+        ['_rels/.rels', xmlHead +
+          '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+          '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>' +
+          '<Relationship Id="rId2" Type="' + VSDX_REL + 'document" Target="visio/document.xml"/>' +
+          '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>' +
+          '</Relationships>'],
+        ['docProps/app.xml', xmlHead +
+          '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" ' +
+          'xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">' +
+          '<Application>Microsoft Visio</Application><DocSecurity>0</DocSecurity><ScaleCrop>false</ScaleCrop>' +
+          '<LinksUpToDate>false</LinksUpToDate><SharedDoc>false</SharedDoc><HyperlinksChanged>false</HyperlinksChanged>' +
+          '<AppVersion>16.0000</AppVersion></Properties>'],
+        ['docProps/core.xml', xmlHead +
+          '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" ' +
+          'xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" ' +
+          'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
+          '<dc:title>' + name + '</dc:title>' +
+          '<dcterms:created xsi:type="dcterms:W3CDTF">' + new Date().toISOString().replace(/\.\d+Z$/, 'Z') + '</dcterms:created>' +
+          '</cp:coreProperties>'],
+        ['visio/_rels/document.xml.rels', xmlHead +
+          '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+          '<Relationship Id="rId1" Type="' + VSDX_REL + 'pages" Target="pages/pages.xml"/>' +
+          '<Relationship Id="rId2" Type="' + VSDX_REL + 'windows" Target="windows.xml"/>' +
+          '</Relationships>'],
+        ['visio/document.xml', vsdxDocumentXml()],
+        ['visio/windows.xml', xmlHead +
+          '<Windows ClientWidth="1280" ClientHeight="800" xmlns="' + VSDX_NS + '" xmlns:r="' + VSDX_RNS + '" xml:space="preserve">' +
+          '<Window ID="0" WindowType="Drawing" WindowState="1073741824" WindowLeft="-8" WindowTop="-31" ' +
+          'WindowWidth="1296" WindowHeight="839" ContainerType="Page" Page="0" ViewScale="-1" ' +
+          'ViewCenterX="' + vsdxNum(result.svgW / VSDX_DPI / 2) + '" ViewCenterY="' + vsdxNum(result.svgH / VSDX_DPI / 2) + '">' +
+          '<ShowRulers>1</ShowRulers><ShowGrid>1</ShowGrid><ShowPageBreaks>0</ShowPageBreaks><ShowGuides>1</ShowGuides>' +
+          '<ShowConnectionPoints>1</ShowConnectionPoints><GlueSettings>9</GlueSettings><SnapSettings>65847</SnapSettings>' +
+          '<SnapExtensions>34</SnapExtensions><SnapAngles/><DynamicGridEnabled>1</DynamicGridEnabled><TabSplitterPos>0.5</TabSplitterPos>' +
+          '</Window></Windows>'],
+        ['visio/pages/_rels/pages.xml.rels', xmlHead +
+          '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+          '<Relationship Id="rId1" Type="' + VSDX_REL + 'page" Target="page1.xml"/>' +
+          '</Relationships>'],
+        ['visio/pages/pages.xml', xmlHead +
+          '<Pages xmlns="' + VSDX_NS + '" xmlns:r="' + VSDX_RNS + '" xml:space="preserve">' +
+          '<Page ID="0" NameU="' + name + '" Name="' + name + '" ViewScale="-1" ViewCenterX="0" ViewCenterY="0">' +
+          '<PageSheet LineStyle="0" FillStyle="0" TextStyle="0">' +
+          '<Cell N="PageWidth" V="' + pageW + '"/><Cell N="PageHeight" V="' + pageHIn + '"/>' +
+          '<Cell N="ShdwOffsetX" V="0.125"/><Cell N="ShdwOffsetY" V="-0.125"/>' +
+          '<Cell N="PageScale" V="1" U="IN"/><Cell N="DrawingScale" V="1" U="IN"/>' +
+          '<Cell N="DrawingSizeType" V="0"/><Cell N="DrawingScaleType" V="0"/>' +
+          '<Cell N="InhibitSnap" V="0"/><Cell N="PageLockReplace" V="0" U="BOOL"/><Cell N="PageLockDuplicate" V="0" U="BOOL"/>' +
+          '<Cell N="UIVisibility" V="0"/><Cell N="ShdwType" V="0"/><Cell N="ShdwObliqueAngle" V="0"/><Cell N="ShdwScaleFactor" V="1"/>' +
+          '<Cell N="DrawingResizeType" V="1"/><Cell N="PageShapeSplit" V="1"/>' +
+          '</PageSheet><Rel r:id="rId1"/></Page></Pages>'],
+        ['visio/pages/page1.xml', xmlHead +
+          '<PageContents xmlns="' + VSDX_NS + '" xmlns:r="' + VSDX_RNS + '" xml:space="preserve">' +
+          '<Shapes>' + shapeXml + '</Shapes></PageContents>'],
+      ];
+      return new Blob([zipStore(files)], { type: 'application/vnd.ms-visio.drawing' });
+    }
+
+    // Minimal ZIP writer (store, no compression) — enough for an OPC package.
+    const ZIP_CRC_TABLE = (() => {
+      const t = new Uint32Array(256);
+      for (let n = 0; n < 256; n++) {
+        let c = n;
+        for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        t[n] = c >>> 0;
+      }
+      return t;
+    })();
+    function zipCrc32(bytes) {
+      let c = 0xFFFFFFFF;
+      for (let i = 0; i < bytes.length; i++) c = ZIP_CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+      return (c ^ 0xFFFFFFFF) >>> 0;
+    }
+    function zipStore(files) {
+      const enc = new TextEncoder();
+      const d = new Date();
+      const dosTime = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+      const dosDate = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+      const chunks = [], central = [];
+      let offset = 0;
+      files.forEach(([path, content]) => {
+        const nameB = enc.encode(path);
+        const data  = typeof content === 'string' ? enc.encode(content) : content;
+        const crc   = zipCrc32(data);
+        const lh = new DataView(new ArrayBuffer(30));
+        lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true);
+        lh.setUint16(8, 0, true); lh.setUint16(10, dosTime, true); lh.setUint16(12, dosDate, true);
+        lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true);
+        lh.setUint16(26, nameB.length, true); lh.setUint16(28, 0, true);
+        chunks.push(new Uint8Array(lh.buffer), nameB, data);
+        const ch = new DataView(new ArrayBuffer(46));
+        ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true);
+        ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true); ch.setUint16(12, dosTime, true);
+        ch.setUint16(14, dosDate, true); ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true);
+        ch.setUint32(24, data.length, true); ch.setUint16(28, nameB.length, true);
+        ch.setUint32(42, offset, true);
+        central.push(new Uint8Array(ch.buffer), nameB);
+        offset += 30 + nameB.length + data.length;
+      });
+      const cdSize = central.reduce((s, b) => s + b.length, 0);
+      const end = new DataView(new ArrayBuffer(22));
+      end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+      end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+      const all = chunks.concat(central, [new Uint8Array(end.buffer)]);
+      const out = new Uint8Array(all.reduce((s, b) => s + b.length, 0));
+      let p = 0; all.forEach(b => { out.set(b, p); p += b.length; });
+      return out;
     }
 
     function svgToJpegBlob(svgStr, svgW, svgH) {
@@ -8539,9 +8824,9 @@
         tdFmt.className = 'bec-fmt-cell';
         const sel = document.createElement('select');
         sel.dataset.row = r;
-        ['JPEG','SVG','PNG'].forEach(f => {
+        [['jpeg','JPEG'],['svg','SVG'],['png','PNG'],['vsdx','Visio']].forEach(([v, f]) => {
           const opt = document.createElement('option');
-          opt.value = f.toLowerCase(); opt.textContent = f;
+          opt.value = v; opt.textContent = f;
           sel.appendChild(opt);
         });
         tdFmt.appendChild(sel);
@@ -8552,7 +8837,7 @@
     }
 
     function becGetConfig(rowIdx) {
-      // Returns { levels: [abs,...], orientations: {abs: 'h'|'v'}, format: 'jpeg'|'svg'|'png' }
+      // Returns { levels: [abs,...], orientations: {abs: 'h'|'v'}, format: 'jpeg'|'svg'|'png'|'vsdx' }
       // or null if no levels checked
       const levels = [];
       const orientations = {};
@@ -8585,7 +8870,8 @@
       return paths;
     }
 
-    async function becSvgToBlob(result, format) {
+    async function becSvgToBlob(result, format, pageName) {
+      if (format === 'vsdx') return buildVsdxBlob(result, pageName);
       if (format === 'svg') return new Blob([result.svg], { type: 'image/svg+xml' });
       if (format === 'jpeg') return await svgToJpegBlob(result.svg, result.svgW, result.svgH);
       if (format === 'png') {
@@ -8629,7 +8915,7 @@
       showExportToast('Exporting…');
 
       const sanitize = s => String(s).replace(/[^a-z0-9 _-]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-      const extMap = { svg: '.svg', jpeg: '.jpg', png: '.png' };
+      const extMap = { svg: '.svg', jpeg: '.jpg', png: '.png', vsdx: '.vsdx' };
       let count = 0;
 
       for (const cfg of configs) {
@@ -8651,7 +8937,7 @@
 
           const nameParts = path.map(sanitize);
           const fname = rowPrefix + (nameParts.join(' - ') || 'export') + extMap[cfg.format];
-          const blob = await becSvgToBlob(result, cfg.format);
+          const blob = await becSvgToBlob(result, cfg.format, path[path.length - 1]);
           if (!blob) continue;
 
           const fileHandle = await dirHandle.getFileHandle(fname, { create: true });
