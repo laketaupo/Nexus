@@ -7,7 +7,7 @@
   <style>
     /* ── ZOOM + THEME VARIABLES ──────────────────────────────────────────── */
     :root {
-      --nw: 180px; --nh: 88px; --nfs: 1rem; --cw: 40px; --pscale: 1;
+      --nw: 240px; --nh: 110px; --nfs: 1rem; --cw: 40px; --pscale: 1;
       --gantt-label-w: 240px;
 
       --bg:      #2c2c32;
@@ -526,7 +526,7 @@
     }
     .node-name {
       word-break: break-word; overflow-wrap: anywhere;
-      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden;
     }
     .node-code {
       position: absolute; top: 5px; left: 0; right: 0; text-align: center;
@@ -2266,14 +2266,14 @@
       gap: 28px; flex-shrink: 0;
     }
 
-    /* The coloured header bar — fixed 80px height, matching export NH */
+    /* The coloured header bar — fixed 110px height, matching export NH */
     .ov-bar {
       border-radius: 8px; padding: .6rem 1rem;
       cursor: pointer; user-select: none;
       font-weight: 600; line-height: 1.35;
       word-break: break-word;
       transition: filter .12s;
-      height: 80px; box-sizing: border-box;
+      height: 110px; box-sizing: border-box;
       display: flex; align-items: center; justify-content: center;
       text-align: center;
     }
@@ -3091,7 +3091,7 @@
     const SIGN_SALT        = 'PF::integrity::v1::';
     const PANEL_CHIP_FIELDS = ['R','A','S','C','I','Input','Output'];
     const PANEL_TEXT_FIELDS = ['L4_Desc','L5_Desc','Tool','Goal','KPI','Documentation','Tool_function','Tool_navigation','Tool_desc','Tool_link','TestScript_link'];
-    const BASE    = { nw: 180, nh: 88, fs: 1.0, cw: 40, nwv: 600 };
+    const BASE    = { nw: 240, nh: 110, fs: 1.0, cw: 40, nwv: 600 };
     const ZOOM_STEP = 0.10;
     const ZOOM_MIN  = 0.5;
     const ZOOM_MAX  = 2.0;
@@ -3215,25 +3215,6 @@
         }
       }
       return t;
-    }
-
-    // Auto-size nodes to fit the longest label in 3 lines
-    function autoSizeNodes(t) {
-      let maxLen = 0;
-      function walk(node) {
-        for (const [k, v] of Object.entries(node)) {
-          maxLen = Math.max(maxLen, k.length);
-          walk(v._children);
-        }
-      }
-      walk(t);
-      if (!maxLen) return;
-      // At 1rem ≈ 16px, avg char width ≈ 8.8px, 3 lines, horizontal padding 24px
-      const charW = 8.8;
-      const pad   = 28;
-      const lines = 3;
-      const needed = Math.ceil(maxLen / lines) * charW + pad;
-      BASE.nw = Math.max(160, Math.min(320, Math.round(needed)));
     }
 
     function getNodesAtPath(path) {
@@ -5322,7 +5303,7 @@
       content.style.transform = `translate(${overviewPan.x}px,${overviewPan.y}px) scale(${overviewScale})`;
       content.style.transformOrigin = '0 0';
 
-      const S = SVG_LAYOUT;  // same layout constants as export (NW:200 NH:80 HGAP:28 VGAP:28 PAD:60)
+      const S = SVG_LAYOUT;  // same layout constants as export (NW:240 NH:110 HGAP:28 VGAP:28 PAD:60)
 
       // Determine the subtree to render and the absolute depth of its root
       let subtree, rootAbsDepth;
@@ -9364,7 +9345,7 @@
     }
 
     // ── SVG EXPORT ─────────────────────────────────────────────────────────
-    const SVG_LAYOUT = { NW: 200, NH: 80, HGAP: 28, VGAP: 28, VLEAF: 28, PAD: 60, FONT: 13, SMALL_FONT: 11, CORNER: 8 };
+    const SVG_LAYOUT = { NW: 240, NH: 110, HGAP: 28, VGAP: 28, VLEAF: 28, PAD: 60, FONT: 13, SMALL_FONT: 11, CORNER: 8 };
     // Level colours L0–L5
     const EXP_FILLS   = ['#3E603D','#619A60','#88D17F','#B0E3A5','#D7F5CB','#EBFFDF'];
     const EXP_STROKES = ['#2d4a2c','#4d7a4c','#6ab062','#8dc882','#b3dfa4','#c5eaae'];
@@ -10080,7 +10061,6 @@
       if (!Object.keys(tree).length) { showNoData(); return; }
       buildOutputIndex(tree);
 
-      autoSizeNodes(tree);
       currentPath = [];
 
       const hashPath = hashToPath(location.hash);
