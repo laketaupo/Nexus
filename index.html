@@ -3024,7 +3024,7 @@
               <span class="exp-k" data-types="image code" title="Give every file the same canvas, so processes show at the same size">Same size</span>
               <div class="exp-seg" data-key="sameSize" data-types="image code" title="Give every file the same canvas, so processes show at the same size"><button type="button" data-v="off">Off</button><button type="button" data-v="on">All files</button></div>
               <span class="exp-k" data-types="image code" data-when="sameSize:on">Align</span>
-              <div class="exp-seg" data-key="align" data-types="image code" data-when="sameSize:on" title="Where a smaller diagram sits on the shared canvas"><button type="button" data-v="center">Centre</button><button type="button" data-v="topleft">Top left</button></div>
+              <div class="exp-seg" data-key="align" data-types="image code" data-when="sameSize:on" title="Where a smaller diagram sits on the shared canvas"><button type="button" data-v="center">Centre</button><button type="button" data-v="topcenter">Top centre</button><button type="button" data-v="topleft">Top left</button></div>
               <span class="exp-k" data-types="code">Size</span>
               <div class="exp-seg" data-key="code.size" data-types="code"><button type="button" data-v="fixed">Fixed pixels</button><button type="button" data-v="fluid">100% width</button></div>
               <span class="exp-k" data-types="code" data-when="code.size:fixed">Width</span>
@@ -8771,7 +8771,7 @@
       if (!['one', 'each', 'parent', 'tabs'].includes(d.files)) d.files = 'one';
       if (!['landscape', 'portrait', 'auto'].includes(d.orient)) d.orient = 'auto';
       if (!['off', 'on'].includes(d.sameSize)) d.sameSize = 'off';
-      if (!['center', 'topleft'].includes(d.align)) d.align = 'center';
+      if (!['center', 'topcenter', 'topleft'].includes(d.align)) d.align = 'center';
       if (!['graph', 'linear'].includes(d.flowStyle)) d.flowStyle = 'graph';
       if (!EXP_LANE_FIELDS.some(([f]) => f === d.laneField)) d.laneField = 'R';
       d.startLevel = Math.max(1, Math.min(EXP_MAX_LEVEL, Math.round(d.startLevel) || 1));
@@ -9113,15 +9113,17 @@
     }
 
     // `shared` ({w, h}): a content size to frame for instead of the diagram's
-    // own (Same size); `align` 'topleft' puts the diagram top left, else centred.
+    // own (Same size); `align` 'topleft' puts the diagram top left, 'topcenter' at
+    // the top and centred horizontally, else centred.
     function expFrame(result, ratio, pad, shared, align) {
       const { x0, y0, w: bw, h: bh } = expContentBox(result);
       let W = Math.max(bw, shared ? shared.w : 0) + 2 * pad, H = Math.max(bh, shared ? shared.h : 0) + 2 * pad;
       if (ratio) { if (W / H < ratio) W = H * ratio; else H = W / ratio; }
       W = Math.ceil(W); H = Math.ceil(H);
-      const topLeft = shared && align === 'topleft';
-      const dx = Math.round(topLeft ? pad - x0 : (W - bw) / 2 - x0);
-      const dy = Math.round(topLeft ? pad - y0 : (H - bh) / 2 - y0);
+      const left = shared && align === 'topleft';
+      const top = shared && (align === 'topleft' || align === 'topcenter');
+      const dx = Math.round(left ? pad - x0 : (W - bw) / 2 - x0);
+      const dy = Math.round(top ? pad - y0 : (H - bh) / 2 - y0);
       const inner = result.svg
         .replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '')
         .replace(/<rect width="[^"]*" height="[^"]*" fill="none"\/>/, '');
