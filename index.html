@@ -2999,6 +2999,7 @@
               <div class="exp-opt-line">
                 <label class="exp-opt"><input type="checkbox" id="expShowCodes"> Show codes</label>
                 <label class="exp-opt" title="Number given to the first process at the top">Start at <input type="number" id="expCodeStart" class="exp-opt-input exp-opt-num" min="0" value="1"></label>
+                <label class="exp-opt" title="Off: drop the L1 part, so 1.2.1 becomes 2.1 and L1 processes show no code"><input type="checkbox" id="expL1Code"> L1 code in front</label>
               </div>
               <div class="exp-opt-line">
                 <select id="expCodeMode" class="exp-opt-input" title="Where codes come from">
@@ -8624,7 +8625,7 @@
       sameSize: 'off', align: 'center',
       code:  { size: 'fluid', width: 960 },
       levels: { 1: { o: 'h', a: true }, 2: { o: 'h', a: true }, 3: { o: 'h', a: true }, 4: { o: 'v', a: false } },
-      showCodes: false, codeMode: 'auto', codePos: 'inline',
+      showCodes: false, codeMode: 'auto', codePos: 'inline', l1Code: true,
     };
 
     // Saved values win where they have the same type as the default
@@ -8829,7 +8830,8 @@
 
     // Codes over the whole tree: the first L1 gets `start`, the steps below
     // parent.1, parent.2, ...; or the CSV codes with missing ones numbered.
-    // Returns path → code.
+    // Returns path → code. With "L1 code in front" off the first part is
+    // dropped (1.2.1 → 2.1; an L1 process gets no code).
     function expBuildCodeOf(mode, start) {
       const map = new Map();
       (function walk(nodes, basePath, parentCode) {
@@ -8841,7 +8843,13 @@
           walk(n._children, p, code);
         });
       })(tree, [], '');
-      return path => map.get(expKey(path)) || '';
+      const l1 = expSettings.l1Code !== false;
+      return path => {
+        const c = map.get(expKey(path)) || '';
+        if (l1 || !c) return c;
+        const i = c.indexOf('.');
+        return i < 0 ? '' : c.slice(i + 1);
+      };
     }
     function expCodeOfNow() {
       const s = expSettings, start = parseInt($('expCodeStart').value, 10);
@@ -9705,6 +9713,7 @@
       $('expShowCodes').checked = !!s.showCodes;
       $('expCodeMode').value = s.codeMode;
       $('expCodePos').value = s.codePos;
+      $('expL1Code').checked = s.l1Code !== false;
       const laneSel = $('expLaneField'), inData = swimFieldsInData();
       const laneOpts = inData.some(([f]) => f === s.laneField) ? inData : inData.concat(EXP_LANE_FIELDS.filter(([f]) => f === s.laneField));
       laneSel.innerHTML = laneOpts.map(([f, l]) => '<option value="' + f + '">' + escHtml(l) + '</option>').join('');
@@ -9796,6 +9805,7 @@
     $('expShowCodes').addEventListener('change', e => { expSettings.showCodes = e.target.checked; expChanged(); });
     $('expCodeMode').addEventListener('change', e => { expSettings.codeMode = e.target.value; expChanged(); });
     $('expCodePos').addEventListener('change', e => { expSettings.codePos = e.target.value; expChanged(); });
+    $('expL1Code').addEventListener('change', e => { expSettings.l1Code = e.target.checked; expChanged(); });
     $('expCodeStart').addEventListener('input', () => { expRenderFileList(expOut); expSchedulePreview(); });
     $('expReset').addEventListener('click', () => {
       const type = expSettings.type;
