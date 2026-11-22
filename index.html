@@ -2812,6 +2812,13 @@
           <button class="cp-theme-opt" id="cpErpOn">On</button>
         </div>
       </div>
+      <div class="cp-row" title="Steps linked with Previous / Next: as a graph (parallel branches stacked) or in one line">
+        <span class="cp-row-label">Parallel steps</span>
+        <div class="cp-theme-seg" style="margin:0">
+          <button class="cp-theme-opt active" id="cpFlowGraph">Graph</button>
+          <button class="cp-theme-opt" id="cpFlowLinear">Linear</button>
+        </div>
+      </div>
 
       <div class="cp-row cp-row-divider">
         <span class="cp-row-label">Highlight: System activity</span>
@@ -3000,6 +3007,8 @@
             <div class="exp-grid">
               <span class="exp-k">Flow</span>
               <div class="exp-seg" data-key="direction" title="Which way the process steps run"><button type="button" data-v="lr">Left to right</button><button type="button" data-v="tb">Top to bottom</button></div>
+              <span class="exp-k" title="Steps linked with Previous / Next: as a graph (parallel branches stacked) or in one line">Parallel steps</span>
+              <div class="exp-seg" data-key="flowStyle" title="Steps linked with Previous / Next: as a graph (parallel branches stacked) or in one line"><button type="button" data-v="graph">Graph</button><button type="button" data-v="linear">Linear</button></div>
               <span class="exp-k" data-hide-formats="vsdx">Layout</span>
               <div class="exp-seg" data-key="layout" data-hide-formats="vsdx" title="Standard levels, or each process in swimlanes"><button type="button" data-v="standard">Standard</button><button type="button" data-v="swimlane">Swimlanes</button></div>
               <span class="exp-k" data-swim>Lanes by</span>
@@ -3311,10 +3320,43 @@
     // and listed by flowWarnings(). A group without links keeps its CSV order
     // as one straight line. In a group with links, a step that no link touches
     // is put back in CSV order between its neighbours.
+    //
+    // Flow style "Linear" (app: Display panel; export: View block) puts the
+    // steps of a linked group in one row instead: in the graph's reading
+    // order, an arrow from each step to the next, and loops kept as return
+    // arrows over the top. Parallel branches then follow one after the other.
     const FLOW_SPLIT = v => v == null ? [] : String(v).split(';').map(s => s.trim()).filter(Boolean);
-    const _flowCache = new WeakMap();
+    const _flowCache = new WeakMap(), _flowLinCache = new WeakMap();
+    const FLOW_STYLE_KEY = 'nexus.flowStyle';
+    let appFlowStyle = 'graph';
+    // The export window has its own choice; everything else follows the app
+    function flowLinear() {
+      const m = document.getElementById('exportModal');
+      if (m && !m.classList.contains('hidden') && typeof expSettings !== 'undefined') return expSettings.flowStyle === 'linear';
+      return appFlowStyle === 'linear';
+    }
 
     function flowOf(children) {
+      const g = flowGraphOf(children);
+      if (!g || !flowLinear()) return g;
+      if (_flowLinCache.has(children)) return _flowLinCache.get(children);
+      const lin = flowLinearOf(g);
+      _flowLinCache.set(children, lin);
+      return lin;
+    }
+
+    // One row in reading order: arrows to the next step, loops kept
+    function flowLinearOf(g) {
+      const order = g.order.slice();
+      const col = new Map(order.map((k, i) => [k, i]));
+      const y = new Map(order.map(k => [k, 0]));
+      const edges = [];
+      for (let i = 0; i < order.length - 1; i++) edges.push({ from: order[i], to: order[i + 1], back: false });
+      g.edges.forEach(e => { if (e.back) edges.push({ from: e.from, to: e.to, back: true }); });
+      return { keys: g.keys, edges, col, y, cols: order.length, rows: 1, order, linear: true };
+    }
+
+    function flowGraphOf(children) {
       if (!children || typeof children !== 'object') return null;
       if (_flowCache.has(children)) return _flowCache.get(children);
       const keys = Object.keys(children);
@@ -8156,6 +8198,22 @@
       clearInfoPanel();
       render('none');
     });
+    // ── PARALLEL STEPS: GRAPH / LINEAR ──────────────────────────────────────
+    // Saved in the app; a dashboard starts with the style it was saved with
+    function setAppFlowStyle(v, save) {
+      appFlowStyle = v === 'linear' ? 'linear' : 'graph';
+      $('cpFlowGraph').classList.toggle('active', appFlowStyle === 'graph');
+      $('cpFlowLinear').classList.toggle('active', appFlowStyle === 'linear');
+      if (save && !window.__PF_EMBED__) { try { localStorage.setItem(FLOW_STYLE_KEY, appFlowStyle); } catch (_) {} }
+    }
+    (function () {
+      let v = window.__PF_EMBED__ ? window.__PF_EMBED__.f : null;
+      if (!window.__PF_EMBED__) { try { v = localStorage.getItem(FLOW_STYLE_KEY); } catch (_) {} }
+      setAppFlowStyle(v, false);
+    })();
+    $('cpFlowGraph').addEventListener('click', () => { if (appFlowStyle !== 'graph') { setAppFlowStyle('graph', true); render('none'); } });
+    $('cpFlowLinear').addEventListener('click', () => { if (appFlowStyle !== 'linear') { setAppFlowStyle('linear', true); render('none'); } });
+
     $('cpErpOff').addEventListener('click', () => {
       erpLaneVisible = false;
       $('cpErpOff').classList.add('active');
@@ -8659,6 +8717,8 @@
       code:  { size: 'fluid', width: 960 },
       levels: { 1: { o: 'h', a: true }, 2: { o: 'h', a: true }, 3: { o: 'h', a: true }, 4: { o: 'v', a: false } },
       showCodes: false, codeMode: 'auto', codePos: 'inline', l1Code: true,
+      // Steps linked with Previous / Next: 'graph' (branches stacked) or 'linear' (one row)
+      flowStyle: 'graph',
       // All tabs in one file (draw.io): the tab rules, in tab order. u: one
       // tab for the whole overview (0) or for each process at L1..L3; f..t:
       // the levels each tab shows. tabNav: clickable blocks and back buttons.
@@ -8712,6 +8772,7 @@
       if (!['landscape', 'portrait', 'auto'].includes(d.orient)) d.orient = 'auto';
       if (!['off', 'on'].includes(d.sameSize)) d.sameSize = 'off';
       if (!['center', 'topleft'].includes(d.align)) d.align = 'center';
+      if (!['graph', 'linear'].includes(d.flowStyle)) d.flowStyle = 'graph';
       if (!EXP_LANE_FIELDS.some(([f]) => f === d.laneField)) d.laneField = 'R';
       d.startLevel = Math.max(1, Math.min(EXP_MAX_LEVEL, Math.round(d.startLevel) || 1));
       d.deepest = Math.max(d.startLevel, Math.min(EXP_MAX_LEVEL, Math.round(d.deepest) || EXP_MAX_LEVEL));
@@ -9358,7 +9419,7 @@
           || dt.toISOString()
       };
       clone.querySelector('#pfEmbedData').textContent =
-        'window.__PF_EMBED__=' + JSON.stringify(simple ? { d: raw, s: sig, meta, v: 'simple' } : { d: raw, s: sig, meta }).replace(/<\//g, '<\\/') + ';';
+        'window.__PF_EMBED__=' + JSON.stringify(Object.assign(simple ? { d: raw, s: sig, meta, v: 'simple' } : { d: raw, s: sig, meta }, appFlowStyle === 'linear' ? { f: 'linear' } : {})).replace(/<\//g, '<\\/') + ';';
 
       const dateStr = dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' +
         String(dt.getDate()).padStart(2, '0');
@@ -10239,7 +10300,9 @@
 
         // Steps linked with Previous / Next (and nothing shown below them): a flow graph
         const flow = keys.length > 1 ? flowOf(nodes) : null;
-        if (flow) {
+        // Linear: one row along the flow; at a level set to vertical, a plain column in flow order
+        const seq = flow && flow.linear ? flow.order : keys;
+        if (flow && !(flow.linear && isVertical(depth))) {
           const kids = keys.map(k => measure(nodes[k]._children, depth + 1));
           if (kids.every(c => !c.items.length)) {
             const FG = SVG_FLOW_GAP, RH = S.NH + S.VLEAF;
@@ -10260,12 +10323,12 @@
           // Stack siblings top-to-bottom
           const items = [];
           let totalH = 0, maxW = 0;
-          keys.forEach(key => {
+          seq.forEach(key => {
             const nodeObj = nodes[key];
             const child   = measure(nodeObj._children, depth + 1);
             const itemW   = Math.max(S.NW, child.totalW);
             const itemH   = S.NH + (child.totalH > 0 ? S.VGAP + child.totalH : 0);
-            items.push({ key, nodeObj, child, subtreeW: itemW, subtreeH: itemH, x: 0, y: totalH });
+            items.push({ key, csvIdx: keys.indexOf(key), nodeObj, child, subtreeW: itemW, subtreeH: itemH, x: 0, y: totalH });
             totalH += itemH + S.VLEAF;
             maxW = Math.max(maxW, itemW);
           });
@@ -10276,11 +10339,11 @@
           // Spread siblings left-to-right
           const items = [];
           let totalW = 0, maxChildH = 0;
-          keys.forEach(key => {
+          seq.forEach(key => {
             const nodeObj = nodes[key];
             const child   = measure(nodeObj._children, depth + 1);
             const itemW   = Math.max(S.NW, child.totalW);
-            items.push({ key, nodeObj, child, subtreeW: itemW, subtreeH: 0, x: totalW, y: 0 });
+            items.push({ key, csvIdx: keys.indexOf(key), nodeObj, child, subtreeW: itemW, subtreeH: 0, x: totalW, y: 0 });
             totalW   += itemW + S.HGAP;
             maxChildH = Math.max(maxChildH, child.totalH);
           });
