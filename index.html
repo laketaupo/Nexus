@@ -911,6 +911,13 @@
       padding-bottom: 520px;
     }
 
+    /* ── SIMPLIFIED VIEW (dashboard export) — only the process ─────────── */
+    html.pf-simple .nav-right,
+    html.pf-simple #levelInfo, html.pf-simple #infoPanel, html.pf-simple #levelLabel,
+    html.pf-simple #ctrlPanel, html.pf-simple #shortcutsDropdown { display: none !important; }
+    html.pf-simple .nav-left { max-width: none; }
+    html.pf-simple #main, html.present.pf-simple #main { padding-top: 56px; padding-bottom: 24px; }
+
     /* ── PRESENTATION MODE — Info panel contrast boost ──────────────────── */
     html.present #infoPanel {
       border-top-width: 3px;
@@ -1124,9 +1131,6 @@
     .exp-k { font-size: .82rem; color: var(--txt3); }
     .exp-grid > .exp-seg, .exp-grid > .exp-opt { justify-self: start; }
     .exp-hint { font-size: .76rem; color: var(--txt4); line-height: 1.45; }
-    .exp-warn { font-size: .76rem; line-height: 1.45; color: #9a5b00; background: rgba(230,160,40,.12);
-      border: 1px solid rgba(230,160,40,.35); border-radius: 6px; padding: .35rem .55rem; }
-    .exp-url { width: 100%; box-sizing: border-box; padding: .35rem .5rem; }
     .exp-adv { border: 1px solid var(--bdr-xs); border-radius: 8px; padding: .45rem .7rem; }
     .exp-adv summary { cursor: pointer; font-size: .72rem; font-weight: 600; text-transform: uppercase;
       letter-spacing: .05em; color: var(--txt4); }
@@ -2814,7 +2818,7 @@
         </button>
         <button type="button" class="exp-type" data-type="code" role="radio">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M13.5 5l-3 14"/></svg>
-          <span class="exp-type-name">Code</span><span class="exp-type-sub">HTML, iframe</span>
+          <span class="exp-type-name">Code</span><span class="exp-type-sub">HTML</span>
         </button>
         <button type="button" class="exp-type" data-type="flowchart" role="radio">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="5" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="8.5" y="16" width="7" height="5" rx="1"/><path d="M10 5.5h4M6.5 8v4.5h5.5V16M17.5 8v4.5H12"/></svg>
@@ -2840,7 +2844,12 @@
             <div class="exp-opt-line" data-hide-contents="dashboard">
               <label class="exp-opt" title="How deep the diagram goes">Levels down to <select id="expDeepest" class="exp-opt-input"></select></label>
             </div>
-            <div class="exp-hint" data-contents="dashboard">The full Nexus view with your data built in: pan, zoom and click into processes. Process details show in the side panel.</div>
+            <div class="exp-grid exp-dash-view" data-contents="dashboard">
+              <span class="exp-k">View</span>
+              <div class="exp-seg" data-key="code.dashView"><button type="button" data-v="full">Full</button><button type="button" data-v="simple">Simplified</button></div>
+            </div>
+            <div class="exp-hint" data-contents="dashboard" data-when="code.dashView:full">The full Nexus view with your data built in: pan, zoom and click into processes. Process details show in the side panel.</div>
+            <div class="exp-hint" data-contents="dashboard" data-when="code.dashView:simple">Only the process and its path, without menus or panels. Click a process to open it; hover (or tap) for a large card with all of its details.</div>
           </div>
 
           <div class="exp-section" data-types="image">
@@ -2869,13 +2878,6 @@
             </div>
           </div>
 
-          <div class="exp-section" data-formats="iframe">
-            <div class="exp-label">SharePoint file</div>
-            <input type="url" id="expUrl" class="exp-opt-input exp-url" spellcheck="false" autocomplete="off"
-              placeholder="https://yourcompany.sharepoint.com/sites/…/Shared Documents/process.html">
-            <div class="exp-hint">Download the HTML export first and upload it to a SharePoint folder. Then paste the address of that file here.</div>
-            <div id="expUrlWarn" class="exp-warn" hidden></div>
-          </div>
 
           <div class="exp-section" data-types="flowchart">
             <div class="exp-label">Page</div>
@@ -3704,7 +3706,7 @@
           flowContainer.querySelectorAll('.erp-node').forEach(n => n.classList.remove('erp-selected'));
           updateInfoPanel(key, nodeObj._meta, nodeObj._desc);
           updatePathTree();
-          if (levelOffset + level >= 4) {
+          if (levelOffset + level >= 4 && !simpleView) {
             openDetailScreen(key, nodeObj._meta, nodeObj._desc);
           }
         });
@@ -8132,7 +8134,7 @@
     const EXP_SETTINGS_KEY = 'nexus.export.settings.v2';
     const EXP_TYPES = {
       image:     { formats: [['svg', 'SVG'], ['png', 'PNG']],                 contents: ['overview', 'process', 'selection'] },
-      code:      { formats: [['html', 'HTML'], ['iframe', 'iframe']],         contents: ['overview', 'process', 'dashboard'] },
+      code:      { formats: [['html', 'HTML']],                             contents: ['overview', 'process', 'dashboard'] },
       flowchart: { formats: [['drawio', 'draw.io'], ['vsdx', 'Visio (.vsdx)']], contents: ['overview', 'process'] },
     };
     const EXP_CONTENT_LABEL = { overview: 'Full overview', process: 'Single process',
@@ -8144,7 +8146,7 @@
       processPath: [],
       deepest: 4,
       image:     { scale: 2, bg: 'white', padding: 24, orient: 'auto' },
-      code:      { orient: 'landscape', size: 'fluid', width: 960, url: '' },
+      code:      { orient: 'landscape', size: 'fluid', width: 960, dashView: 'full' },
       flowchart: { orient: 'auto' },
       advOpen: false,
       split: 'one', parents: false,
@@ -8171,6 +8173,7 @@
         if (!EXP_TYPES[t].contents.includes(d.content[t])) d.content[t] = EXP_DEFAULTS.content[t];
       });
       if (![1, 2, 4].includes(d.image.scale)) d.image.scale = 2;
+      if (!['full', 'simple'].includes(d.code.dashView)) d.code.dashView = 'full';
       return d;
     }
     function expLoadSettings() {
@@ -8466,7 +8469,7 @@
       });
     }
 
-    // ── Code: HTML page, iframe snippet, interactive dashboard ──
+    // ── Code: HTML page, interactive dashboard ──
     const expJsonForScript = v => JSON.stringify(v).replace(/</g, '\\u003c');
 
     // Size of the embedded page: fixed pixels, or 100% wide at the given proportions
@@ -8479,13 +8482,52 @@
       return expRatio() || (fr ? fr.svgW / fr.svgH : 16 / 9);
     }
 
+    // ── Hover card: shared by the HTML export and the simplified dashboard ──
+    // A card with the process name and all of its filled-in fields. `big`
+    // gives the larger, easier to read version used by the simplified dashboard.
+    function hoverCardCss(big) {
+      const k = big ? 1.3 : 1;
+      const px = v => Math.round(v * k * 10) / 10 + 'px';
+      return '.hcard{position:fixed;z-index:1000;max-width:min(' + px(340) + ',calc(100vw - 16px));min-width:' + px(200) + ';box-sizing:border-box;' +
+        'background:#fff;color:#1f2a1f;border:1px solid #d5dfd3;border-radius:' + px(10) + ';box-shadow:0 8px 24px rgba(20,40,20,.16);' +
+        'padding:' + px(12) + ' ' + px(14) + ';font-size:' + px(12.5) + ';line-height:1.45;text-align:left;' +
+        'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;' +
+        'pointer-events:none;opacity:0;transition:opacity .1s;max-height:calc(100vh - 16px);overflow:auto;overscroll-behavior:contain}\n' +
+        '.hcard.show{opacity:1}\n.hcard.pinned{pointer-events:auto}\n' +
+        '.hcard h3{margin:0 0 ' + px(8) + ';font-size:' + px(14) + ';line-height:1.3;font-weight:650;color:#1c3620}\n' +
+        '.hcard dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:' + px(4) + ' ' + px(12) + '}\n' +
+        '.hcard dt{color:#6a776a;white-space:nowrap}\n' +
+        '.hcard dd{margin:0;overflow-wrap:anywhere;white-space:pre-line}\n' +
+        '.hcard .none{color:#8a948a;font-style:italic}\n' +
+        '.hcard .hint{margin-top:' + px(10) + ';padding-top:' + px(8) + ';border-top:1px solid #e6ece4;color:#4d6b4d;font-size:' + px(11.5) + '}\n';
+    }
+    // Fills the card for n = { t: title, f: [[label, value], ...], hint }.
+    // Self-contained: its source is also written into exported pages.
+    function hoverCardFill(card, n) {
+      function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+      var h = '<h3>' + esc(n.t) + '</h3>';
+      if (n.f.length) { h += '<dl>'; n.f.forEach(function (r) { h += '<dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd>'; }); h += '</dl>'; }
+      else h += '<div class="none">No details</div>';
+      if (n.hint) h += '<div class="hint">' + esc(n.hint) + '</div>';
+      card.innerHTML = h;
+    }
+    // Places the card next to (x, y), inside the window. Self-contained too.
+    function hoverCardPlace(card, x, y) {
+      var m = 8, g = 14, w = card.offsetWidth, h = card.offsetHeight, W = window.innerWidth, H = window.innerHeight;
+      var l = x + g, t = y + g;
+      if (l + w > W - m) l = x - w - g;
+      if (l < m) l = Math.max(m, Math.min(W - w - m, x - w / 2));
+      if (t + h > H - m) t = y - h - g;
+      if (t < m) t = Math.max(m, H - h - m);
+      card.style.left = l + 'px'; card.style.top = t + 'px';
+    }
+    // Card rows for a node: all filled-in fields except the name (the title)
+    const hoverCardRows = sh => exportDataRows(sh).filter(([k]) => k !== 'Name').map(([, label, v]) => [label, String(v).trim()]);
+
     // One self-contained HTML page with the diagram. Hovering (or tapping) a
     // process shows a card with all of its filled-in data.
     function expStaticHtml(fr, title, size) {
-      const data = fr.shapes.map(sh => ({
-        t: sh.name || sh.text,
-        f: exportDataRows(sh).filter(([k]) => k !== 'Name').map(([, label, v]) => [label, String(v).trim()]),
-      }));
+      const data = fr.shapes.map(sh => ({ t: sh.name || sh.text, f: hoverCardRows(sh) }));
       const frameCss = size.fixed
         ? '.frame{width:' + size.w + 'px;height:' + size.h + 'px;margin:0 auto}'
         : '.frame{width:100%;height:100%}';
@@ -8497,40 +8539,19 @@
         '.frame svg{display:block;width:100%;height:100%}\n' +
         '#d rect{cursor:pointer;transition:filter .12s}\n#d rect:hover,#d rect.on{filter:brightness(.93)}\n' +
         '#d text{pointer-events:none}\n' +
-        '.card{position:fixed;z-index:10;max-width:340px;min-width:200px;box-sizing:border-box;background:#fff;color:#1f2a1f;' +
-        'border:1px solid #d5dfd3;border-radius:10px;box-shadow:0 8px 24px rgba(20,40,20,.16);padding:12px 14px;font-size:12.5px;' +
-        'line-height:1.45;pointer-events:none;opacity:0;transition:opacity .1s;max-height:calc(100vh - 16px);overflow:auto;overscroll-behavior:contain}\n' +
-        '.card.show{opacity:1}\n.card.pinned{pointer-events:auto}\n' +
-        '.card h3{margin:0 0 8px;font-size:14px;line-height:1.3;font-weight:650;color:#1c3620}\n' +
-        '.card dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}\n' +
-        '.card dt{color:#6a776a;white-space:nowrap}\n' +
-        '.card dd{margin:0;overflow-wrap:anywhere;white-space:pre-line}\n' +
-        '.card .none{color:#8a948a;font-style:italic}\n' +
+        hoverCardCss(false) +
         '</style>\n</head>\n<body>\n<div class="frame">\n' +
         expSvgMarkup(fr, 1, '#ffffff', ' preserveAspectRatio="xMidYMid meet" role="img" aria-label="' + escHtml(title) + '"') +
-        '</div>\n<div class="card" id="card" role="tooltip"></div>\n' +
+        '</div>\n<div class="hcard" id="card" role="tooltip"></div>\n' +
         '<script>\n(function () {\n' +
         '  var D = ' + expJsonForScript(data) + ';\n' +
         '  var card = document.getElementById("card"), rects = document.querySelectorAll("#d rect"), on = null, pinned = false;\n' +
-        '  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }\n' +
-        '  function fill(n) {\n' +
-        '    var h = "<h3>" + esc(n.t) + "</h3>";\n' +
-        '    if (n.f.length) { h += "<dl>"; n.f.forEach(function (r) { h += "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>"; }); h += "</dl>"; }\n' +
-        '    else h += "<div class=\\"none\\">No details</div>";\n' +
-        '    card.innerHTML = h;\n' +
-        '  }\n' +
-        '  function place(x, y) {\n' +
-        '    var m = 8, g = 14, w = card.offsetWidth, h = card.offsetHeight, W = window.innerWidth, H = window.innerHeight;\n' +
-        '    var l = x + g, t = y + g;\n' +
-        '    if (l + w > W - m) l = x - w - g;\n' +
-        '    if (l < m) l = Math.max(m, Math.min(W - w - m, x - w / 2));\n' +
-        '    if (t + h > H - m) t = y - h - g;\n' +
-        '    if (t < m) t = Math.max(m, H - h - m);\n' +
-        '    card.style.left = l + "px"; card.style.top = t + "px";\n' +
-        '  }\n' +
+        '  ' + hoverCardFill.toString() + '\n' +
+        '  ' + hoverCardPlace.toString() + '\n' +
+        '  function place(x, y) { hoverCardPlace(card, x, y); }\n' +
         '  function show(i, x, y) {\n' +
         '    if (on) on.classList.remove("on");\n' +
-        '    on = rects[i]; on.classList.add("on"); fill(D[i]); card.classList.add("show"); place(x, y);\n' +
+        '    on = rects[i]; on.classList.add("on"); hoverCardFill(card, D[i]); card.classList.add("show"); place(x, y);\n' +
         '  }\n' +
         '  function hide() { if (on) on.classList.remove("on"); on = null; pinned = false; card.classList.remove("show", "pinned"); }\n' +
         '  Array.prototype.forEach.call(rects, function (r, i) {\n' +
@@ -8551,7 +8572,9 @@
     }
 
     // The whole Nexus page with the data built in (as "Save" does)
-    function buildStandaloneHtml() {
+    // opts.simple: the simplified view (only the process, details in a large hover card)
+    function buildStandaloneHtml(opts) {
+      const simple = !!(opts && opts.simple);
       const raw = (_sessionData ? _sessionData.raw : null) ||
         (window.__PF_EMBED__ ? window.__PF_EMBED__.d : null);
       const sig = (_sessionData ? _sessionData.sig : null) ||
@@ -8569,6 +8592,9 @@
       clone.querySelector('#ctrlPanel').className = 'hidden';
       clone.querySelector('#shortcutsDropdown').classList.add('hidden');
       clone.querySelector('#importOverlay').className = 'imp-overlay hidden';
+      clone.classList.toggle('pf-simple', simple);
+      const oldCard = clone.querySelector('#pfHoverCard');
+      if (oldCard) oldCard.remove();
 
       const topKeys = Object.keys(tree);
       const dt = new Date();
@@ -8584,36 +8610,11 @@
           || dt.toISOString()
       };
       clone.querySelector('#pfEmbedData').textContent =
-        'window.__PF_EMBED__=' + JSON.stringify({ d: raw, s: sig, meta }).replace(/<\//g, '<\\/') + ';';
+        'window.__PF_EMBED__=' + JSON.stringify(simple ? { d: raw, s: sig, meta, v: 'simple' } : { d: raw, s: sig, meta }).replace(/<\//g, '<\\/') + ';';
 
       const dateStr = dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' +
         String(dt.getDate()).padStart(2, '0');
       return { html: '<!DOCTYPE html>\n' + clone.outerHTML, dateStr };
-    }
-
-    // SharePoint address → iframe src (spaces encoded, quotes escaped)
-    function expUrlInfo() {
-      const raw = String(expSettings.code.url || '').trim();
-      const url = raw.replace(/ /g, '%20');
-      const ok = /^https:\/\/[^\s"'<>]+$/i.test(url);
-      let warn = '';
-      if (raw && !ok) warn = 'Enter the full https:// address of the uploaded HTML file.';
-      else if (ok && /\/:[a-z]:\//i.test(url))
-        warn = 'This looks like a sharing link, which SharePoint won’t show in a frame. Open the folder in SharePoint and use the address of the file itself (…/Shared Documents/…/file.html).';
-      else if (ok && !/\.(html?|aspx)([?#]|$)/i.test(url))
-        warn = 'The address doesn’t end in .html. Check that it points to the uploaded HTML file.';
-      return { url, ok, warn };
-    }
-    function expIframeSnippet(size, title) {
-      const { url } = expUrlInfo();
-      const src = escHtml(url), t = escHtml(title);
-      if (size.fixed) {
-        return '<iframe src="' + src + '" title="' + t + '" width="' + size.w + '" height="' + size.h +
-          '" style="border:0;" loading="lazy" allowfullscreen></iframe>';
-      }
-      const rw = Math.round(size.ratio * 1000), rh = 1000;
-      return '<iframe src="' + src + '" title="' + t + '" width="100%" height="' + size.h +
-        '" style="width:100%;height:auto;aspect-ratio:' + rw + ' / ' + rh + ';border:0;" loading="lazy" allowfullscreen></iframe>';
     }
 
     // ── Current output: what the preview shows and the buttons deliver ──
@@ -8623,7 +8624,7 @@
     let expPreviewTimer = null;
 
     function expCurrentTitle() {
-      if (expContent() === 'dashboard') return 'Process dashboard';
+      if (expContent() === 'dashboard') return expSettings.code.dashView === 'simple' ? 'Process overview' : 'Process dashboard';
       return expPath.length ? expPath[expPath.length - 1] : 'All processes';
     }
 
@@ -8634,11 +8635,14 @@
       if (t === 'code') {
         let html, ratio, fr = null, base, title = expCurrentTitle();
         if (content === 'dashboard') {
-          if (!expDashCache) expDashCache = buildStandaloneHtml();
-          if (!expDashCache) return { empty: 'No data to export' };
+          const view = expSettings.code.dashView === 'simple' ? 'simple' : 'full';
+          expDashCache = expDashCache || {};
+          if (!expDashCache[view]) expDashCache[view] = buildStandaloneHtml({ simple: view === 'simple' });
+          const dash = expDashCache[view];
+          if (!dash) return { empty: 'No data to export' };
           ratio = expCodeRatio(null);
-          html = expDashCache.html;
-          base = 'Process dashboard ' + expDashCache.dateStr;
+          html = dash.html;
+          base = (view === 'simple' ? 'Process overview ' : 'Process dashboard ') + dash.dateStr;
         } else {
           const { items } = expBuildItems(1);
           if (!items.length) return { empty: 'Nothing to export' };
@@ -8649,8 +8653,7 @@
         }
         const size = expCodeSize(ratio);
         if (content === 'dashboard' || !size.fixed) size.view = { w: 960, h: Math.round(960 / ratio) };
-        if (fmt === 'html') return { kind: 'html', total: 1, html, size, base, title, text: html };
-        return { kind: 'iframe', total: 1, html, size, base, title, text: expIframeSnippet(size, title) };
+        return { kind: 'html', total: 1, html, size, base, title, text: html };
       }
       const { items, total } = expBuildItems(1);
       if (!items.length) return { empty: 'Nothing to export' };
@@ -8719,9 +8722,8 @@
         const kb = Math.round(out.html.length / 1024);
         const sizeTxt = out.size.fixed ? out.size.w + ' × ' + out.size.h + ' px' : '100% width';
         meta.classList.remove('is-warn');
-        meta.textContent = (out.kind === 'iframe' ? 'iframe · ' + sizeTxt + ' · preview of the page it points to'
-          : 'HTML · ' + sizeTxt + ' · one file, ' + kb + ' KB') +
-          (expContent() === 'dashboard' ? '' : ' · hover a process for its details');
+        meta.textContent = 'HTML · ' + sizeTxt + ' · one file, ' + kb + ' KB' +
+          (expContent() === 'dashboard' && expSettings.code.dashView !== 'simple' ? '' : ' · hover a process for its details');
         const MAX = 20000;
         box.value = out.text.length > MAX
           ? out.text.slice(0, MAX) + '\n\n… (' + kb + ' KB in total; Copy and Download give the full file)'
@@ -8736,16 +8738,11 @@
       drawio: { copy: 'Copy XML',     dl: 'Download .drawio' },
       vsdx:   { copy: null,           dl: 'Download .vsdx' },
       html:   { copy: 'Copy HTML',    dl: 'Download HTML' },
-      iframe: { copy: 'Copy snippet', dl: 'Download snippet' },
     };
     function expUpdateActions() {
       const fmt = expFmt(), a = EXP_ACTIONS[fmt], go = $('btnExpGo'), cp = $('btnExpCopy');
       const n = expOut ? expOut.total : 0;
-      let note = '', blocked = !expOut;
-      if (fmt === 'iframe' && expOut) {
-        const u = expUrlInfo();
-        if (!u.ok) { blocked = true; note = 'Paste the SharePoint address of the HTML file first'; }
-      }
+      const note = '', blocked = !expOut;
       go.textContent = n > 1 ? 'Download ' + n + ' files' : a.dl;
       go.disabled = blocked || n === 0;
       cp.hidden = !a.copy;
@@ -8873,7 +8870,6 @@
       });
       if (document.activeElement !== $('expPadding')) $('expPadding').value = s.image.padding;
       if (document.activeElement !== $('expWidth'))   $('expWidth').value = s.code.width;
-      if (document.activeElement !== $('expUrl'))     $('expUrl').value = s.code.url;
       $('expShowCodes').checked = !!s.showCodes;
       $('expCodeMode').value = s.codeMode;
       $('expCodePos').value = s.codePos;
@@ -8883,9 +8879,6 @@
 
       const sel = expSelectionPath();
       $('expSelInfo').textContent = sel.length ? sel.join(' › ') : 'Nothing selected: the full overview is exported';
-      const u = expUrlInfo();
-      $('expUrlWarn').textContent = u.warn;
-      $('expUrlWarn').hidden = !u.warn || expFmt() !== 'iframe';
     }
 
     function expRefresh() {
@@ -8964,12 +8957,6 @@
       const v = parseInt(e.target.value, 10);
       if (Number.isFinite(v) && v >= 200) { expSettings.code.width = Math.min(4000, v); expSaveSettings(); expSchedulePreview(); }
     });
-    $('expUrl').addEventListener('input', e => {
-      expSettings.code.url = e.target.value; expSaveSettings();
-      const u = expUrlInfo();
-      $('expUrlWarn').textContent = u.warn; $('expUrlWarn').hidden = !u.warn;
-      expSchedulePreview();
-    });
     $('expAdvanced').addEventListener('toggle', () => { expSettings.advOpen = $('expAdvanced').open; expSaveSettings(); });
     $('expSplit').addEventListener('change', e => { expSettings.split = e.target.value; expChanged(); });
     $('expDeepest').addEventListener('change', e => { expSettings.deepest = Number(e.target.value); expChanged(); });
@@ -9016,7 +9003,6 @@
       } else if (fmt === 'svg')    { ok = await expCopyText(expSvgFile(expOut.fr)); what = 'SVG'; }
       else if (fmt === 'drawio')   { ok = await expCopyText(buildDrawioXml(expOut.fr, expOut.title)); what = 'draw.io XML'; }
       else if (fmt === 'html')     { ok = await expCopyText(expOut.html); what = 'HTML'; }
-      else if (fmt === 'iframe')   { ok = await expCopyText(expOut.text); what = 'iframe snippet'; }
       showExportToast(ok ? what + ' copied' : 'Copy failed: use Download instead');
       if (ok) {
         const cp = $('btnExpCopy'), label = cp.textContent;
@@ -9040,12 +9026,6 @@
       if (fmt === 'html') {
         saveBlob(new Blob([expOut.html], { type: 'text/html' }), sanitizeFileName(expOut.base) + '.html');
         showExportToast('Exported HTML');
-        return;
-      }
-      if (fmt === 'iframe') {
-        if (!expUrlInfo().ok) return;
-        saveBlob(new Blob([expOut.text + '\n'], { type: 'text/html' }), sanitizeFileName(expOut.base) + ' - iframe.html');
-        showExportToast('Exported iframe snippet');
         return;
       }
       const ext = EXPORT_EXT[fmt];
@@ -9839,6 +9819,107 @@
       setZoom(1.0);
       render('right');
     }
+    // ── SIMPLIFIED VIEW ─────────────────────────────────────────────────────
+    // Set by the "Simplified" dashboard export: no menus or panels, and the
+    // details of a process show in a large hover card (tap on touch screens).
+    // A mouse click opens a process; on touch the first tap shows the card and
+    // a second tap opens it.
+    let simpleView = false;
+    function initSimpleView() {
+      simpleView = true;
+      document.documentElement.classList.add('pf-simple');
+      const style = document.createElement('style');
+      style.textContent = hoverCardCss(true);
+      document.head.appendChild(style);
+      const card = document.createElement('div');
+      card.className = 'hcard'; card.id = 'pfHoverCard'; card.setAttribute('role', 'tooltip');
+      document.body.appendChild(card);
+
+      let on = null, pinned = false, touch = false, keyboard = false;
+      const nodeOf = t => (t && t.closest) ? t.closest('.node, .erp-node') : null;
+      function dataFor(el) {
+        const key = el.getAttribute('data-key');
+        const n = getNodesAtPath(currentPath)[key] || { _children: {} };
+        const m = n._meta || null;
+        const sh = { level: levelOffset + currentPath.length, code: n._code, name: altLabel(key),
+                     desc: n._desc || (m && m.L4_Desc) || '', meta: m };
+        const kids = Object.keys(n._children || {}).length > 0;
+        return { t: altLabel(key), f: hoverCardRows(sh),
+                 hint: kids ? (touch ? 'Tap again to open' : 'Click to open') : '' };
+      }
+      function show(el, x, y) {
+        on = el;
+        hoverCardFill(card, dataFor(el));
+        card.classList.add('show');
+        hoverCardPlace(card, x, y);
+      }
+      // Under the process (or above it when there is no room), never over it
+      function showAtNode(el) {
+        const r = el.getBoundingClientRect();
+        show(el, r.left, r.bottom);
+        const m = 8, h = card.offsetHeight, w = card.offsetWidth;
+        let t = r.bottom + m;
+        if (t + h > window.innerHeight - m && r.top - h - m >= m) t = r.top - h - m;
+        card.style.top = Math.max(m, t) + 'px';
+        card.style.left = Math.max(m, Math.min(window.innerWidth - w - m, r.left + r.width / 2 - w / 2)) + 'px';
+      }
+      function hide() { on = null; pinned = false; card.classList.remove('show', 'pinned'); }
+      function pin() { pinned = true; card.classList.add('pinned'); }
+
+      // Mouse or touch, from the last pointer used
+      document.addEventListener('pointerdown', e => { touch = e.pointerType !== 'mouse'; keyboard = false; }, true);
+      // Keyboard users get the card on focus (not on the automatic focus at load)
+      document.addEventListener('keydown', () => { keyboard = true; }, true);
+      document.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') touch = false; }, true);
+
+      flowContainer.addEventListener('mouseover', e => {
+        if (touch || pinned) return;
+        const el = nodeOf(e.target);
+        if (el && el !== on) show(el, e.clientX, e.clientY);
+      });
+      flowContainer.addEventListener('mousemove', e => {
+        if (!touch && !pinned && on) hoverCardPlace(card, e.clientX, e.clientY);
+      });
+      flowContainer.addEventListener('mouseout', e => {
+        if (!pinned && on && !on.contains(e.relatedTarget)) hide();
+      });
+      // Capture phase: decides before the node's own click (which opens it)
+      flowContainer.addEventListener('click', e => {
+        const el = nodeOf(e.target);
+        if (!el || e.target.closest('a, button')) return;
+        const opens = el.classList.contains('has-children');
+        if (touch) {
+          if (pinned && on === el) { hide(); if (opens) return; }
+          else { showAtNode(el); pin(); }
+          e.stopPropagation(); e.preventDefault();
+          return;
+        }
+        if (opens) { hide(); return; }
+        // A step without children: keep its card open so it can be read and scrolled
+        if (pinned && on === el) hide();
+        else { show(el, e.clientX, e.clientY); pin(); }
+      }, true);
+      flowContainer.addEventListener('focusin', e => {
+        const el = nodeOf(e.target);
+        if (el && !pinned && keyboard) showAtNode(el);
+      });
+      flowContainer.addEventListener('focusout', e => {
+        if (!pinned && on && !on.contains(e.relatedTarget)) hide();
+      });
+      document.addEventListener('click', e => {
+        if (pinned && !card.contains(e.target) && nodeOf(e.target) !== on) hide();
+      });
+      // Tapping the card of a process with steps opens it
+      card.addEventListener('click', () => {
+        if (!on || !on.classList.contains('has-children')) return;
+        const key = on.getAttribute('data-key');
+        hide(); drillInto(key);
+      });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' || e.key === 'Enter') hide(); });
+      window.addEventListener('scroll', () => { if (!pinned) hide(); }, true);
+      window.addEventListener('resize', hide);
+    }
+
     async function init() {
       let savedTheme = null;
       try { savedTheme = localStorage.getItem('pfTheme'); } catch (_) {}
@@ -9848,6 +9929,7 @@
         $('btnReset').style.display = 'none';
         $('infoWrap').style.display = 'block';
         initInfoDropdown();
+        if (window.__PF_EMBED__.v === 'simple') initSimpleView();
       }
       initShortcutsDropdown();
       btnHome.addEventListener('click', goHome);
