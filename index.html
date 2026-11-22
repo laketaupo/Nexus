@@ -1180,7 +1180,9 @@
     .exp-pv-empty { font-size: .85rem; color: var(--txt4); font-style: italic; }
     .exp-preview-meta { font-size: .76rem; color: var(--txt4); min-height: 1.1em; }
     .exp-preview-meta.is-warn { color: #b06a00; }
-    .exp-code { height: 140px; flex-shrink: 0; }
+    /* Code box: shares the preview column and never grows past it (own scroll) */
+    .exp-preview-pane .exp-code { height: auto; flex: 0 1 220px; min-height: 90px; max-height: 45%; resize: none; }
+    .exp-preview-pane:has(.exp-code:not([hidden])) .exp-preview { min-height: 140px; }
     .exp-split { align-self: flex-start; max-width: 100%; }
     .exp-files { flex-shrink: 0; border: 1px solid var(--bdr-xs); border-radius: 8px; background: var(--surf); display: flex; flex-direction: column; min-height: 0; }
     .exp-files[hidden] { display: none; }
