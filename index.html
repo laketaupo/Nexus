@@ -451,7 +451,7 @@
 
     /* ERP node styling */
     .erp-node {
-      width: var(--nw); min-height: calc(var(--nh) * 0.82); height: auto;
+      width: var(--nw); height: calc(var(--nh) * 0.82); min-height: 0;
       flex-shrink: 0;
       background: var(--erp-surf); border: 1.5px solid var(--erp-bdr);
       border-radius: 8px; display: flex; flex-direction: column;
@@ -466,10 +466,11 @@
       content: "⚙"; position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%);
       font-size: .6rem; opacity: .45; color: var(--erp-acc);
     }
-    .erp-node-name { word-break: break-word; font-weight: 600; }
+    .erp-node-name { word-break: break-word; overflow-wrap: anywhere; font-weight: 600; max-width: 100%;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
     .erp-node-tx {
       font-size: .68rem; opacity: .7; font-family: monospace;
-      margin-top: 2px; word-break: break-all;
+      margin-top: 2px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     /* Empty placeholder — same size as node but invisible, keeps alignment */
     .erp-node.erp-empty {
@@ -514,7 +515,8 @@
 
     /* ── NODE ──────────────────────────────────────────────────────────── */
     .node {
-      width: var(--nw); min-height: var(--nh); height: auto; flex-shrink: 0;
+      /* Every process box has the same size; long names end in "…" (full name in the hover card) */
+      width: var(--nw); height: var(--nh); min-height: 0; flex-shrink: 0;
       background: var(--surf); border: 1.5px solid var(--bdr);
       border-radius: 8px; display: flex; align-items: center; justify-content: center;
       text-align: center; color: var(--txt); font-size: var(--nfs);
@@ -523,7 +525,8 @@
       cursor: default; padding: .4rem .75rem 1rem; outline: none;
     }
     .node-name {
-      word-break: break-word;
+      word-break: break-word; overflow-wrap: anywhere;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden;
     }
     .node-code {
       position: absolute; top: 5px; left: 0; right: 0; text-align: center;
@@ -1136,7 +1139,21 @@
       letter-spacing: .05em; color: var(--txt4); }
     .exp-adv[open] summary { margin-bottom: .6rem; }
     .exp-adv-body { display: flex; flex-direction: column; gap: .8rem; }
-    .exp-preview-pane { display: flex; flex-direction: column; gap: .45rem; min-height: 0; min-width: 0; }
+    .exp-preview-pane { display: flex; flex-direction: column; gap: .45rem; min-height: 0; min-width: 0; position: relative; }
+    .exp-pv-expand { position: absolute; top: .45rem; right: .45rem; z-index: 2; display: inline-flex; align-items: center; gap: .3rem;
+      padding: .28rem .55rem; border-radius: 6px; border: 1px solid var(--bdr-s); background: var(--nav); color: var(--txt3);
+      font-size: .74rem; cursor: pointer; box-shadow: 0 1px 4px var(--shd); opacity: .92; }
+    .exp-pv-expand:hover { color: var(--acc-t); border-color: var(--acc); opacity: 1; }
+    .exp-pv-expand:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+    .exp-pv-expand svg { width: 13px; height: 13px; }
+    .exp-pv-expand .ic-in { display: none; }
+    #exportModal.pv-expanded .exp-pv-expand .ic-in { display: block; }
+    #exportModal.pv-expanded .exp-pv-expand .ic-out { display: none; }
+    /* Enlarged preview: the settings step aside and the preview fills the window */
+    #exportModal.pv-expanded .exp-types, #exportModal.pv-expanded .exp-main > .exp-body,
+    #exportModal.pv-expanded #expCodeBox { display: none !important; }
+    #exportModal.pv-expanded .exp-main { grid-template-columns: 1fr; }
+    #exportModal.pv-expanded .exp-preview { flex: 1; height: auto; }
     .exp-preview { flex: 1; min-height: 220px; border-radius: 8px; background: var(--surf2); border: 1px solid var(--bdr-xs);
       display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .exp-preview svg { display: block; }
@@ -1151,6 +1168,24 @@
     .exp-preview-meta { font-size: .76rem; color: var(--txt4); min-height: 1.1em; }
     .exp-preview-meta.is-warn { color: #b06a00; }
     .exp-code { height: 140px; flex-shrink: 0; }
+    .exp-split { align-self: flex-start; max-width: 100%; }
+    .exp-files { flex-shrink: 0; border: 1px solid var(--bdr-xs); border-radius: 8px; background: var(--surf); display: flex; flex-direction: column; min-height: 0; }
+    .exp-files[hidden] { display: none; }
+    .exp-files-head { display: flex; align-items: baseline; justify-content: space-between; gap: .6rem; padding: .4rem .65rem;
+      border-bottom: 1px solid var(--bdr-xs); font-size: .78rem; font-weight: 600; color: var(--txt2); }
+    .exp-files-sub { font-weight: 400; color: var(--txt4); font-size: .72rem; }
+    .exp-files-list { list-style: none; margin: 0; padding: .2rem 0; max-height: 190px; overflow-y: auto; }
+    .exp-files-list li { display: flex; align-items: center; gap: .5rem; padding: .18rem .65rem; }
+    .exp-files-list li.active { background: var(--acc-10); }
+    .exp-file-name { flex: 1; min-width: 0; text-align: left; background: none; border: none; padding: .15rem 0; cursor: pointer;
+      font-size: .78rem; color: var(--txt2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .exp-file-name:hover { color: var(--acc-t); text-decoration: underline; }
+    .exp-files-list li.active .exp-file-name { color: var(--acc-t); font-weight: 600; }
+    .exp-file-dl { flex: none; font-size: .72rem; padding: .2rem .55rem; border-radius: 6px; border: 1px solid var(--bdr-s);
+      background: var(--nav); color: var(--txt2); cursor: pointer; }
+    .exp-file-dl:hover { border-color: var(--acc); color: var(--acc-t); }
+    .exp-file-dl.done { border-color: var(--acc); color: var(--acc-t); }
+    #exportModal.pv-expanded .exp-files { display: none; }
     .exp-action-note { margin-right: auto; align-self: center; font-size: .78rem; color: var(--txt4); }
     .exp-btn:disabled { opacity: .45; cursor: not-allowed; }
     @media (max-width: 860px) {
@@ -1395,8 +1430,7 @@
     }
     .flow-level.vertical .connector { display: none; }
     .flow-level.vertical .node {
-      width: var(--nw-v); max-width: calc(100vw - 4rem);
-      text-align: left; padding: .6rem 1rem;
+      width: var(--nw); text-align: left; padding: .6rem 1rem;
     }
     .flow-level.vertical .node-name { word-break: break-word; }
 
@@ -2844,6 +2878,10 @@
             <div class="exp-opt-line" data-hide-contents="dashboard">
               <label class="exp-opt" title="How deep the diagram goes">Levels down to <select id="expDeepest" class="exp-opt-input"></select></label>
             </div>
+            <div class="exp-grid" data-hide-contents="dashboard">
+              <span class="exp-k">Flow</span>
+              <div class="exp-seg" data-key="direction" title="Which way the process steps run"><button type="button" data-v="lr">Left to right</button><button type="button" data-v="tb">Top to bottom</button></div>
+            </div>
             <div class="exp-grid exp-dash-view" data-contents="dashboard">
               <span class="exp-k">View</span>
               <div class="exp-seg" data-key="code.dashView"><button type="button" data-v="full">Full</button><button type="button" data-v="simple">Simplified</button></div>
@@ -2887,13 +2925,18 @@
             </div>
           </div>
 
+          <div class="exp-section" data-hide-contents="dashboard">
+            <div class="exp-label">Files</div>
+            <select id="expSplit" class="exp-opt-input exp-split" aria-label="Files"></select>
+            <div class="exp-hint" id="expSplitHint"></div>
+          </div>
+
           <details class="exp-adv" id="expAdvanced" data-hide-contents="dashboard">
             <summary>Advanced</summary>
             <div class="exp-adv-body">
               <div class="exp-section">
                 <div class="exp-sublabel">Diagrams</div>
                 <div class="exp-opt-line">
-                  <select id="expSplit" class="exp-opt-input" data-types="image flowchart"></select>
                   <label class="exp-opt" title="Show the direct parent processes as bars above each diagram"><input type="checkbox" id="expParents"> Include parent chain</label>
                 </div>
               </div>
@@ -2923,8 +2966,17 @@
         </div>
 
         <div class="exp-preview-pane">
+          <button type="button" id="expPvExpand" class="exp-pv-expand" aria-pressed="false" title="Enlarge the preview (Esc to go back)">
+            <svg class="ic-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            <svg class="ic-in" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            <span id="expPvExpandLabel">Enlarge</span>
+          </button>
           <div class="exp-preview" id="expPreview" aria-label="Preview"></div>
           <div class="exp-preview-meta" id="expPreviewMeta" aria-live="polite"></div>
+          <div class="exp-files" id="expFiles" hidden>
+            <div class="exp-files-head"><span id="expFilesCount"></span><span class="exp-files-sub">Click a name to preview it</span></div>
+            <ul class="exp-files-list" id="expFilesList"></ul>
+          </div>
           <textarea id="expCodeBox" class="drawio-xml exp-code" readonly spellcheck="false" data-types="code" aria-label="Code"></textarea>
         </div>
       </div>
@@ -3366,6 +3418,7 @@
 
     // ── RENDER ─────────────────────────────────────────────────────────────
     function render(direction) {
+      if (hoverKit) hoverKit.hide();
       const nodes = getNodesAtPath(currentPath);
       const keys  = Object.keys(nodes);
       const isL5  = (levelOffset + currentPath.length) === 4 && erpLaneVisible; // viewing L4 nodes (drilled into L3)
@@ -8149,7 +8202,7 @@
       code:      { orient: 'landscape', size: 'fluid', width: 960, dashView: 'full' },
       flowchart: { orient: 'auto' },
       advOpen: false,
-      split: 'one', parents: false,
+      split: 'one', parents: false, direction: 'lr',
       levels: { 1: { o: 'h', a: true }, 2: { o: 'h', a: true }, 3: { o: 'h', a: true }, 4: { o: 'v', a: false } },
       showCodes: false, codeMode: 'auto', codePos: 'inline',
     };
@@ -8204,8 +8257,10 @@
     const expType    = () => expSettings.type;
     const expFmt     = () => expSettings.fmt[expSettings.type];
     const expContent = () => expSettings.content[expSettings.type];
-    // Code exports are always one file; Image and Flowchart can write one per process
-    const expSplitVal = () => expSettings.type === 'code' ? 'one' : expSettings.split;
+    // The interactive dashboard is always one file; diagrams can be written one per process
+    const expSplitVal = () => (expSettings.type === 'code' && expContent() === 'dashboard') ? 'one' : String(expSettings.split);
+    // "tree<N>": the starting process and every process up to N levels below it, one file each
+    const expTreeDepth = split => /^tree\d$/.test(split) ? Number(split.slice(4)) : 0;
 
     // "Current selection": the process on screen, or the step selected in it
     function expSelectionPath() {
@@ -8287,15 +8342,28 @@
     // Level at which each diagram starts
     function expRootLevel() {
       const split = expSplitVal();
-      return split === 'one' ? Math.max(1, expScopeLevel()) : Number(split);
+      return split === 'one' || expTreeDepth(split) ? Math.max(1, expScopeLevel()) : Number(split);
     }
 
     // Paths of the diagrams to export (one path per diagram; [] = all processes)
     function expDiagramPaths() {
       const split = expSplitVal();
       if (split === 'one') return [expPath.slice()];
-      const target = Number(split);
       const out = [];
+      const below = expTreeDepth(split);
+      if (below) {
+        // The process itself, then each process below it that has steps of its own
+        const hasKids = p => Object.keys(p.length ? (expNodeAt(p) || { _children: {} })._children : tree).length > 0;
+        (function walk(path) {
+          if (!hasKids(path) || path.length >= EXP_MAX_LEVEL) return;
+          out.push(path);
+          if (path.length - expPath.length >= below) return;
+          const nodes = path.length ? expNodeAt(path)._children : tree;
+          Object.keys(nodes).forEach(k => walk(path.concat(k)));
+        })(expPath.slice());
+        return out;
+      }
+      const target = Number(split);
       (function walk(nodes, path) {
         Object.keys(nodes).forEach(k => {
           const p = path.concat(k);
@@ -8367,7 +8435,7 @@
     // ── Building the diagrams ──
     // Lays out the diagrams in scope with the Advanced options. `limit` caps
     // how many are built (the preview only needs the first).
-    function expBuildItems(limit) {
+    function expBuildItems(limit, from) {
       const s = expSettings;
       const orientations = {}, arrowLevels = [];
       Object.keys(s.levels).forEach(l => {
@@ -8378,9 +8446,13 @@
       const codeOf = s.showCodes ? expBuildCodeOf(s.codeMode, Number.isFinite(start) ? start : 1) : null;
       const paths = expDiagramPaths();
       const items = [];
-      (limit ? paths.slice(0, limit) : paths).forEach(path => {
-        const result = buildSvgString(path, s.deepest, orientations, {
+      const at = from || 0;
+      (limit ? paths.slice(at, at + limit) : paths).forEach(path => {
+        // Each file goes at least one level below its own process
+        const deepest = Math.max(s.deepest, Math.min(EXP_MAX_LEVEL, path.length + 1));
+        const result = buildSvgString(path, deepest, orientations, {
           arrowLevels, showCodes: s.showCodes, codeOwnLine: s.codePos === 'line',
+          direction: s.direction === 'tb' ? 'tb' : 'lr',
           codeOf: codeOf || undefined,
           parentChain: s.parents ? expParentChain(path) : [],
         });
@@ -8482,9 +8554,9 @@
       return expRatio() || (fr ? fr.svgW / fr.svgH : 16 / 9);
     }
 
-    // ── Hover card: shared by the HTML export and the simplified dashboard ──
+    // ── Hover card: shared by the HTML export, the dashboards and the app ──
     // A card with the process name and all of its filled-in fields. `big`
-    // gives the larger, easier to read version used by the simplified dashboard.
+    // gives the larger, easier to read version used by the dashboards.
     function hoverCardCss(big) {
       const k = big ? 1.3 : 1;
       const px = v => Math.round(v * k * 10) / 10 + 'px';
@@ -8493,33 +8565,152 @@
         'padding:' + px(12) + ' ' + px(14) + ';font-size:' + px(12.5) + ';line-height:1.45;text-align:left;' +
         'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;' +
         'pointer-events:none;opacity:0;transition:opacity .1s;max-height:calc(100vh - 16px);overflow:auto;overscroll-behavior:contain}\n' +
-        '.hcard.show{opacity:1}\n.hcard.pinned{pointer-events:auto}\n' +
-        '.hcard h3{margin:0 0 ' + px(8) + ';font-size:' + px(14) + ';line-height:1.3;font-weight:650;color:#1c3620}\n' +
+        '.hcard.show{opacity:1;pointer-events:auto}\n' +
+        '.hcard-dock{z-index:400;top:12px;right:12px;left:auto;width:min(' + px(360) + ',calc(100vw - 24px));max-width:none;' +
+        'max-height:calc(100vh - 24px);border-left:4px solid #619a60;box-shadow:0 10px 32px rgba(20,40,20,.24);visibility:hidden}\n' +
+        '.hcard-dock.show{visibility:visible}\n' +
+        '.hcard .hc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:' + px(8) + ';margin:0 0 ' + px(8) + '}\n' +
+        '.hcard h3{margin:0;font-size:' + px(14) + ';line-height:1.3;font-weight:650;color:#1c3620;overflow-wrap:anywhere}\n' +
+        '.hcard .hc-btn{flex:none;display:inline-flex;align-items:center;justify-content:center;width:' + px(24) + ';height:' + px(24) + ';' +
+        'margin:-' + px(3) + ' -' + px(4) + ' 0 0;padding:0;border:1px solid #d5dfd3;border-radius:' + px(6) + ';background:#f6f9f5;color:#4d6b4d;' +
+        'cursor:pointer;font:inherit;font-size:' + px(15) + ';line-height:1}\n' +
+        '.hcard .hc-btn:hover{background:#e6f2e2;border-color:#9cc596;color:#1c3620}\n' +
+        '.hcard .hc-btn svg{width:' + px(13) + ';height:' + px(13) + '}\n' +
         '.hcard dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:' + px(4) + ' ' + px(12) + '}\n' +
         '.hcard dt{color:#6a776a;white-space:nowrap}\n' +
         '.hcard dd{margin:0;overflow-wrap:anywhere;white-space:pre-line}\n' +
         '.hcard .none{color:#8a948a;font-style:italic}\n' +
         '.hcard .hint{margin-top:' + px(10) + ';padding-top:' + px(8) + ';border-top:1px solid #e6ece4;color:#4d6b4d;font-size:' + px(11.5) + '}\n';
     }
-    // Fills the card for n = { t: title, f: [[label, value], ...], hint }.
+    // Fills the card for n = { t: title, f: [[label, value], ...], hint, btn: 'pin' | 'unpin' }.
     // Self-contained: its source is also written into exported pages.
     function hoverCardFill(card, n) {
       function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-      var h = '<h3>' + esc(n.t) + '</h3>';
+      var b = n.btn === 'pin'
+        ? '<button type="button" class="hc-btn hc-pin" title="Keep this card open at the side of the screen" aria-label="Pin to the side">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+          '<line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.8a2 2 0 0 0-1.1-1.8l-1.8-.9a2 2 0 0 1-1.1-1.8V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.7a2 2 0 0 1-1.1 1.8l-1.8.9A2 2 0 0 0 5 15.2Z"/></svg></button>'
+        : n.btn === 'unpin' ? '<button type="button" class="hc-btn hc-unpin" title="Unpin" aria-label="Unpin">&times;</button>' : '';
+      var h = '<div class="hc-head"><h3>' + esc(n.t) + '</h3>' + b + '</div>';
       if (n.f.length) { h += '<dl>'; n.f.forEach(function (r) { h += '<dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd>'; }); h += '</dl>'; }
       else h += '<div class="none">No details</div>';
       if (n.hint) h += '<div class="hint">' + esc(n.hint) + '</div>';
       card.innerHTML = h;
     }
-    // Places the card next to (x, y), inside the window. Self-contained too.
-    function hoverCardPlace(card, x, y) {
-      var m = 8, g = 14, w = card.offsetWidth, h = card.offsetHeight, W = window.innerWidth, H = window.innerHeight;
-      var l = x + g, t = y + g;
-      if (l + w > W - m) l = x - w - g;
-      if (l < m) l = Math.max(m, Math.min(W - w - m, x - w / 2));
-      if (t + h > H - m) t = y - h - g;
-      if (t < m) t = Math.max(m, H - h - m);
-      card.style.left = l + 'px'; card.style.top = t + 'px';
+    // Hover card behaviour. Self-contained too (written into exported pages).
+    // With a mouse the card appears after a short delay, right against the
+    // process, and goes away as soon as the pointer leaves both. The pin button
+    // keeps a copy docked at the side of the screen until it is unpinned.
+    // o: { root, find(target) -> el|null, data(el, touch) -> { t, f, hint },
+    //      delay, dockTop, id, tap: 'show' | 'open' | 'none', clickShows,
+    //      opens(el) -> bool, open(el) }
+    function hoverCardKit(o) {
+      var card = document.createElement('div'), dock = document.createElement('div');
+      card.className = 'hcard'; card.setAttribute('role', 'tooltip');
+      dock.className = 'hcard hcard-dock'; dock.setAttribute('role', 'complementary'); dock.setAttribute('aria-label', 'Pinned process');
+      if (o.id) { card.id = o.id; dock.id = o.id + 'Dock'; }
+      if (o.dockTop) { dock.style.top = o.dockTop + 'px'; dock.style.maxHeight = 'calc(100vh - ' + (o.dockTop + 12) + 'px)'; }
+      document.body.appendChild(card); document.body.appendChild(dock);
+      var on = null, pend = null, timer = 0, held = false, touch = false, keyboard = false;
+      var delay = o.delay == null ? 400 : o.delay;
+      function inside(box, n) { return !!(n && box && box.contains(n)); }
+      function place(el) {
+        var r = el.getBoundingClientRect(), m = 8, w = card.offsetWidth, h = card.offsetHeight,
+            W = window.innerWidth, H = window.innerHeight;
+        // Right against the process (1px overlap) so the pointer can move onto the card
+        var t = r.bottom - 1;
+        if (t + h > H - m) t = r.top - h + 1 >= m ? r.top - h + 1 : Math.max(m, H - h - m);
+        card.style.top = t + 'px';
+        card.style.left = Math.max(m, Math.min(W - w - m, r.left + r.width / 2 - w / 2)) + 'px';
+      }
+      function show(el) {
+        clearTimeout(timer); pend = null;
+        if (on && on !== el) on.classList.remove('hc-on');
+        on = el; el.classList.add('hc-on');
+        var n = o.data(el, touch); n.btn = 'pin';
+        hoverCardFill(card, n);
+        card.classList.add('show');
+        place(el);
+      }
+      function hide() {
+        clearTimeout(timer); pend = null; held = false;
+        if (on) on.classList.remove('hc-on');
+        on = null; card.classList.remove('show');
+      }
+      function later(el) {
+        if (pend === el || on === el) return;
+        clearTimeout(timer); pend = el;
+        timer = setTimeout(function () { if (pend === el && document.body.contains(el)) show(el); }, delay);
+      }
+      function pin() {
+        if (!on) return;
+        var n = o.data(on, touch); n.btn = 'unpin'; n.hint = '';
+        hoverCardFill(dock, n);
+        dock.classList.add('show');
+        hide();
+      }
+      document.addEventListener('pointerdown', function (e) { touch = e.pointerType !== 'mouse'; keyboard = false; }, true);
+      document.addEventListener('pointermove', function (e) { if (e.pointerType === 'mouse') touch = false; }, true);
+      document.addEventListener('keydown', function () { keyboard = true; }, true);
+      o.root.addEventListener('mouseover', function (e) {
+        if (touch || held) return;
+        var el = o.find(e.target);
+        if (!el) return;
+        if (on && on !== el) hide();
+        later(el);
+      });
+      o.root.addEventListener('mouseout', function (e) {
+        if (touch || held) return;
+        var el = o.find(e.target), rt = e.relatedTarget;
+        if (!el || inside(el, rt)) return;
+        if (on === el && inside(card, rt)) return;
+        hide();
+      });
+      card.addEventListener('mouseout', function (e) {
+        var rt = e.relatedTarget;
+        if (touch || held || inside(card, rt) || inside(on, rt)) return;
+        hide();
+      });
+      card.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (e.target.closest && e.target.closest('.hc-pin')) { pin(); return; }
+        // Tapping the card of a process with steps opens it
+        if (o.tap === 'open' && on && o.opens && o.opens(on) && o.open) { var el = on; hide(); o.open(el); }
+      });
+      dock.addEventListener('click', function (e) {
+        if (e.target.closest && e.target.closest('.hc-unpin')) dock.classList.remove('show');
+      });
+      // Capture phase: decides before the process's own click
+      o.root.addEventListener('click', function (e) {
+        var el = o.find(e.target);
+        if (!el || (e.target.closest && e.target.closest('a, button'))) return;
+        var opens = !!(o.opens && o.opens(el));
+        if (touch && o.tap && o.tap !== 'none') {
+          if (held && on === el) { hide(); if (opens && o.tap === 'open') return; }
+          else { show(el); held = true; }
+          e.stopPropagation(); e.preventDefault();
+          return;
+        }
+        if (opens || !o.clickShows) { hide(); return; }
+        show(el);
+      }, true);
+      o.root.addEventListener('focusin', function (e) {
+        var el = o.find(e.target);
+        if (el && keyboard && !held) show(el);
+      });
+      o.root.addEventListener('focusout', function (e) {
+        if (!held && on && !inside(on, e.relatedTarget) && !inside(card, e.relatedTarget)) hide();
+      });
+      document.addEventListener('click', function (e) {
+        if (held && !inside(card, e.target) && o.find(e.target) !== on) hide();
+      });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' || e.key === 'Enter') hide(); });
+      window.addEventListener('scroll', function (e) {
+        if (inside(card, e.target) || inside(dock, e.target)) return;
+        if (held && on) place(on); else hide();
+      }, true);
+      window.addEventListener('resize', hide);
+      return { hide: hide, unpin: function () { dock.classList.remove('show'); } };
     }
     // Card rows for a node: all filled-in fields except the name (the title)
     const hoverCardRows = sh => exportDataRows(sh).filter(([k]) => k !== 'Name').map(([, label, v]) => [label, String(v).trim()]);
@@ -8537,7 +8728,7 @@
         'html,body{margin:0;height:100%;background:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}\n' +
         frameCss + '\n' +
         '.frame svg{display:block;width:100%;height:100%}\n' +
-        '#d rect{cursor:pointer;transition:filter .12s}\n#d rect:hover,#d rect.on{filter:brightness(.93)}\n' +
+        '#d rect{cursor:pointer;transition:filter .12s}\n#d rect:hover,#d rect.hc-on{filter:brightness(.93)}\n' +
         '#d text{pointer-events:none}\n' +
         hoverCardCss(false) +
         '</style>\n</head>\n<body>\n<div class="frame">\n' +
@@ -8545,29 +8736,13 @@
         '</div>\n<div class="hcard" id="card" role="tooltip"></div>\n' +
         '<script>\n(function () {\n' +
         '  var D = ' + expJsonForScript(data) + ';\n' +
-        '  var card = document.getElementById("card"), rects = document.querySelectorAll("#d rect"), on = null, pinned = false;\n' +
+        '  var rects = document.querySelectorAll("#d rect");\n' +
+        '  function idx(r) { return Array.prototype.indexOf.call(rects, r); }\n' +
         '  ' + hoverCardFill.toString() + '\n' +
-        '  ' + hoverCardPlace.toString() + '\n' +
-        '  function place(x, y) { hoverCardPlace(card, x, y); }\n' +
-        '  function show(i, x, y) {\n' +
-        '    if (on) on.classList.remove("on");\n' +
-        '    on = rects[i]; on.classList.add("on"); hoverCardFill(card, D[i]); card.classList.add("show"); place(x, y);\n' +
-        '  }\n' +
-        '  function hide() { if (on) on.classList.remove("on"); on = null; pinned = false; card.classList.remove("show", "pinned"); }\n' +
-        '  Array.prototype.forEach.call(rects, function (r, i) {\n' +
-        '    if (!D[i]) return;\n' +
-        '    r.addEventListener("mouseenter", function (e) { if (!pinned) show(i, e.clientX, e.clientY); });\n' +
-        '    r.addEventListener("mousemove", function (e) { if (!pinned) place(e.clientX, e.clientY); });\n' +
-        '    r.addEventListener("mouseleave", function () { if (!pinned) hide(); });\n' +
-        '    r.addEventListener("click", function (e) {\n' +
-        '      e.stopPropagation();\n' +
-        '      if (pinned && on === r) { hide(); return; }\n' +
-        '      show(i, e.clientX, e.clientY); pinned = true; card.classList.add("pinned");\n' +
-        '    });\n' +
-        '  });\n' +
-        '  document.addEventListener("click", function (e) { if (pinned && !card.contains(e.target)) hide(); });\n' +
-        '  document.addEventListener("keydown", function (e) { if (e.key === "Escape") hide(); });\n' +
-        '  window.addEventListener("scroll", function () { if (!pinned) hide(); }, true);\n' +
+        '  ' + hoverCardKit.toString() + '\n' +
+        '  hoverCardKit({ root: document, tap: "show", clickShows: true,\n' +
+        '    find: function (t) { var r = t && t.closest ? t.closest("#d rect") : null; return r && D[idx(r)] ? r : null; },\n' +
+        '    data: function (r) { var n = D[idx(r)]; return { t: n.t, f: n.f }; } });\n' +
         '})();\n</' + 'script>\n</body>\n</html>\n';
     }
 
@@ -8593,8 +8768,7 @@
       clone.querySelector('#shortcutsDropdown').classList.add('hidden');
       clone.querySelector('#importOverlay').className = 'imp-overlay hidden';
       clone.classList.toggle('pf-simple', simple);
-      const oldCard = clone.querySelector('#pfHoverCard');
-      if (oldCard) oldCard.remove();
+      ['#pfHoverCard', '#pfHoverCardDock', '#pfHoverCss'].forEach(sel => { const n = clone.querySelector(sel); if (n) n.remove(); });
 
       const topKeys = Object.keys(tree);
       const dt = new Date();
@@ -8644,22 +8818,77 @@
           html = dash.html;
           base = (view === 'simple' ? 'Process overview ' : 'Process dashboard ') + dash.dateStr;
         } else {
-          const { items } = expBuildItems(1);
+          const { items, total } = expBuildItems(1, expPvAt(expPathCount()));
           if (!items.length) return { empty: 'Nothing to export' };
           fr = expFramed(items[0].result);
           ratio = expCodeRatio(fr);
+          title = items[0].title;
           html = expStaticHtml(fr, title, expCodeSize(ratio));
           base = items[0].base;
+          const size = expCodeSize(ratio);
+          if (!size.fixed) size.view = { w: 960, h: Math.round(960 / ratio) };
+          return { kind: 'html', total, html, size, base, title, text: html };
         }
         const size = expCodeSize(ratio);
         if (content === 'dashboard' || !size.fixed) size.view = { w: 960, h: Math.round(960 / ratio) };
         return { kind: 'html', total: 1, html, size, base, title, text: html };
       }
-      const { items, total } = expBuildItems(1);
+      const { items, total } = expBuildItems(1, expPvAt(expPathCount()));
       if (!items.length) return { empty: 'Nothing to export' };
       const fr = expFramed(items[0].result);
       return { kind: t, total, fr, base: items[0].base, title: items[0].title };
     }
+    // Names and titles of every file, without laying the diagrams out
+    function expFileEntries() {
+      const s = expSettings, start = parseInt($('expCodeStart').value, 10);
+      const codeOf = s.showCodes ? expBuildCodeOf(s.codeMode, Number.isFinite(start) ? start : 1) : null;
+      return expDiagramPaths().map(path => ({ base: expFileBase(path, codeOf), title: path.length ? path[path.length - 1] : 'All processes' }));
+    }
+    // One file of several, ready to save
+    async function expItemBlob(i) {
+      const { items } = expBuildItems(1, i);
+      if (!items.length) return null;
+      const it = items[0], fr = expFramed(it.result);
+      if (expFmt() === 'html') return new Blob([expStaticHtml(fr, it.title, expCodeSize(expCodeRatio(fr)))], { type: 'text/html' });
+      return expFileBlob(fr, it.title);
+    }
+    const expItemExt = () => expFmt() === 'html' ? '.html' : EXPORT_EXT[expFmt()];
+
+    // Lists the files when there are several, each with its own download button
+    function expRenderFileList(out) {
+      const box = $('expFiles'), list = $('expFilesList');
+      if (!out || out.total < 2) { box.hidden = true; list.innerHTML = ''; return; }
+      const entries = expFileEntries(), ext = expItemExt();
+      box.hidden = false;
+      $('expFilesCount').textContent = entries.length + ' files';
+      list.innerHTML = '';
+      entries.forEach((e, i) => {
+        const li = document.createElement('li');
+        li.classList.toggle('active', i === expPvIndex);
+        const name = document.createElement('button');
+        name.type = 'button'; name.className = 'exp-file-name';
+        name.textContent = e.base + ext; name.title = e.title;
+        name.addEventListener('click', () => { expPvIndex = i; expSchedulePreview(); });
+        const dl = document.createElement('button');
+        dl.type = 'button'; dl.className = 'exp-file-dl'; dl.textContent = 'Download';
+        dl.setAttribute('aria-label', 'Download ' + e.base + ext);
+        dl.addEventListener('click', async () => {
+          const blob = await expItemBlob(i);
+          if (!blob) { showExportToast('Export failed: diagram too large at this scale'); return; }
+          saveBlob(blob, e.base + ext);
+          dl.textContent = 'Downloaded ✓'; dl.classList.add('done');
+        });
+        li.appendChild(name); li.appendChild(dl);
+        list.appendChild(li);
+      });
+      const act = list.children[expPvIndex];
+      if (act && act.scrollIntoView) act.scrollIntoView({ block: 'nearest' });
+    }
+
+    // Which of several files the preview shows
+    let expPvIndex = 0;
+    const expPathCount = () => expDiagramPaths().length;
+    const expPvAt = n => (expPvIndex = Math.max(0, Math.min(expPvIndex, n - 1)));
 
     function expSchedulePreview() {
       clearTimeout(expPreviewTimer);
@@ -8678,6 +8907,7 @@
       let out;
       try { out = expBuildOutput(); } catch (err) { console.error(err); out = { empty: 'Preview failed' }; }
       expOut = out.empty ? null : out;
+      expRenderFileList(expOut);
       pv.className = 'exp-preview';
       box.value = '';
       if (out.empty) {
@@ -8698,7 +8928,7 @@
         const svg = pv.querySelector('svg');
         svg.setAttribute('width', Math.max(1, Math.round(fr.svgW * k)));
         svg.setAttribute('height', Math.max(1, Math.round(fr.svgH * k)));
-        const more = out.total > 1 ? ' · showing 1 of ' + out.total + ' files' : '';
+        const more = out.total > 1 ? ' · file ' + (expPvIndex + 1) + ' of ' + out.total : '';
         if (isImage) {
           const sc = expSettings.image.scale, w = Math.round(fr.svgW * sc), h = Math.round(fr.svgH * sc);
           const big = fmt === 'png' && expPngTooBig(w, h) ? ' · too large for PNG at ' + sc + 'x, pick a smaller scale or SVG' : '';
@@ -8722,7 +8952,7 @@
         const kb = Math.round(out.html.length / 1024);
         const sizeTxt = out.size.fixed ? out.size.w + ' × ' + out.size.h + ' px' : '100% width';
         meta.classList.remove('is-warn');
-        meta.textContent = 'HTML · ' + sizeTxt + ' · one file, ' + kb + ' KB' +
+        meta.textContent = 'HTML · ' + sizeTxt + (out.total > 1 ? ' · file ' + (expPvIndex + 1) + ' of ' + out.total + ', ' : ' · one file, ') + kb + ' KB' +
           (expContent() === 'dashboard' && expSettings.code.dashView !== 'simple' ? '' : ' · hover a process for its details');
         const MAX = 20000;
         box.value = out.text.length > MAX
@@ -8743,7 +8973,7 @@
       const fmt = expFmt(), a = EXP_ACTIONS[fmt], go = $('btnExpGo'), cp = $('btnExpCopy');
       const n = expOut ? expOut.total : 0;
       const note = '', blocked = !expOut;
-      go.textContent = n > 1 ? 'Download ' + n + ' files' : a.dl;
+      go.textContent = n > 1 ? 'Download all ' + n + ' files' : a.dl;
       go.disabled = blocked || n === 0;
       cp.hidden = !a.copy;
       cp.textContent = a.copy || '';
@@ -8757,10 +8987,20 @@
       const sel = $('expSplit');
       sel.innerHTML = '';
       const add = (v, t) => { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); };
-      add('one', 'One diagram');
-      for (let n = Math.max(1, expScopeLevel() + 1); n <= 3; n++) add(String(n), 'One per L' + n + ' process (separate files)');
+      const sc = expScopeLevel(), name = sc ? 'This process' : 'The overview';
+      add('one', 'One file');
+      for (let n = 1; sc + n <= EXP_MAX_LEVEL - 1; n++) {
+        add('tree' + n, name + ' + ' + (n === 1 ? '1 level' : n + ' levels') + ' below, one file per process');
+      }
+      if (expType() !== 'code') {
+        for (let n = Math.max(1, sc + 1); n <= 3; n++) add(String(n), 'Only the L' + n + ' processes, one file each');
+      }
       if (![...sel.options].some(o => o.value === String(expSettings.split))) expSettings.split = 'one';
       sel.value = String(expSettings.split);
+      const n = expSplitVal() === 'one' ? 1 : expDiagramPaths().length;
+      $('expSplitHint').textContent = n > 1
+        ? n + ' separate files, each with its own download button under the preview.'
+        : 'Pick the parent process above, then how many levels below it get their own file.';
     }
 
     function expBuildDeepestOptions() {
@@ -8796,7 +9036,10 @@
         optsEl.className = 'exp-lv-opts';
         const orient = document.createElement('span');
         orient.className = 'exp-lv-orient';
-        [['h', '⇆ H', 'Horizontal'], ['v', '⇅ V', 'Vertical']].forEach(([v, t, title]) => {
+        // Top to bottom turns the whole diagram, so a level laid out "side by side" runs downwards
+        const tb = expSettings.direction === 'tb';
+        [['h', tb ? '⇅ V' : '⇆ H', tb ? 'Vertical (along the flow)' : 'Horizontal'],
+         ['v', tb ? '⇆ H' : '⇅ V', tb ? 'Horizontal (across the flow)' : 'Vertical']].forEach(([v, t, title]) => {
           const b = document.createElement('button');
           b.type = 'button'; b.textContent = t; b.title = title + ' layout for L' + abs;
           b.dataset.abs = abs; b.dataset.orient = v;
@@ -8891,6 +9134,7 @@
     }
     function expChanged() { expSaveSettings(); expRefresh(); }
     function expScopeChanged() {
+      expPvIndex = 0;
       $('expCodeStart').value = expDefaultCodeStart();
       expRefresh();
     }
@@ -8919,7 +9163,17 @@
       const active = exportModal.querySelector('.exp-type.active');
       if (active) active.focus();
     }
+    // Enlarges the live preview inside the export window (Esc goes back)
+    function expSetPreviewExpanded(on) {
+      exportModal.classList.toggle('pv-expanded', on);
+      const b = $('expPvExpand');
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.title = on ? 'Back to the settings (Esc)' : 'Enlarge the preview (Esc to go back)';
+      $('expPvExpandLabel').textContent = on ? 'Back to settings' : 'Enlarge';
+      expSchedulePreview();
+    }
     function closeExportModal() {
+      expSetPreviewExpanded(false);
       exportModal.classList.add('hidden');
       clearTimeout(expPreviewTimer);
       $('expPreview').innerHTML = '';
@@ -8958,7 +9212,7 @@
       if (Number.isFinite(v) && v >= 200) { expSettings.code.width = Math.min(4000, v); expSaveSettings(); expSchedulePreview(); }
     });
     $('expAdvanced').addEventListener('toggle', () => { expSettings.advOpen = $('expAdvanced').open; expSaveSettings(); });
-    $('expSplit').addEventListener('change', e => { expSettings.split = e.target.value; expChanged(); });
+    $('expSplit').addEventListener('change', e => { expSettings.split = e.target.value; expPvIndex = 0; expChanged(); });
     $('expDeepest').addEventListener('change', e => { expSettings.deepest = Number(e.target.value); expChanged(); });
     $('expParents').addEventListener('change', e => { expSettings.parents = e.target.checked; expChanged(); });
     $('expShowCodes').addEventListener('change', e => { expSettings.showCodes = e.target.checked; expChanged(); });
@@ -8974,7 +9228,12 @@
 
     $('btnExpCancel').addEventListener('click', closeExportModal);
     exportModal.addEventListener('click', e => { if (e.target === exportModal) closeExportModal(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !exportModal.classList.contains('hidden')) closeExportModal(); });
+    $('expPvExpand').addEventListener('click', () => expSetPreviewExpanded(!exportModal.classList.contains('pv-expanded')));
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape' || exportModal.classList.contains('hidden')) return;
+      if (exportModal.classList.contains('pv-expanded')) expSetPreviewExpanded(false);
+      else closeExportModal();
+    });
 
     // ── Copy and download ──
     async function expCopyText(text) {
@@ -9023,6 +9282,10 @@
     async function expDownload() {
       if (!expOut) return;
       const fmt = expFmt();
+      if (fmt === 'html' && expOut.total > 1) {
+        await saveFiles(expFileEntries().map((e, i) => ({ name: e.base + '.html', make: () => expItemBlob(i) })));
+        return;
+      }
       if (fmt === 'html') {
         saveBlob(new Blob([expOut.html], { type: 'text/html' }), sanitizeFileName(expOut.base) + '.html');
         showExportToast('Exported HTML');
@@ -9174,7 +9437,13 @@
         subtree = { [usePath[i]]: { _children: subtree, _meta: nodeObj._meta, _desc: nodeObj._desc, _code: nodeObj._code } };
       }
       if (!Object.keys(subtree).length) return null;
-      const S = SVG_LAYOUT;
+      // Top to bottom: the left-to-right layout is computed with width and
+      // height swapped, then every position is mirrored on the diagonal, so the
+      // steps run downwards and each level sits in a column to the right.
+      const TB = opts.direction === 'tb';
+      const L0 = SVG_LAYOUT;
+      const S = TB ? Object.assign({}, L0, { NW: L0.NH, NH: L0.NW, HGAP: L0.VGAP, VGAP: L0.HGAP }) : L0;
+      const tx = TB ? (x, y, w, h) => ({ x: y, y: x, w: h, h: w }) : (x, y, w, h) => ({ x, y, w, h });
 
       const exportRootAbsDepth = Math.max(0, usePath.length - 1) + levelOffset;
       const maxExportLevel     = Math.min(useMaxAbs - exportRootAbsDepth + 1,
@@ -9239,6 +9508,8 @@
       // Pushes the shape model (used by every exporter) and its SVG; returns its index.
       function drawNode(nodeX, nodeY, nodeW, nodeH, cx, key, absLevel, nodeObj, code) {
         const ci = Math.min(absLevel, EXP_FILLS.length - 1);
+        const g = tx(nodeX, nodeY, nodeW, nodeH);
+        nodeX = g.x; nodeY = g.y; nodeW = g.w; nodeH = g.h;
         const sh = { x: nodeX, y: nodeY, w: nodeW, h: nodeH, name: key, level: absLevel,
           text: (opts.showCodes && code) ? code + (opts.codeOwnLine ? '\n' : ' ') + key : key,
           fill: EXP_FILLS[ci], stroke: EXP_STROKES[ci], color: EXP_TEXTS[ci],
@@ -9288,6 +9559,15 @@
       // renderLevel: positions items at absolute (xBase+item.x, yBase+item.y)
       function levelLabel(abs, y) {
         const ci = Math.min(abs, EXP_FILLS.length - 1);
+        if (TB) {
+          // Columns: the level tag sits above its column
+          const cx = y + L0.NW / 2;
+          parts.levelTags.push({ x: cx - 20, y: S.PAD - 40, w: 40, h: 20, text: 'L' + abs, color: EXP_FILLS[ci] });
+          parts.labels.push(
+            '<text x="' + cx + '" y="' + (S.PAD - 14) + '" text-anchor="middle" fill="' + EXP_FILLS[ci] + '"' +
+            ' font-size="11" font-weight="700" letter-spacing="0.5" font-family="' + FF + '">L' + abs + '</text>');
+          return;
+        }
         parts.levelTags.push({ x: S.PAD - 50, y: y + S.NH / 2 - 10, w: 40, h: 20, text: 'L' + abs, color: EXP_FILLS[ci] });
         parts.labels.push(
           '<text x="' + (S.PAD - 10) + '" y="' + (y + S.NH / 2 + 4) + '" text-anchor="end"' +
@@ -9337,6 +9617,11 @@
               ? { x1: a.x + a.w / 2, y1: a.y + (a.hasKids ? a.subtreeH : S.NH), x2: b.x + b.w / 2, y2: b.y }
               : { x1: a.x + a.w, y1: a.y + S.NH / 2, x2: b.x, y2: b.y + S.NH / 2 };
             ar.from = a.shapeIdx; ar.to = b.shapeIdx; ar.vertical = vertical; ar.fromHasKids = a.hasKids;
+            if (TB) {
+              [ar.x1, ar.y1, ar.x2, ar.y2] = [ar.y1, ar.x1, ar.y2, ar.x2];
+              ar.vertical = !vertical;
+              ar.tb = true;
+            }
             parts.arrows.push(ar);
           }
         }
@@ -9349,6 +9634,7 @@
       const chainH = chain.length * (S.NH + S.VGAP);
       svgW = measured.totalW + S.PAD * 2;
       svgH = measured.totalH + chainH + S.PAD * 2;
+      if (TB) [svgW, svgH] = [svgH, svgW];
       chain.forEach((p, i) => {
         const y = S.PAD + i * (S.NH + S.VGAP);
         levelLabel(p.abs, y);
@@ -9358,6 +9644,15 @@
       renderLevel(measured.items, 0, S.PAD, S.PAD + chainH, '', usePath.slice(0, -1));
 
       const arrowSvg = parts.arrows.map(a => {
+        if (a.tb && a.y1 === a.y2) {
+          return '<line x1="' + a.x1 + '" y1="' + a.y1 + '" x2="' + (a.x2 - 1) + '" y2="' + a.y2 + '" stroke="' + EXP_ARROW_COLOR +
+            '" stroke-width="1.5" marker-end="url(#expArrow)"/>';
+        }
+        if (a.tb && a.vertical && a.x1 !== a.x2) {
+          const my = (a.y1 + a.y2) / 2;
+          return '<polyline points="' + a.x1 + ',' + a.y1 + ' ' + a.x1 + ',' + my + ' ' + a.x2 + ',' + my + ' ' + a.x2 + ',' + (a.y2 - 1) +
+            '" fill="none" stroke="' + EXP_ARROW_COLOR + '" stroke-width="1.5" marker-end="url(#expArrow)"/>';
+        }
         if (a.vertical || a.y1 === a.y2) {
           return '<line x1="' + a.x1 + '" y1="' + a.y1 + '" x2="' + a.x2 + '" y2="' + (a.y2 - 1) + '" stroke="' + EXP_ARROW_COLOR +
             '" stroke-width="1.5" marker-end="url(#expArrow)"/>';
@@ -9675,7 +9970,11 @@
       });
       (result.arrows || []).forEach((a, i) => {
         // Vertical arrow from a block with children goes round the left side
-        const ports = !a.vertical ? 'exitX=1;exitY=0.5;entryX=0;entryY=0.5;'
+        // Top to bottom: steps flow downwards; a sideways arrow from a block with children goes over the top
+        const ports = a.tb
+          ? (a.vertical ? 'exitX=0.5;exitY=1;entryX=0.5;entryY=0;'
+             : a.fromHasKids ? 'exitX=0.5;exitY=0;entryX=0.5;entryY=0;' : 'exitX=1;exitY=0.5;entryX=0;entryY=0.5;')
+          : !a.vertical ? 'exitX=1;exitY=0.5;entryX=0;entryY=0.5;'
           : a.fromHasKids ? 'exitX=0;exitY=0.5;entryX=0;entryY=0.5;'
           : 'exitX=0.5;exitY=1;entryX=0.5;entryY=0;';
         cells.push('<mxCell id="e' + i + '" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;' +
@@ -9819,105 +10118,37 @@
       setZoom(1.0);
       render('right');
     }
-    // ── SIMPLIFIED VIEW ─────────────────────────────────────────────────────
-    // Set by the "Simplified" dashboard export: no menus or panels, and the
-    // details of a process show in a large hover card (tap on touch screens).
-    // A mouse click opens a process; on touch the first tap shows the card and
-    // a second tap opens it.
-    let simpleView = false;
-    function initSimpleView() {
-      simpleView = true;
-      document.documentElement.classList.add('pf-simple');
+    // ── HOVER CARDS AND THE SIMPLIFIED VIEW ─────────────────────────────────
+    // Every view shows a large hover card with the full name and all filled-in
+    // details of a process (after a short delay; pin keeps it at the side).
+    // The "Simplified" dashboard export also hides menus and panels: a mouse
+    // click opens a process; on touch the first tap shows the card and a
+    // second tap opens it.
+    let simpleView = false, hoverKit = null;
+    function initHoverCards(simple) {
+      simpleView = !!simple;
+      if (simpleView) document.documentElement.classList.add('pf-simple');
       const style = document.createElement('style');
+      style.id = 'pfHoverCss';
       style.textContent = hoverCardCss(true);
       document.head.appendChild(style);
-      const card = document.createElement('div');
-      card.className = 'hcard'; card.id = 'pfHoverCard'; card.setAttribute('role', 'tooltip');
-      document.body.appendChild(card);
-
-      let on = null, pinned = false, touch = false, keyboard = false;
-      const nodeOf = t => (t && t.closest) ? t.closest('.node, .erp-node') : null;
-      function dataFor(el) {
-        const key = el.getAttribute('data-key');
-        const n = getNodesAtPath(currentPath)[key] || { _children: {} };
-        const m = n._meta || null;
-        const sh = { level: levelOffset + currentPath.length, code: n._code, name: altLabel(key),
-                     desc: n._desc || (m && m.L4_Desc) || '', meta: m };
-        const kids = Object.keys(n._children || {}).length > 0;
-        return { t: altLabel(key), f: hoverCardRows(sh),
-                 hint: kids ? (touch ? 'Tap again to open' : 'Click to open') : '' };
-      }
-      function show(el, x, y) {
-        on = el;
-        hoverCardFill(card, dataFor(el));
-        card.classList.add('show');
-        hoverCardPlace(card, x, y);
-      }
-      // Under the process (or above it when there is no room), never over it
-      function showAtNode(el) {
-        const r = el.getBoundingClientRect();
-        show(el, r.left, r.bottom);
-        const m = 8, h = card.offsetHeight, w = card.offsetWidth;
-        let t = r.bottom + m;
-        if (t + h > window.innerHeight - m && r.top - h - m >= m) t = r.top - h - m;
-        card.style.top = Math.max(m, t) + 'px';
-        card.style.left = Math.max(m, Math.min(window.innerWidth - w - m, r.left + r.width / 2 - w / 2)) + 'px';
-      }
-      function hide() { on = null; pinned = false; card.classList.remove('show', 'pinned'); }
-      function pin() { pinned = true; card.classList.add('pinned'); }
-
-      // Mouse or touch, from the last pointer used
-      document.addEventListener('pointerdown', e => { touch = e.pointerType !== 'mouse'; keyboard = false; }, true);
-      // Keyboard users get the card on focus (not on the automatic focus at load)
-      document.addEventListener('keydown', () => { keyboard = true; }, true);
-      document.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') touch = false; }, true);
-
-      flowContainer.addEventListener('mouseover', e => {
-        if (touch || pinned) return;
-        const el = nodeOf(e.target);
-        if (el && el !== on) show(el, e.clientX, e.clientY);
+      hoverKit = hoverCardKit({
+        root: flowContainer, id: 'pfHoverCard', delay: 400, dockTop: 68,
+        tap: simpleView ? 'open' : 'none', clickShows: simpleView,
+        find: t => (t && t.closest) ? t.closest('.node, .erp-node:not(.erp-empty)') : null,
+        opens: el => el.classList.contains('has-children'),
+        open: el => drillInto(el.getAttribute('data-key')),
+        data(el, touch) {
+          const key = el.getAttribute('data-key');
+          const n = getNodesAtPath(currentPath)[key] || { _children: {} };
+          const m = n._meta || null;
+          const sh = { level: levelOffset + currentPath.length, code: n._code, name: altLabel(key),
+                       desc: n._desc || (m && m.L4_Desc) || '', meta: m };
+          const kids = Object.keys(n._children || {}).length > 0;
+          return { t: altLabel(key), f: hoverCardRows(sh),
+                   hint: kids ? (touch ? 'Tap again to open' : 'Click to open') : '' };
+        },
       });
-      flowContainer.addEventListener('mousemove', e => {
-        if (!touch && !pinned && on) hoverCardPlace(card, e.clientX, e.clientY);
-      });
-      flowContainer.addEventListener('mouseout', e => {
-        if (!pinned && on && !on.contains(e.relatedTarget)) hide();
-      });
-      // Capture phase: decides before the node's own click (which opens it)
-      flowContainer.addEventListener('click', e => {
-        const el = nodeOf(e.target);
-        if (!el || e.target.closest('a, button')) return;
-        const opens = el.classList.contains('has-children');
-        if (touch) {
-          if (pinned && on === el) { hide(); if (opens) return; }
-          else { showAtNode(el); pin(); }
-          e.stopPropagation(); e.preventDefault();
-          return;
-        }
-        if (opens) { hide(); return; }
-        // A step without children: keep its card open so it can be read and scrolled
-        if (pinned && on === el) hide();
-        else { show(el, e.clientX, e.clientY); pin(); }
-      }, true);
-      flowContainer.addEventListener('focusin', e => {
-        const el = nodeOf(e.target);
-        if (el && !pinned && keyboard) showAtNode(el);
-      });
-      flowContainer.addEventListener('focusout', e => {
-        if (!pinned && on && !on.contains(e.relatedTarget)) hide();
-      });
-      document.addEventListener('click', e => {
-        if (pinned && !card.contains(e.target) && nodeOf(e.target) !== on) hide();
-      });
-      // Tapping the card of a process with steps opens it
-      card.addEventListener('click', () => {
-        if (!on || !on.classList.contains('has-children')) return;
-        const key = on.getAttribute('data-key');
-        hide(); drillInto(key);
-      });
-      document.addEventListener('keydown', e => { if (e.key === 'Escape' || e.key === 'Enter') hide(); });
-      window.addEventListener('scroll', () => { if (!pinned) hide(); }, true);
-      window.addEventListener('resize', hide);
     }
 
     async function init() {
@@ -9929,8 +10160,8 @@
         $('btnReset').style.display = 'none';
         $('infoWrap').style.display = 'block';
         initInfoDropdown();
-        if (window.__PF_EMBED__.v === 'simple') initSimpleView();
       }
+      initHoverCards(!!(window.__PF_EMBED__ && window.__PF_EMBED__.v === 'simple'));
       initShortcutsDropdown();
       btnHome.addEventListener('click', goHome);
       btnUp.addEventListener('click', goUp);
