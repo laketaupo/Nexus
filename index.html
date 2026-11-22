@@ -1111,7 +1111,7 @@
     .exp-title { font-size: 1.05rem; font-weight: 700; color: var(--txt); }
     #exportModal .exp-box { width: 1120px; height: min(820px, calc(100vh - 2rem)); padding: 1.2rem 1.4rem; gap: .85rem; }
     #exportModal [hidden] { display: none !important; }
-    .exp-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; }
+    .exp-types { display: grid; grid-template-columns: repeat(2, 1fr); gap: .5rem; }
     .exp-type { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: .65rem;
       align-items: center; text-align: left; padding: .6rem .8rem; border-radius: 9px; cursor: pointer;
       border: 1px solid var(--bdr-s); background: var(--surf); color: var(--txt2); transition: border-color .15s, background .15s; }
@@ -1122,7 +1122,7 @@
     .exp-type.active { border-color: var(--acc); background: var(--acc-10); box-shadow: inset 0 0 0 1px var(--acc); }
     .exp-type.active svg, .exp-type.active .exp-type-name { color: var(--acc-t); }
     .exp-type:focus-visible, .exp-seg button:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
-    .exp-main { display: grid; grid-template-columns: 380px 1fr; gap: 1.1rem; flex: 1; min-height: 0; }
+    .exp-main { display: grid; grid-template-columns: 430px 1fr; gap: 1.1rem; flex: 1; min-height: 0; }
     .exp-main .exp-body { min-height: 0; }
     .exp-seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--bdr-s); border-radius: 7px; overflow: hidden; align-self: flex-start; }
     .exp-seg button { background: var(--surf); border: none; border-right: 1px solid var(--bdr-xs); padding: .3rem .7rem;
@@ -1132,7 +1132,7 @@
     .exp-seg button.active { background: var(--acc-10); color: var(--acc-t); font-weight: 600; }
     .exp-grid { display: grid; grid-template-columns: auto 1fr; gap: .5rem .8rem; align-items: center; }
     .exp-k { font-size: .82rem; color: var(--txt3); }
-    .exp-grid > .exp-seg, .exp-grid > .exp-opt { justify-self: start; }
+    .exp-grid > .exp-seg, .exp-grid > .exp-opt, .exp-grid > select { justify-self: start; }
     .exp-hint { font-size: .76rem; color: var(--txt4); line-height: 1.45; }
     .exp-adv { border: 1px solid var(--bdr-xs); border-radius: 8px; padding: .45rem .7rem; }
     .exp-adv summary { cursor: pointer; font-size: .72rem; font-weight: 600; text-transform: uppercase;
@@ -1214,6 +1214,28 @@
     .gantt-export-fmt { font-size: .72rem; padding: .18rem .3rem; border-radius: 6px; border: 1px solid var(--bdr-s);
       background: var(--surf); color: var(--txt2); cursor: pointer; }
     .exp-section { display: flex; flex-direction: column; gap: .45rem; }
+    /* Numbered blocks: 1 What to export, 2 Type, 3 View */
+    .exp-block { display: flex; flex-direction: column; gap: .7rem; padding-bottom: 1rem; border-bottom: 1px solid var(--bdr-xs); }
+    .exp-block:last-child { border-bottom: none; }
+    .exp-block-head { display: flex; align-items: center; font-size: .8rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .04em; color: var(--txt2); }
+    .exp-block-body { display: flex; flex-direction: column; gap: .75rem; }
+    .exp-block-note { font-size: .78rem; color: var(--txt3); background: var(--surf2); border-radius: 6px; padding: .4rem .6rem; }
+    .exp-sub-head { display: flex; align-items: baseline; justify-content: space-between; gap: .6rem; }
+    .exp-sub-links { display: inline-flex; gap: .7rem; }
+    .exp-proc-list { border: 1px solid var(--bdr-s); border-radius: 8px; background: var(--surf); max-height: 210px; overflow-y: auto; padding: .25rem 0; }
+    .exp-proc-group { font-size: .7rem; font-weight: 600; color: var(--txt4); padding: .35rem .65rem .1rem; text-transform: uppercase; letter-spacing: .03em;
+      display: flex; align-items: center; gap: .4rem; cursor: pointer; }
+    .exp-proc-group input { accent-color: var(--acc); cursor: pointer; }
+    .exp-proc-item { display: flex; align-items: center; gap: .45rem; padding: .16rem .65rem; font-size: .82rem; color: var(--txt2); cursor: pointer; }
+    .exp-proc-item.in-group { padding-left: 1.4rem; }
+    .exp-proc-item:hover { background: var(--bdr-xs); }
+    .exp-proc-item input { accent-color: var(--acc); width: 15px; height: 15px; cursor: pointer; flex: none; }
+    .exp-proc-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .exp-proc-empty { font-size: .8rem; color: var(--txt4); font-style: italic; padding: .4rem .65rem; }
+    .exp-file-copy { flex: none; font-size: .72rem; padding: .2rem .55rem; border-radius: 6px; border: 1px solid var(--bdr-s);
+      background: var(--surf); color: var(--txt3); cursor: pointer; }
+    .exp-file-copy:hover, .exp-file-copy.done { border-color: var(--acc); color: var(--acc-t); }
     .exp-label { font-size: .72rem; font-weight: 600; text-transform: uppercase;
       letter-spacing: .05em; color: var(--txt4); }
     /* ── EXPORT PICKER ─────────────────────────────────────────────────── */
@@ -2845,130 +2867,116 @@
         <div class="exp-title" id="expTitle">Export</div>
         <button type="button" id="expReset" class="exp-link" title="Restore the default settings">Reset to defaults</button>
       </div>
-      <div class="exp-types" id="expTypes" role="radiogroup" aria-label="Export type">
-        <button type="button" class="exp-type" data-type="image" role="radio">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 9"/></svg>
-          <span class="exp-type-name">Image</span><span class="exp-type-sub">SVG, PNG</span>
-        </button>
-        <button type="button" class="exp-type" data-type="code" role="radio">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M13.5 5l-3 14"/></svg>
-          <span class="exp-type-name">Code</span><span class="exp-type-sub">HTML</span>
-        </button>
-        <button type="button" class="exp-type" data-type="flowchart" role="radio">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="5" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="8.5" y="16" width="7" height="5" rx="1"/><path d="M10 5.5h4M6.5 8v4.5h5.5V16M17.5 8v4.5H12"/></svg>
-          <span class="exp-type-name">Flowchart</span><span class="exp-type-sub">draw.io, Visio</span>
-        </button>
-      </div>
       <div class="exp-main">
         <div class="exp-body">
-          <div class="exp-section">
-            <div class="exp-label">Format</div>
-            <div class="exp-seg" id="expFmtSeg"></div>
+
+          <!-- 1. What to export -->
+          <div class="exp-block">
+            <div class="exp-block-head"><span class="exp-step">1</span>What to export</div>
+            <div class="exp-block-note" data-types="dashboard">The dashboard always holds all processes, so these choices don't apply to it.</div>
+            <div class="exp-block-body" data-hide-types="dashboard">
+              <div class="exp-grid">
+                <span class="exp-k">Start level</span>
+                <div class="exp-seg" id="expStartSeg" title="The level of the processes you export"></div>
+                <span class="exp-k" data-hide-swim>Down to</span>
+                <select id="expDeepest" class="exp-opt-input" data-hide-swim aria-label="Down to" title="How deep each diagram goes"></select>
+              </div>
+              <div class="exp-section">
+                <div class="exp-sub-head">
+                  <span class="exp-sublabel" id="expProcCount">Processes</span>
+                  <span class="exp-sub-links"><button type="button" class="exp-link" id="expProcAll">All</button><button type="button" class="exp-link" id="expProcNone">None</button></span>
+                </div>
+                <div class="exp-proc-list" id="expProcList" role="group" aria-label="Processes to export"></div>
+              </div>
+              <div class="exp-section" id="expParentsBox">
+                <div class="exp-sublabel">Include the levels above</div>
+                <div class="exp-opt-line" id="expParentChecks"></div>
+              </div>
+              <div class="exp-section" id="expFilesBox">
+                <div class="exp-sublabel">Files</div>
+                <div class="exp-seg" data-key="files" title="One file with everything, or a file per process"><button type="button" data-v="one">All in one file</button><button type="button" data-v="each">One file per process</button></div>
+                <div class="exp-hint" id="expFilesHint"></div>
+              </div>
+            </div>
           </div>
 
-          <div class="exp-section">
-            <div class="exp-label">Content</div>
-            <div class="exp-seg exp-seg-wrap" id="expContentSeg"></div>
-            <div class="exp-picker" data-contents="process">
-              <div class="exp-col" id="expCol0"></div>
-              <div class="exp-col" id="expCol1"></div>
-              <div class="exp-col" id="expCol2"></div>
+          <!-- 2. Type -->
+          <div class="exp-block">
+            <div class="exp-block-head"><span class="exp-step">2</span>Type</div>
+            <div class="exp-types" id="expTypes" role="radiogroup" aria-label="Export type">
+              <button type="button" class="exp-type" data-type="image" role="radio">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 9"/></svg>
+                <span class="exp-type-name">Image</span><span class="exp-type-sub">SVG, PNG</span>
+              </button>
+              <button type="button" class="exp-type" data-type="code" role="radio">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M13.5 5l-3 14"/></svg>
+                <span class="exp-type-name">Code</span><span class="exp-type-sub">HTML</span>
+              </button>
+              <button type="button" class="exp-type" data-type="dashboard" role="radio">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 9v12"/></svg>
+                <span class="exp-type-name">Dashboard</span><span class="exp-type-sub">Interactive HTML</span>
+              </button>
+              <button type="button" class="exp-type" data-type="flowchart" role="radio">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="5" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="8.5" y="16" width="7" height="5" rx="1"/><path d="M10 5.5h4M6.5 8v4.5h5.5V16M17.5 8v4.5H12"/></svg>
+                <span class="exp-type-name">Flowchart</span><span class="exp-type-sub">draw.io, Visio</span>
+              </button>
             </div>
-            <div id="expSelInfo" class="exp-summary" data-contents="selection"></div>
-            <div class="exp-opt-line" data-hide-contents="dashboard" data-hide-swim>
-              <label class="exp-opt" title="How deep the diagram goes">Levels down to <select id="expDeepest" class="exp-opt-input"></select></label>
+            <div class="exp-grid">
+              <span class="exp-k" data-hide-types="dashboard">Format</span>
+              <div class="exp-seg" id="expFmtSeg" data-hide-types="dashboard"></div>
+              <span class="exp-k" data-types="dashboard">View</span>
+              <div class="exp-seg" data-key="dashView" data-types="dashboard"><button type="button" data-v="full">Full</button><button type="button" data-v="simple">Simplified</button></div>
             </div>
-            <div class="exp-grid" data-hide-contents="dashboard">
+            <div class="exp-hint" data-types="dashboard" data-when="dashView:full">The full Nexus view with your data built in: pan, zoom and click into processes. Process details show in the side panel.</div>
+            <div class="exp-hint" data-types="dashboard" data-when="dashView:simple">Only the process and its path, without menus or panels. Click a process to open it; hover (or tap) for a large card with all of its details.</div>
+          </div>
+
+          <!-- 3. View -->
+          <div class="exp-block" data-hide-types="dashboard">
+            <div class="exp-block-head"><span class="exp-step">3</span>View</div>
+            <div class="exp-grid">
               <span class="exp-k">Flow</span>
               <div class="exp-seg" data-key="direction" title="Which way the process steps run"><button type="button" data-v="lr">Left to right</button><button type="button" data-v="tb">Top to bottom</button></div>
-              <span class="exp-k" data-formats="svg png html drawio">Layout</span>
-              <div class="exp-seg" data-key="layout" data-formats="svg png html drawio" title="Standard levels, or one process in swimlanes"><button type="button" data-v="standard">Standard</button><button type="button" data-v="swimlane">Swimlanes</button></div>
+              <span class="exp-k" data-hide-formats="vsdx">Layout</span>
+              <div class="exp-seg" data-key="layout" data-hide-formats="vsdx" title="Standard levels, or each process in swimlanes"><button type="button" data-v="standard">Standard</button><button type="button" data-v="swimlane">Swimlanes</button></div>
               <span class="exp-k" data-swim>Lanes by</span>
               <select id="expLaneField" class="exp-opt-input" data-swim aria-label="Lanes by" title="The field that puts each step in a lane"></select>
-            </div>
-            <div class="exp-hint" data-swim>The process and its steps one level down, one lane per value. Steps without a value go in Unassigned. Left to right gives lanes as rows, top to bottom as columns.</div>
-            <div class="exp-hint" data-formats="vsdx" data-when="layout:swimlane">Swimlanes are available for draw.io, SVG, PNG and HTML. Visio uses the standard layout.</div>
-            <div class="exp-grid exp-dash-view" data-contents="dashboard">
-              <span class="exp-k">View</span>
-              <div class="exp-seg" data-key="code.dashView"><button type="button" data-v="full">Full</button><button type="button" data-v="simple">Simplified</button></div>
-            </div>
-            <div class="exp-hint" data-contents="dashboard" data-when="code.dashView:full">The full Nexus view with your data built in: pan, zoom and click into processes. Process details show in the side panel.</div>
-            <div class="exp-hint" data-contents="dashboard" data-when="code.dashView:simple">Only the process and its path, without menus or panels. Click a process to open it; hover (or tap) for a large card with all of its details.</div>
-          </div>
-
-          <div class="exp-section" data-types="image">
-            <div class="exp-label">Image</div>
-            <div class="exp-grid">
-              <span class="exp-k">Scale</span>
-              <div class="exp-seg" data-key="image.scale" data-num><button type="button" data-v="1">1x</button><button type="button" data-v="2">2x</button><button type="button" data-v="4">4x</button></div>
-              <span class="exp-k">Background</span>
-              <div class="exp-seg" data-key="image.bg"><button type="button" data-v="transparent">Transparent</button><button type="button" data-v="white">White</button></div>
-              <span class="exp-k">Padding</span>
-              <label class="exp-opt"><input type="number" id="expPadding" class="exp-opt-input exp-opt-num" min="0" max="400" step="4"> px</label>
               <span class="exp-k">Orientation</span>
-              <div class="exp-seg" data-key="image.orient"><button type="button" data-v="landscape">Landscape</button><button type="button" data-v="portrait">Portrait</button><button type="button" data-v="auto">Auto</button></div>
+              <div class="exp-seg" data-key="orient"><button type="button" data-v="landscape">Landscape</button><button type="button" data-v="portrait">Portrait</button><button type="button" data-v="auto">Auto</button></div>
+              <span class="exp-k" data-types="image">Scale</span>
+              <div class="exp-seg" data-key="image.scale" data-num data-types="image"><button type="button" data-v="1">1x</button><button type="button" data-v="2">2x</button><button type="button" data-v="4">4x</button></div>
+              <span class="exp-k" data-types="image">Background</span>
+              <div class="exp-seg" data-key="image.bg" data-types="image"><button type="button" data-v="transparent">Transparent</button><button type="button" data-v="white">White</button></div>
+              <span class="exp-k" data-types="image">Padding</span>
+              <label class="exp-opt" data-types="image"><input type="number" id="expPadding" class="exp-opt-input exp-opt-num" min="0" max="400" step="4"> px</label>
+              <span class="exp-k" data-types="code">Size</span>
+              <div class="exp-seg" data-key="code.size" data-types="code"><button type="button" data-v="fixed">Fixed pixels</button><button type="button" data-v="fluid">100% width</button></div>
+              <span class="exp-k" data-types="code" data-when="code.size:fixed">Width</span>
+              <label class="exp-opt" data-types="code" data-when="code.size:fixed"><input type="number" id="expWidth" class="exp-opt-input exp-opt-num" min="200" max="4000" step="10"> px</label>
             </div>
-          </div>
-
-          <div class="exp-section" data-types="code">
-            <div class="exp-label">Layout</div>
-            <div class="exp-grid">
-              <span class="exp-k">Orientation</span>
-              <div class="exp-seg" data-key="code.orient"><button type="button" data-v="landscape">Landscape</button><button type="button" data-v="portrait">Portrait</button><button type="button" data-v="auto">Auto</button></div>
-              <span class="exp-k">Size</span>
-              <div class="exp-seg" data-key="code.size"><button type="button" data-v="fixed">Fixed pixels</button><button type="button" data-v="fluid">100% width</button></div>
-              <span class="exp-k" data-when="code.size:fixed">Width</span>
-              <label class="exp-opt" data-when="code.size:fixed"><input type="number" id="expWidth" class="exp-opt-input exp-opt-num" min="200" max="4000" step="10"> px</label>
+            <div class="exp-hint" data-swim>Each process gets its own swimlane diagram of its steps one level down, one lane per value. Steps without a value go in Unassigned.</div>
+            <div class="exp-section" data-hide-swim>
+              <div class="exp-sublabel">Levels</div>
+              <div id="expLevelChecks" class="exp-level-checks"></div>
             </div>
-          </div>
-
-
-          <div class="exp-section" data-types="flowchart">
-            <div class="exp-label">Page</div>
-            <div class="exp-grid">
-              <span class="exp-k">Orientation</span>
-              <div class="exp-seg" data-key="flowchart.orient"><button type="button" data-v="landscape">Landscape</button><button type="button" data-v="portrait">Portrait</button><button type="button" data-v="auto">Auto</button></div>
-            </div>
-          </div>
-
-          <div class="exp-section" data-hide-contents="dashboard">
-            <div class="exp-label">Files</div>
-            <select id="expSplit" class="exp-opt-input exp-split" aria-label="Files"></select>
-            <div class="exp-hint" id="expSplitHint"></div>
-          </div>
-
-          <details class="exp-adv" id="expAdvanced" data-hide-contents="dashboard">
-            <summary>Advanced</summary>
-            <div class="exp-adv-body">
-              <div class="exp-section">
-                <div class="exp-sublabel">Diagrams</div>
-                <div class="exp-opt-line">
-                  <label class="exp-opt" title="Show the direct parent processes as bars above each diagram"><input type="checkbox" id="expParents"> Include parent chain</label>
-                </div>
+            <div class="exp-section">
+              <div class="exp-sublabel">Codes</div>
+              <div class="exp-opt-line">
+                <label class="exp-opt"><input type="checkbox" id="expShowCodes"> Show codes</label>
+                <label class="exp-opt" title="Number given to the first process at the top">Start at <input type="number" id="expCodeStart" class="exp-opt-input exp-opt-num" min="0" value="1"></label>
               </div>
-              <div class="exp-section" data-hide-swim>
-                <div class="exp-sublabel">Levels</div>
-                <div id="expLevelChecks" class="exp-level-checks"></div>
-              </div>
-              <div class="exp-section">
-                <div class="exp-sublabel">Labels</div>
-                <div class="exp-opt-line">
-                  <label class="exp-opt"><input type="checkbox" id="expShowCodes"> Show codes</label>
-                  <label class="exp-opt" title="Number given to the starting process">Start at <input type="number" id="expCodeStart" class="exp-opt-input exp-opt-num" min="0" value="1"></label>
-                </div>
-                <div class="exp-opt-line">
-                  <select id="expCodeMode" class="exp-opt-input" title="Where codes come from">
-                    <option value="auto">Number from structure</option>
-                    <option value="data">Use codes from CSV (number missing ones)</option>
-                  </select>
-                  <select id="expCodePos" class="exp-opt-input" title="Where the code is shown">
-                    <option value="inline">Code before name</option>
-                    <option value="line">Code on its own line</option>
-                  </select>
-                </div>
+              <div class="exp-opt-line">
+                <select id="expCodeMode" class="exp-opt-input" title="Where codes come from">
+                  <option value="auto">Number from structure</option>
+                  <option value="data">Use codes from CSV (number missing ones)</option>
+                </select>
+                <select id="expCodePos" class="exp-opt-input" title="Where the code is shown">
+                  <option value="inline">Code before name</option>
+                  <option value="line">Code on its own line</option>
+                </select>
               </div>
             </div>
-          </details>
+          </div>
         </div>
 
         <div class="exp-preview-pane">
@@ -2983,7 +2991,7 @@
             <div class="exp-files-head"><span id="expFilesCount"></span><span class="exp-files-sub">Click a name to preview it</span></div>
             <ul class="exp-files-list" id="expFilesList"></ul>
           </div>
-          <textarea id="expCodeBox" class="drawio-xml exp-code" readonly spellcheck="false" data-types="code" aria-label="Code"></textarea>
+          <textarea id="expCodeBox" class="drawio-xml exp-code" readonly spellcheck="false" data-types="code dashboard" aria-label="Code"></textarea>
         </div>
       </div>
       <div class="exp-actions">
@@ -8161,21 +8169,20 @@
     });
 
     // ── EXPORT MODAL ───────────────────────────────────────────────────────
-    // Step 1 picks the type (Image, Code, Flowchart). The options below change
-    // per type and the preview on the right follows every change. Layout and
-    // label choices (levels, codes, parent chain, one file per process) live
-    // under Advanced. The last type and options are remembered.
+    // One screen with three numbered blocks and a live preview on the right:
+    // 1 What to export (start level, depth, which processes, levels above,
+    // files), 2 Type (Image, Code, Dashboard, Flowchart, plus the format) and
+    // 3 View (flow, layout, orientation, levels, codes). The preview follows
+    // every change and the last choices are remembered.
     const exportModal  = $('exportModal');
     const expLvlChecks = $('expLevelChecks');
-    let expSel      = [null, null, null];  // selected key in each picker column
-    let expPickPath = [];                  // process picked in the picker
-    let expPath     = [];                  // scope of the export ([] = all processes)
     const EXP_MAX_LEVEL    = 4;
-    const EXP_SETTINGS_KEY = 'nexus.export.settings.v2';
+    const EXP_SETTINGS_KEY = 'nexus.export.settings.v3';
     const EXP_TYPES = {
-      image:     { formats: [['svg', 'SVG'], ['png', 'PNG']],                 contents: ['overview', 'process', 'selection'] },
-      code:      { formats: [['html', 'HTML']],                             contents: ['overview', 'process', 'dashboard'] },
-      flowchart: { formats: [['drawio', 'draw.io'], ['vsdx', 'Visio (.vsdx)']], contents: ['overview', 'process'] },
+      image:     { formats: [['svg', 'SVG'], ['png', 'PNG']] },
+      code:      { formats: [['html', 'HTML']] },
+      dashboard: { formats: [['html', 'HTML']] },
+      flowchart: { formats: [['drawio', 'draw.io'], ['vsdx', 'Visio (.vsdx)']] },
     };
     // Fields that can group the steps into swimlanes (see buildSwimlaneSvg)
     const EXP_LANE_FIELDS = [
@@ -8184,20 +8191,17 @@
       ['Tool', 'System (Tool)'], ['Tool_function', 'System function'], ['Type', 'Type'],
       ['Supplier', 'Supplier'], ['Customer', 'Customer'],
     ];
-    const EXP_CONTENT_LABEL = { overview: 'Full overview', process: 'Single process',
-                                selection: 'Current selection', dashboard: 'Interactive dashboard' };
     const EXP_DEFAULTS = {
       type: 'image',
-      fmt:     { image: 'png', code: 'html', flowchart: 'drawio' },
-      content: { image: 'overview', code: 'overview', flowchart: 'overview' },
-      processPath: [],
-      deepest: 4,
-      image:     { scale: 2, bg: 'white', padding: 24, orient: 'auto' },
-      code:      { orient: 'landscape', size: 'fluid', width: 960, dashView: 'full' },
-      flowchart: { orient: 'auto' },
-      advOpen: false,
-      split: 'one', parents: false, direction: 'lr',
-      layout: 'standard', laneField: 'R',
+      fmt: { image: 'png', code: 'html', dashboard: 'html', flowchart: 'drawio' },
+      dashView: 'full',
+      // What to export: processes at the start level, down to `deepest`.
+      // `excluded` holds the unticked ones (so new processes start ticked),
+      // `parentLevels` the levels above the start level that are drawn too.
+      startLevel: 1, deepest: 4, excluded: [], parentLevels: [], files: 'one',
+      direction: 'lr', layout: 'standard', laneField: 'R', orient: 'auto',
+      image: { scale: 2, bg: 'white', padding: 24 },
+      code:  { size: 'fluid', width: 960 },
       levels: { 1: { o: 'h', a: true }, 2: { o: 'h', a: true }, 3: { o: 'h', a: true }, 4: { o: 'v', a: false } },
       showCodes: false, codeMode: 'auto', codePos: 'inline',
     };
@@ -8218,24 +8222,32 @@
       if (!EXP_TYPES[d.type]) d.type = 'image';
       Object.keys(EXP_TYPES).forEach(t => {
         if (!EXP_TYPES[t].formats.some(f => f[0] === d.fmt[t])) d.fmt[t] = EXP_DEFAULTS.fmt[t];
-        if (!EXP_TYPES[t].contents.includes(d.content[t])) d.content[t] = EXP_DEFAULTS.content[t];
       });
       if (![1, 2, 4].includes(d.image.scale)) d.image.scale = 2;
-      if (!['full', 'simple'].includes(d.code.dashView)) d.code.dashView = 'full';
+      if (!['full', 'simple'].includes(d.dashView)) d.dashView = 'full';
       if (!['standard', 'swimlane'].includes(d.layout)) d.layout = 'standard';
+      if (!['one', 'each'].includes(d.files)) d.files = 'one';
+      if (!['landscape', 'portrait', 'auto'].includes(d.orient)) d.orient = 'auto';
       if (!EXP_LANE_FIELDS.some(([f]) => f === d.laneField)) d.laneField = 'R';
+      d.startLevel = Math.max(1, Math.min(EXP_MAX_LEVEL, Math.round(d.startLevel) || 1));
+      d.deepest = Math.max(d.startLevel, Math.min(EXP_MAX_LEVEL, Math.round(d.deepest) || EXP_MAX_LEVEL));
+      d.excluded = d.excluded.filter(k => typeof k === 'string');
+      d.parentLevels = d.parentLevels.filter(l => Number.isInteger(l) && l >= 1 && l < EXP_MAX_LEVEL);
       return d;
     }
     function expLoadSettings() {
       try {
-        const v2 = localStorage.getItem(EXP_SETTINGS_KEY);
-        if (v2) return expMergeDefaults(JSON.parse(v2));
+        const v3 = localStorage.getItem(EXP_SETTINGS_KEY);
+        if (v3) return expMergeDefaults(JSON.parse(v3));
         // Carry over the options of the previous export window
-        const v1 = JSON.parse(localStorage.getItem('nexus.export.settings.v1'));
-        if (v1 && typeof v1 === 'object') {
-          const s = expMergeDefaults(v1);
-          if (v1.fmt === 'vsdx' || v1.fmt === 'drawio') { s.type = 'flowchart'; s.fmt.flowchart = v1.fmt; }
-          else if (v1.fmt === 'svg' || v1.fmt === 'png') { s.type = 'image'; s.fmt.image = v1.fmt; }
+        const v2 = JSON.parse(localStorage.getItem('nexus.export.settings.v2'));
+        if (v2 && typeof v2 === 'object') {
+          const s = expMergeDefaults(v2);
+          if (v2.type === 'code' && v2.content && v2.content.code === 'dashboard') s.type = 'dashboard';
+          if (v2.code && v2.code.dashView === 'simple') s.dashView = 'simple';
+          const o = v2[v2.type] && v2[v2.type].orient;
+          if (['landscape', 'portrait', 'auto'].includes(o)) s.orient = o;
+          if (v2.split && v2.split !== 'one') s.files = 'each';
           return s;
         }
       } catch (_) {}
@@ -8251,85 +8263,12 @@
       const ks = key.split('.'), last = ks.pop();
       ks.reduce((o, k) => o[k], expSettings)[last] = v;
     }
-    const expType    = () => expSettings.type;
-    const expFmt     = () => expSettings.fmt[expSettings.type];
-    const expContent = () => expSettings.content[expSettings.type];
-    // The interactive dashboard is always one file; diagrams can be written one per process
-    const expSplitVal = () => (expSettings.type === 'code' && expContent() === 'dashboard') ? 'one' : String(expSettings.split);
+    const expType = () => expSettings.type;
+    const expFmt  = () => expSettings.fmt[expSettings.type];
+    const expKey  = p => p.join('\u001f');
     // Swimlanes: SVG, PNG, HTML and draw.io (not Visio, not the dashboard)
     const EXP_SWIM_FORMATS = ['svg', 'png', 'html', 'drawio'];
-    const expSwimOn = () => expSettings.layout === 'swimlane' && EXP_SWIM_FORMATS.includes(expFmt()) && expContent() !== 'dashboard';
-    // "tree<N>": the starting process and every process up to N levels below it, one file each
-    const expTreeDepth = split => /^tree\d$/.test(split) ? Number(split.slice(4)) : 0;
-
-    // "Current selection": the process on screen, or the step selected in it
-    function expSelectionPath() {
-      const p = currentPath.slice();
-      if (selectedKey && getNodesAtPath(p)[selectedKey]) p.push(selectedKey);
-      return p;
-    }
-    function expReady() {
-      const c = expContent();
-      return c !== 'process' || expPickPath.length > 0;
-    }
-
-    function updateExpPath() {
-      expPickPath = [];
-      for (let i = 0; i < 3; i++) {
-        if (expSel[i] !== null) expPickPath.push(expSel[i]);
-        else break;
-      }
-      const c = expContent();
-      expPath = c === 'process' ? expPickPath.slice() : c === 'selection' ? expSelectionPath() : [];
-    }
-
-    function getPickerNodes(colIdx) {
-      // col 0 → tree root; col N → children of expSel[N-1]
-      let cur = tree;
-      for (let i = 0; i < colIdx; i++) {
-        if (!expSel[i] || !cur[expSel[i]]) return {};
-        cur = cur[expSel[i]]._children;
-      }
-      return cur;
-    }
-
-    function buildPickerCol(colIdx) {
-      const col = $('expCol' + colIdx);
-      if (!col) return;
-      col.innerHTML = '';
-      const hdr = document.createElement('div');
-      hdr.className = 'exp-col-header';
-      hdr.textContent = 'L' + (levelOffset + colIdx);
-      col.appendChild(hdr);
-
-      const nodes = getPickerNodes(colIdx);
-      const keys  = Object.keys(nodes);
-      if (!keys.length) {
-        const empty = document.createElement('div');
-        empty.className = 'exp-col-empty';
-        empty.textContent = colIdx === 0 ? 'No data' : '—';
-        col.appendChild(empty);
-        return;
-      }
-      keys.forEach(key => {
-        const item = document.createElement('div');
-        item.className = 'exp-col-item' + (key === expSel[colIdx] ? ' selected' : '');
-        item.textContent = key;
-        item.title = key;
-        item.addEventListener('click', () => {
-          // Clicking the selected item clears it and the deeper columns
-          expSel[colIdx] = expSel[colIdx] === key ? null : key;
-          for (let j = colIdx + 1; j < 3; j++) expSel[j] = null;
-          updateExpPath();
-          expSettings.processPath = expPickPath.slice();
-          expSaveSettings();
-          for (let j = colIdx; j < 3; j++) buildPickerCol(j);
-          expScopeChanged();
-        });
-        col.appendChild(item);
-      });
-    }
-    function buildAllPickerCols() { for (let i = 0; i < 3; i++) buildPickerCol(i); }
+    const expSwimOn = () => expSettings.layout === 'swimlane' && expType() !== 'dashboard' && EXP_SWIM_FORMATS.includes(expFmt());
 
     function expNodeAt(path) {
       if (!path.length) return null;
@@ -8337,44 +8276,80 @@
       return parent[path[path.length - 1]] || null;
     }
 
-    // Absolute level of the starting process (0 = all processes)
-    const expScopeLevel = () => expPath.length;
-    // Level at which each diagram starts
-    function expRootLevel() {
-      const split = expSplitVal();
-      return split === 'one' || expTreeDepth(split) ? Math.max(1, expScopeLevel()) : Number(split);
+    // ── What to export ──
+    // Deepest level that has processes (at most EXP_MAX_LEVEL)
+    function expDataDepth() {
+      let m = 1;
+      (function walk(nodes, d) {
+        Object.keys(nodes).forEach(k => { m = Math.max(m, d); if (d < EXP_MAX_LEVEL) walk(nodes[k]._children, d + 1); });
+      })(tree, 1);
+      return m;
     }
-
-    // Paths of the diagrams to export (one path per diagram; [] = all processes)
-    function expDiagramPaths() {
-      const split = expSplitVal();
-      if (split === 'one') return [expPath.slice()];
+    // Every process at a level, as paths, in tree order
+    function expPathsAt(level) {
       const out = [];
-      const below = expTreeDepth(split);
-      if (below) {
-        // The process itself, then each process below it that has steps of its own
-        const hasKids = p => Object.keys(p.length ? (expNodeAt(p) || { _children: {} })._children : tree).length > 0;
-        (function walk(path) {
-          if (!hasKids(path) || path.length >= EXP_MAX_LEVEL) return;
-          out.push(path);
-          if (path.length - expPath.length >= below) return;
-          const nodes = path.length ? expNodeAt(path)._children : tree;
-          Object.keys(nodes).forEach(k => walk(path.concat(k)));
-        })(expPath.slice());
-        return out;
-      }
-      const target = Number(split);
       (function walk(nodes, path) {
         Object.keys(nodes).forEach(k => {
           const p = path.concat(k);
-          if (p.length === target) out.push(p);
-          else if (p.length < target) walk(nodes[k]._children, p);
+          if (p.length === level) out.push(p);
+          else walk(nodes[k]._children, p);
         });
-      })(expPath.length ? expNodeAt(expPath)._children : tree, expPath.slice());
+      })(tree, []);
+      return out;
+    }
+    const expStart   = () => Math.min(expSettings.startLevel, expDataDepth());
+    const expDeepest = () => Math.max(expStart(), Math.min(EXP_MAX_LEVEL, expSettings.deepest));
+    // Ticked processes at the start level
+    function expChecked() {
+      const ex = new Set(expSettings.excluded);
+      return expPathsAt(expStart()).filter(p => !ex.has(expKey(p)));
+    }
+    // Levels above the start level that are drawn too, top-down
+    const expParentLvls = () => expSettings.parentLevels.filter(l => l >= 1 && l < expStart()).sort((a, b) => a - b);
+
+    // The diagrams to build, one per file: { paths, swim }
+    // Swimlanes: one per ticked process that has steps. Otherwise one diagram
+    // with every ticked process, or one per ticked process.
+    function expDiagramSpecs() {
+      if (expType() === 'dashboard') return [];
+      const checked = expChecked();
+      if (expSwimOn()) {
+        return checked.filter(p => { const n = expNodeAt(p); return n && Object.keys(n._children).length; })
+          .map(p => ({ paths: [p], swim: true }));
+      }
+      if (!checked.length) return [];
+      if (expSettings.files === 'each') return checked.map(p => ({ paths: [p] }));
+      return [{ paths: checked }];
+    }
+
+    // The tree one diagram draws: the chosen levels above (only processes with
+    // ticked ones below them; levels not chosen are skipped), the ticked
+    // processes, and their real steps below down to `deepest`.
+    function expVirtualTree(paths) {
+      const keep = expParentLvls(), start = expStart(), deepest = expDeepest();
+      const wrap = (n, p) => ({ _children: n._children, _meta: n._meta, _desc: n._desc, _code: n._code, _path: p, _name: p[p.length - 1] });
+      const root = {};
+      paths.forEach(p => {
+        let nodes = root;
+        keep.forEach(l => {
+          const ap = p.slice(0, l), id = expKey(ap);
+          if (!nodes[id]) nodes[id] = Object.assign(wrap(expNodeAt(ap), ap), { _children: {} });
+          nodes = nodes[id]._children;
+        });
+        nodes[expKey(p)] = wrap(expNodeAt(p), p);
+      });
+      const depthLevels = keep.slice();
+      for (let l = start; l <= deepest; l++) depthLevels.push(l);
+      return { nodes: root, depthLevels };
+    }
+    // Levels that appear in the diagrams (for the Levels rows)
+    function expShownLevels() {
+      const out = expParentLvls();
+      for (let l = expStart(); l <= expDeepest(); l++) out.push(l);
       return out;
     }
 
-    // Direct ancestors of a diagram root, top-down, as parent-chain bars
+    // Direct ancestors of a process, top-down, as parent-chain bars (swimlanes)
     function expParentChain(path) {
       const chain = [];
       for (let i = 0; i + 1 < path.length; i++) {
@@ -8384,38 +8359,29 @@
       return chain;
     }
 
-    // Codes: numbered from the starting process (which gets `start`), or taken
-    // from the CSV with missing ones numbered. Returns path → code.
+    // Codes over the whole tree: the first L1 gets `start`, the steps below
+    // parent.1, parent.2, ...; or the CSV codes with missing ones numbered.
+    // Returns path → code.
     function expBuildCodeOf(mode, start) {
       const map = new Map();
-      const keyOf = p => p.join('\u001f');
-      function walk(nodes, basePath, parentCode) {
+      (function walk(nodes, basePath, parentCode) {
         Object.keys(nodes).forEach((k, i) => {
           const n = nodes[k], p = basePath.concat(k);
           const code = (mode === 'data' && n._code) ? String(n._code)
             : parentCode ? parentCode + '.' + (i + 1) : String(start + i);
-          map.set(keyOf(p), code);
+          map.set(expKey(p), code);
           walk(n._children, p, code);
         });
-      }
-      if (expPath.length) {
-        const n = expNodeAt(expPath);
-        const code = (mode === 'data' && n._code) ? String(n._code) : String(start);
-        map.set(keyOf(expPath), code);
-        walk(n._children, expPath, code);
-      } else {
-        walk(tree, [], '');
-      }
-      return path => {
-        if (map.has(keyOf(path))) return map.get(keyOf(path));
-        // Parents above the starting process: only their own CSV code, if any
-        const n = mode === 'data' ? expNodeAt(path) : null;
-        return n && n._code ? String(n._code) : '';
-      };
+      })(tree, [], '');
+      return path => map.get(expKey(path)) || '';
+    }
+    function expCodeOfNow() {
+      const s = expSettings, start = parseInt($('expCodeStart').value, 10);
+      return s.showCodes ? expBuildCodeOf(s.codeMode, Number.isFinite(start) ? start : 1) : null;
     }
 
     function expDefaultCodeStart() {
-      const n = expPath.length ? expNodeAt(expPath) : tree[Object.keys(tree)[0]];
+      const n = tree[Object.keys(tree)[0]];
       const num = parseInt(String((n && n._code) || '').split('.').pop(), 10);
       return Number.isFinite(num) ? num : 1;
     }
@@ -8431,10 +8397,21 @@
       if (code) names[names.length - 1] = sanitizeFileName(code) + ' ' + names[names.length - 1];
       return names.join(' - ');
     }
+    // File name and title of one diagram
+    function expSpecName(spec, codeOf) {
+      if (spec.paths.length === 1) {
+        const p = spec.paths[0];
+        return { base: expFileBase(p, codeOf) + (spec.swim ? ' (swimlanes)' : ''), title: p[p.length - 1] };
+      }
+      const lvl = expStart();
+      if (lvl === 1 && spec.paths.length === expPathsAt(1).length) return { base: 'All processes', title: 'All processes' };
+      const t = 'L' + lvl + ' processes (' + spec.paths.length + ')';
+      return { base: t, title: t };
+    }
 
     // ── Building the diagrams ──
-    // Lays out the diagrams in scope with the Advanced options. `limit` caps
-    // how many are built (the preview only needs the first).
+    // Lays out the diagrams with the View options. `limit` caps how many are
+    // built from index `from` (the preview only needs one).
     function expBuildItems(limit, from) {
       const s = expSettings;
       const orientations = {}, arrowLevels = [];
@@ -8442,43 +8419,41 @@
         orientations[l] = s.levels[l].o;
         if (s.levels[l].a) arrowLevels.push(Number(l));
       });
-      const start = parseInt($('expCodeStart').value, 10);
-      const codeOf = s.showCodes ? expBuildCodeOf(s.codeMode, Number.isFinite(start) ? start : 1) : null;
-      const paths = expDiagramPaths();
-      const items = [];
+      const codeOf = expCodeOfNow();
+      const specs = expDiagramSpecs();
       const at = from || 0;
-      const swim = expSwimOn();
-      (limit ? paths.slice(at, at + limit) : paths).forEach(path => {
-        if (swim) {
-          const result = buildSwimlaneSvg(path, {
+      const items = [];
+      const keep = expParentLvls();
+      (limit ? specs.slice(at, at + limit) : specs).forEach(spec => {
+        const names = expSpecName(spec, codeOf);
+        let result;
+        if (spec.swim) {
+          const path = spec.paths[0];
+          result = buildSwimlaneSvg(path, {
             laneField: s.laneField, direction: s.direction === 'tb' ? 'tb' : 'lr',
             showCodes: s.showCodes, codeOwnLine: s.codePos === 'line', codeOf: codeOf || undefined,
-            parentChain: s.parents ? expParentChain(path) : [],
+            parentChain: expParentChain(path).filter(c => keep.includes(c.abs)),
           });
-          if (result) items.push({ result, base: expFileBase(path, codeOf) + ' (swimlanes)',
-                                   title: path.length ? path[path.length - 1] : 'All processes' });
-          return;
+        } else {
+          const v = expVirtualTree(spec.paths);
+          result = buildSvgString([], EXP_MAX_LEVEL, orientations, {
+            rootNodes: v.nodes, depthLevels: v.depthLevels,
+            arrowLevels, showCodes: s.showCodes, codeOwnLine: s.codePos === 'line',
+            direction: s.direction === 'tb' ? 'tb' : 'lr',
+            codeOf: codeOf || undefined,
+          });
         }
-        // Each file goes at least one level below its own process
-        const deepest = Math.max(s.deepest, Math.min(EXP_MAX_LEVEL, path.length + 1));
-        const result = buildSvgString(path, deepest, orientations, {
-          arrowLevels, showCodes: s.showCodes, codeOwnLine: s.codePos === 'line',
-          direction: s.direction === 'tb' ? 'tb' : 'lr',
-          codeOf: codeOf || undefined,
-          parentChain: s.parents ? expParentChain(path) : [],
-        });
-        if (result) items.push({ result, base: expFileBase(path, codeOf),
-                                 title: path.length ? path[path.length - 1] : 'All processes' });
+        if (result) items.push(Object.assign({ result }, names));
       });
-      return { items, total: paths.length };
+      return { items, total: specs.length };
     }
 
     // Page proportions per orientation: A4 for images and flowcharts, screen
     // proportions for code. null = fit the diagram.
     function expRatio() {
-      const t = expType(), o = expSettings[t].orient;
-      if (o === 'landscape') return t === 'code' ? 16 / 9 : Math.SQRT2;
-      if (o === 'portrait')  return t === 'code' ? 3 / 4  : Math.SQRT1_2;
+      const t = expType(), o = expSettings.orient, screen = t === 'code' || t === 'dashboard';
+      if (o === 'landscape') return screen ? 16 / 9 : Math.SQRT2;
+      if (o === 'portrait')  return screen ? 3 / 4  : Math.SQRT1_2;
       return null;
     }
 
@@ -8517,7 +8492,7 @@
         : t === 'flowchart' ? 40 : 24;
       const fr = expFrame(result, expRatio(), pad);
       if (t === 'flowchart') {
-        const o = expSettings.flowchart.orient;
+        const o = expSettings.orient;
         fr.pageOrient = o === 'auto' ? (fr.svgW >= fr.svgH ? 'landscape' : 'portrait') : o;
       }
       return fr;
@@ -8784,72 +8759,71 @@
     let expPreviewUrl = null;
     let expPreviewTimer = null;
 
-    function expCurrentTitle() {
-      if (expContent() === 'dashboard') return expSettings.code.dashView === 'simple' ? 'Process overview' : 'Process dashboard';
-      return expPath.length ? expPath[expPath.length - 1] : 'All processes';
-    }
-
-    // Builds the single output that the preview shows (first diagram only)
+    // Builds the single output that the preview shows (one diagram)
     function expBuildOutput() {
-      const t = expType(), fmt = expFmt(), content = expContent();
-      if (!expReady()) return { empty: 'Pick a process to export' };
-      if (t === 'code') {
-        let html, ratio, fr = null, base, title = expCurrentTitle();
-        if (content === 'dashboard') {
-          const view = expSettings.code.dashView === 'simple' ? 'simple' : 'full';
-          expDashCache = expDashCache || {};
-          if (!expDashCache[view]) expDashCache[view] = buildStandaloneHtml({ simple: view === 'simple' });
-          const dash = expDashCache[view];
-          if (!dash) return { empty: 'No data to export' };
-          ratio = expCodeRatio(null);
-          html = dash.html;
-          base = (view === 'simple' ? 'Process overview ' : 'Process dashboard ') + dash.dateStr;
-        } else {
-          const { items, total } = expBuildItems(1, expPvAt(expPathCount()));
-          if (!items.length) return { empty: 'Nothing to export' };
-          fr = expFramed(items[0].result);
-          ratio = expCodeRatio(fr);
-          title = items[0].title;
-          html = expStaticHtml(fr, title, expCodeSize(ratio));
-          base = items[0].base;
-          const size = expCodeSize(ratio);
-          if (!size.fixed) size.view = { w: 960, h: Math.round(960 / ratio) };
-          return { kind: 'html', total, html, size, base, title, text: html };
-        }
-        const size = expCodeSize(ratio);
-        if (content === 'dashboard' || !size.fixed) size.view = { w: 960, h: Math.round(960 / ratio) };
-        return { kind: 'html', total: 1, html, size, base, title, text: html };
+      const t = expType();
+      if (t === 'dashboard') {
+        const view = expSettings.dashView === 'simple' ? 'simple' : 'full';
+        expDashCache = expDashCache || {};
+        if (!expDashCache[view]) expDashCache[view] = buildStandaloneHtml({ simple: view === 'simple' });
+        const dash = expDashCache[view];
+        if (!dash) return { empty: 'No data to export' };
+        const ratio = expCodeRatio(null), size = expCodeSize(ratio);
+        size.view = { w: 960, h: Math.round(960 / ratio) };
+        const title = view === 'simple' ? 'Process overview' : 'Process dashboard';
+        return { kind: 'html', total: 1, html: dash.html, size, base: title + ' ' + dash.dateStr, title, text: dash.html };
       }
-      const { items, total } = expBuildItems(1, expPvAt(expPathCount()));
-      if (!items.length) return { empty: 'Nothing to export' };
-      const fr = expFramed(items[0].result);
-      return { kind: t, total, fr, base: items[0].base, title: items[0].title };
+      if (!expChecked().length) return { empty: 'Tick at least one process' };
+      const { items, total } = expBuildItems(1, expPvAt(expSpecCount()));
+      if (!items.length) return { empty: expSwimOn() ? 'The ticked processes have no steps to put in lanes' : 'Nothing to export' };
+      const it = items[0], fr = expFramed(it.result);
+      if (t === 'code') {
+        const size = expCodeSize(expCodeRatio(fr));
+        const html = expStaticHtml(fr, it.title, size);
+        if (!size.fixed) size.view = { w: 960, h: Math.round(960 / size.ratio) };
+        return { kind: 'html', total, html, size, fr, base: it.base, title: it.title, text: html };
+      }
+      return { kind: t, total, fr, base: it.base, title: it.title };
     }
     // Names and titles of every file, without laying the diagrams out
     function expFileEntries() {
-      const s = expSettings, start = parseInt($('expCodeStart').value, 10);
-      const codeOf = s.showCodes ? expBuildCodeOf(s.codeMode, Number.isFinite(start) ? start : 1) : null;
-      const tag = expSwimOn() ? ' (swimlanes)' : '';
-      return expDiagramPaths().map(path => ({ base: expFileBase(path, codeOf) + tag, title: path.length ? path[path.length - 1] : 'All processes' }));
+      const codeOf = expCodeOfNow();
+      return expDiagramSpecs().map(spec => expSpecName(spec, codeOf));
+    }
+    // One file of several: its text (HTML, draw.io XML) or null
+    function expItemText(i) {
+      const { items } = expBuildItems(1, i);
+      if (!items.length) return null;
+      const it = items[0], fr = expFramed(it.result), fmt = expFmt();
+      if (fmt === 'html')   return expStaticHtml(fr, it.title, expCodeSize(expCodeRatio(fr)));
+      if (fmt === 'drawio') return buildDrawioXml(fr, it.title);
+      return null;
     }
     // One file of several, ready to save
     async function expItemBlob(i) {
+      const fmt = expFmt();
+      if (fmt === 'html' || fmt === 'drawio') {
+        const text = expItemText(i);
+        return text == null ? null : new Blob([text], { type: fmt === 'html' ? 'text/html' : 'application/xml' });
+      }
       const { items } = expBuildItems(1, i);
       if (!items.length) return null;
-      const it = items[0], fr = expFramed(it.result);
-      if (expFmt() === 'html') return new Blob([expStaticHtml(fr, it.title, expCodeSize(expCodeRatio(fr)))], { type: 'text/html' });
-      return expFileBlob(fr, it.title);
+      return expFileBlob(expFramed(items[0].result), items[0].title);
     }
     const expItemExt = () => expFmt() === 'html' ? '.html' : EXPORT_EXT[expFmt()];
+    const expCanCopyItems = () => ['html', 'drawio'].includes(expFmt());
 
-    // Lists the files when there are several, each with its own download button
+    // Lists the files when there are several, each with its own buttons
     function expRenderFileList(out) {
       const box = $('expFiles'), list = $('expFilesList');
       if (!out || out.total < 2) { box.hidden = true; list.innerHTML = ''; return; }
-      const entries = expFileEntries(), ext = expItemExt();
+      const entries = expFileEntries(), ext = expItemExt(), canCopy = expCanCopyItems();
       box.hidden = false;
       $('expFilesCount').textContent = entries.length + ' files';
       list.innerHTML = '';
+      const flash = (b, txt) => {
+        b.textContent = txt; b.classList.add('done');
+      };
       entries.forEach((e, i) => {
         const li = document.createElement('li');
         li.classList.toggle('active', i === expPvIndex);
@@ -8857,6 +8831,22 @@
         name.type = 'button'; name.className = 'exp-file-name';
         name.textContent = e.base + ext; name.title = e.title;
         name.addEventListener('click', () => { expPvIndex = i; expSchedulePreview(); });
+        li.appendChild(name);
+        if (canCopy) {
+          const cp = document.createElement('button');
+          cp.type = 'button'; cp.className = 'exp-file-copy'; cp.textContent = 'Copy';
+          cp.setAttribute('aria-label', 'Copy ' + e.base + ext);
+          cp.addEventListener('click', async () => {
+            const text = expItemText(i);
+            const ok = text != null && await expCopyText(text);
+            showExportToast(ok ? (expFmt() === 'html' ? 'HTML' : 'draw.io XML') + ' copied' : 'Copy failed: use Download instead');
+            if (ok) {
+              flash(cp, 'Copied ✓');
+              setTimeout(() => { if (cp.textContent === 'Copied ✓') { cp.textContent = 'Copy'; cp.classList.remove('done'); } }, 1600);
+            }
+          });
+          li.appendChild(cp);
+        }
         const dl = document.createElement('button');
         dl.type = 'button'; dl.className = 'exp-file-dl'; dl.textContent = 'Download';
         dl.setAttribute('aria-label', 'Download ' + e.base + ext);
@@ -8864,9 +8854,9 @@
           const blob = await expItemBlob(i);
           if (!blob) { showExportToast('Export failed: diagram too large at this scale'); return; }
           saveBlob(blob, e.base + ext);
-          dl.textContent = 'Downloaded ✓'; dl.classList.add('done');
+          flash(dl, 'Downloaded ✓');
         });
-        li.appendChild(name); li.appendChild(dl);
+        li.appendChild(dl);
         list.appendChild(li);
       });
       const act = list.children[expPvIndex];
@@ -8875,7 +8865,7 @@
 
     // Which of several files the preview shows
     let expPvIndex = 0;
-    const expPathCount = () => expDiagramPaths().length;
+    const expSpecCount = () => expDiagramSpecs().length;
     const expPvAt = n => (expPvIndex = Math.max(0, Math.min(expPvIndex, n - 1)));
 
     function expSchedulePreview() {
@@ -8904,7 +8894,7 @@
         expUpdateActions();
         return;
       }
-      const t = expType(), fmt = expFmt();
+      const fmt = expFmt();
       if (out.kind === 'image' || out.kind === 'flowchart') {
         const fr = out.fr;
         const isImage = out.kind === 'image';
@@ -8925,7 +8915,7 @@
         } else {
           const o = fr.pageOrient === 'portrait' ? 'Portrait' : 'Landscape';
           const lab = fmt === 'vsdx' ? 'Visio' : 'draw.io';
-          meta.textContent = lab + ' · ' + o + ' page' + (expSettings.flowchart.orient === 'auto' ? ' sized to the diagram' : ' (A4 proportions)') +
+          meta.textContent = lab + ' · ' + o + ' page' + (expSettings.orient === 'auto' ? ' sized to the diagram' : ' (A4 proportions)') +
             ' · ' + (fr.swim ? fr.swim.lanes.length + ' lane' + (fr.swim.lanes.length === 1 ? '' : 's') + ', ' : '') +
             fr.shapes.length + ' shapes' + (fr.arrows.length ? ', ' + fr.arrows.length + ' connectors' : '') + more;
           meta.classList.remove('is-warn');
@@ -8942,7 +8932,7 @@
         const sizeTxt = out.size.fixed ? out.size.w + ' × ' + out.size.h + ' px' : '100% width';
         meta.classList.remove('is-warn');
         meta.textContent = 'HTML · ' + sizeTxt + (out.total > 1 ? ' · file ' + (expPvIndex + 1) + ' of ' + out.total + ', ' : ' · one file, ') + kb + ' KB' +
-          (expContent() === 'dashboard' && expSettings.code.dashView !== 'simple' ? '' : ' · hover a process for its details');
+          (expType() === 'dashboard' && expSettings.dashView !== 'simple' ? '' : ' · hover a process for its details');
         const MAX = 20000;
         box.value = out.text.length > MAX
           ? out.text.slice(0, MAX) + '\n\n… (' + kb + ' KB in total; Copy and Download give the full file)'
@@ -8960,65 +8950,147 @@
     };
     function expUpdateActions() {
       const fmt = expFmt(), a = EXP_ACTIONS[fmt], go = $('btnExpGo'), cp = $('btnExpCopy');
-      const n = expOut ? expOut.total : 0;
-      const note = '', blocked = !expOut;
+      const n = expOut ? expOut.total : 0, blocked = !expOut;
       go.textContent = n > 1 ? 'Download all ' + n + ' files' : a.dl;
       go.disabled = blocked || n === 0;
-      cp.hidden = !a.copy;
+      cp.hidden = !a.copy || n > 1;
       cp.textContent = a.copy || '';
       cp.disabled = blocked || n !== 1 || (fmt === 'png' && !window.ClipboardItem);
-      cp.title = n > 1 ? 'Copy works for one diagram at a time' : '';
-      $('expActionNote').textContent = note;
+      $('expActionNote').textContent = n > 1 && expCanCopyItems() ? 'Copy a file from the list under the preview' : '';
     }
 
     // ── Rendering the options ──
-    function expBuildSplitOptions() {
-      const sel = $('expSplit');
-      sel.innerHTML = '';
-      const add = (v, t) => { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); };
-      const sc = expScopeLevel(), name = sc ? 'This process' : 'The overview';
-      add('one', 'One file');
-      for (let n = 1; sc + n <= EXP_MAX_LEVEL - 1; n++) {
-        add('tree' + n, name + ' + ' + (n === 1 ? '1 level' : n + ' levels') + ' below, one file per process');
-      }
-      if (expType() !== 'code') {
-        for (let n = Math.max(1, sc + 1); n <= 3; n++) add(String(n), 'Only the L' + n + ' processes, one file each');
-      }
-      if (![...sel.options].some(o => o.value === String(expSettings.split))) expSettings.split = 'one';
-      sel.value = String(expSettings.split);
-      const n = expSplitVal() === 'one' ? 1 : expDiagramPaths().length;
-      $('expSplitHint').textContent = n > 1
-        ? n + ' separate files, each with its own download button under the preview.'
-        : 'Pick the parent process above, then how many levels below it get their own file.';
+    function expBuildSeg(el, options, current, onPick) {
+      el.innerHTML = '';
+      options.forEach(([v, label]) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.dataset.v = v; b.textContent = label;
+        b.classList.toggle('active', v === current);
+        b.setAttribute('aria-pressed', v === current ? 'true' : 'false');
+        b.addEventListener('click', () => onPick(v));
+        el.appendChild(b);
+      });
+    }
+
+    function expBuildStartSeg() {
+      const opts = [];
+      for (let l = 1; l <= expDataDepth(); l++) opts.push([String(l), 'L' + l]);
+      expBuildSeg($('expStartSeg'), opts, String(expStart()), v => {
+        expSettings.startLevel = Number(v);
+        if (expSettings.deepest < expSettings.startLevel) expSettings.deepest = expSettings.startLevel;
+        expPvIndex = 0; expChanged();
+      });
     }
 
     function expBuildDeepestOptions() {
       const sel = $('expDeepest');
       sel.innerHTML = '';
-      const root = expRootLevel();
-      for (let l = root; l <= EXP_MAX_LEVEL; l++) {
+      for (let l = expStart(); l <= EXP_MAX_LEVEL; l++) {
         const o = document.createElement('option'); o.value = l; o.textContent = 'L' + l; sel.appendChild(o);
       }
-      if (expSettings.deepest < root) expSettings.deepest = root;
-      sel.value = String(expSettings.deepest);
+      sel.value = String(expDeepest());
+    }
+
+    // Ticks or unticks processes at the start level
+    function expToggle(paths, on) {
+      const ex = new Set(expSettings.excluded);
+      paths.forEach(p => { if (on) ex.delete(expKey(p)); else ex.add(expKey(p)); });
+      expSettings.excluded = [...ex];
+      expPvIndex = 0; expChanged();
+    }
+
+    // The processes at the start level, grouped under their parent
+    function expBuildProcList() {
+      const list = $('expProcList'), scroll = list.scrollTop;
+      const all = expPathsAt(expStart()), ex = new Set(expSettings.excluded);
+      const on = p => !ex.has(expKey(p));
+      list.innerHTML = '';
+      $('expProcCount').textContent = 'Processes · ' + all.filter(on).length + ' of ' + all.length;
+      if (!all.length) { list.innerHTML = '<div class="exp-proc-empty">No processes at this level</div>'; return; }
+      const item = (p, inGroup) => {
+        const lab = document.createElement('label');
+        lab.className = 'exp-proc-item' + (inGroup ? ' in-group' : '');
+        lab.title = p.join(' › ');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.checked = on(p);
+        cb.addEventListener('change', () => expToggle([p], cb.checked));
+        const sp = document.createElement('span'); sp.textContent = p[p.length - 1];
+        lab.appendChild(cb); lab.appendChild(sp);
+        return lab;
+      };
+      if (expStart() === 1) all.forEach(p => list.appendChild(item(p, false)));
+      else {
+        const groups = new Map();
+        all.forEach(p => {
+          const k = expKey(p.slice(0, -1));
+          if (!groups.has(k)) groups.set(k, { parent: p.slice(0, -1), paths: [] });
+          groups.get(k).paths.push(p);
+        });
+        groups.forEach(g => {
+          const lab = document.createElement('label');
+          lab.className = 'exp-proc-group'; lab.title = 'Tick or untick everything under ' + g.parent.join(' › ');
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          const n = g.paths.filter(on).length;
+          cb.checked = n === g.paths.length; cb.indeterminate = n > 0 && n < g.paths.length;
+          cb.addEventListener('change', () => expToggle(g.paths, cb.checked));
+          const sp = document.createElement('span'); sp.textContent = g.parent.join(' › ');
+          lab.appendChild(cb); lab.appendChild(sp);
+          list.appendChild(lab);
+          g.paths.forEach(p => list.appendChild(item(p, true)));
+        });
+      }
+      list.scrollTop = scroll;
+    }
+
+    // One tick box per level above the start level
+    function expBuildParentChecks() {
+      const box = $('expParentChecks'), start = expStart();
+      $('expParentsBox').hidden = start === 1;
+      box.innerHTML = '';
+      for (let l = 1; l < start; l++) {
+        const lab = document.createElement('label');
+        lab.className = 'exp-opt'; lab.title = 'Draw the L' + l + ' processes above the ticked ones';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.checked = expSettings.parentLevels.includes(l);
+        cb.addEventListener('change', () => {
+          const set = new Set(expSettings.parentLevels);
+          if (cb.checked) set.add(l); else set.delete(l);
+          expSettings.parentLevels = [...set].sort((a, b) => a - b);
+          expChanged();
+        });
+        lab.appendChild(cb); lab.appendChild(document.createTextNode(' L' + l));
+        box.appendChild(lab);
+      }
+    }
+
+    function expBuildFilesBox() {
+      const n = expChecked().length, swim = expSwimOn();
+      $('expFilesBox').hidden = n <= 1;
+      const seg = $('expFilesBox').querySelector('.exp-seg');
+      seg.querySelectorAll('button').forEach(b => { b.disabled = swim; });
+      const files = expSpecCount();
+      $('expFilesHint').textContent = swim
+        ? 'Swimlanes always give one file per process' + (files ? ' (' + files + ' files).' : '.')
+        : expSettings.files === 'each'
+          ? files + ' files, each with its own buttons under the preview.'
+          : 'All ' + n + ' processes in one diagram.';
     }
 
     function buildLevelChecks() {
       expLvlChecks.innerHTML = '';
-      const root = expRootLevel();
+      const shown = expShownLevels(), start = expStart();
       for (let abs = 1; abs <= EXP_MAX_LEVEL; abs++) {
         const lv = expSettings.levels[abs];
-        const inDiagram = abs >= root && abs <= expSettings.deepest;
-        const isParent  = abs < root && expSettings.parents;
+        const inDiagram = shown.includes(abs);
         const row = document.createElement('div');
-        row.className = 'exp-level-row' + (inDiagram ? '' : isParent ? ' is-parent' : ' is-out');
+        row.className = 'exp-level-row' + (inDiagram ? '' : ' is-out');
 
         const lbl = document.createElement('span');
         lbl.className = 'exp-lv-label'; lbl.textContent = 'L' + abs;
         const state = document.createElement('span');
         state.className = 'exp-lv-name';
-        state.textContent = inDiagram ? (abs === root ? 'Diagram top level' : 'Included')
-          : isParent ? 'Parent bar' : abs < root ? 'Above diagram' : 'Not included';
+        state.textContent = !inDiagram ? 'Not included' : abs === start ? 'Start level' : abs < start ? 'Level above' : 'Included';
         row.appendChild(lbl); row.appendChild(state);
 
         const optsEl = document.createElement('span');
@@ -9053,28 +9125,16 @@
       }
     }
 
-    function expBuildSeg(el, options, current, onPick) {
-      el.innerHTML = '';
-      options.forEach(([v, label]) => {
-        const b = document.createElement('button');
-        b.type = 'button'; b.dataset.v = v; b.textContent = label;
-        b.classList.toggle('active', v === current);
-        b.setAttribute('aria-pressed', v === current ? 'true' : 'false');
-        b.addEventListener('click', () => onPick(v));
-        el.appendChild(b);
-      });
-    }
-
     function expApplyVisibility() {
-      const type = expType(), fmt = expFmt(), content = expContent();
+      const type = expType(), fmt = expFmt();
       const has = (attr, v) => attr.split(' ').includes(v);
-      exportModal.querySelectorAll('[data-types],[data-formats],[data-contents],[data-hide-contents],[data-when],[data-swim],[data-hide-swim]').forEach(el => {
+      exportModal.querySelectorAll('[data-types],[data-hide-types],[data-formats],[data-hide-formats],[data-when],[data-swim],[data-hide-swim]').forEach(el => {
         const d = el.dataset;
         let show = true;
         if (d.types)        show = show && has(d.types, type);
+        if (d.hideTypes)    show = show && !has(d.hideTypes, type);
         if (d.formats)      show = show && has(d.formats, fmt);
-        if (d.contents)     show = show && has(d.contents, content);
-        if (d.hideContents) show = show && !has(d.hideContents, content);
+        if (d.hideFormats)  show = show && !has(d.hideFormats, fmt);
         if (d.when) { const [k, v] = d.when.split(':'); show = show && String(expGet(k)) === v; }
         if (d.swim !== undefined) show = show && expSwimOn();
         if (d.hideSwim !== undefined) show = show && !expSwimOn();
@@ -9088,15 +9148,14 @@
         const on = b.dataset.type === s.type;
         b.classList.toggle('active', on);
         b.setAttribute('aria-checked', on ? 'true' : 'false');
+        b.tabIndex = on ? 0 : -1;
       });
       expBuildSeg($('expFmtSeg'), EXP_TYPES[s.type].formats, expFmt(), v => {
-        s.fmt[s.type] = v; expChanged();
-      });
-      expBuildSeg($('expContentSeg'), EXP_TYPES[s.type].contents.map(c => [c, EXP_CONTENT_LABEL[c]]), expContent(), v => {
-        s.content[s.type] = v; expSaveSettings(); updateExpPath(); expScopeChanged();
+        s.fmt[s.type] = v; expPvIndex = 0; expChanged();
       });
       exportModal.querySelectorAll('.exp-seg[data-key]').forEach(seg => {
-        const cur = String(expGet(seg.dataset.key));
+        // Swimlanes always write one file per process
+        const cur = seg.dataset.key === 'files' && expSwimOn() ? 'each' : String(expGet(seg.dataset.key));
         seg.querySelectorAll('button[data-v]').forEach(b => {
           b.classList.toggle('active', b.dataset.v === cur);
           b.setAttribute('aria-pressed', b.dataset.v === cur ? 'true' : 'false');
@@ -9107,54 +9166,38 @@
       $('expShowCodes').checked = !!s.showCodes;
       $('expCodeMode').value = s.codeMode;
       $('expCodePos').value = s.codePos;
-      $('expParents').checked = !!s.parents;
       const laneSel = $('expLaneField'), inData = swimFieldsInData();
       const laneOpts = inData.some(([f]) => f === s.laneField) ? inData : inData.concat(EXP_LANE_FIELDS.filter(([f]) => f === s.laneField));
       laneSel.innerHTML = laneOpts.map(([f, l]) => '<option value="' + f + '">' + escHtml(l) + '</option>').join('');
       laneSel.value = s.laneField;
       ['expCodeMode', 'expCodePos', 'expCodeStart'].forEach(id => { $(id).disabled = !s.showCodes; });
-      $('expAdvanced').open = !!s.advOpen;
-
-      const sel = expSelectionPath();
-      $('expSelInfo').textContent = sel.length ? sel.join(' › ') : 'Nothing selected: the full overview is exported';
     }
 
     function expRefresh() {
-      expBuildSplitOptions();
+      expBuildStartSeg();
       expBuildDeepestOptions();
+      expBuildProcList();
+      expBuildParentChecks();
       buildLevelChecks();
       expSyncControls();
       expApplyVisibility();
+      expBuildFilesBox();
       expSchedulePreview();
     }
     function expChanged() { expSaveSettings(); expRefresh(); }
-    function expScopeChanged() {
-      expPvIndex = 0;
-      $('expCodeStart').value = expDefaultCodeStart();
-      expRefresh();
-    }
 
     function openExportModal(preset) {
       if (!Object.keys(tree).length) return;
       expDashCache = null;
-      // Process picker: the process on screen, else the last one picked
-      const saved = Array.isArray(expSettings.processPath) ? expSettings.processPath : [];
-      const start = currentPath.length ? currentPath : (isValidPath(saved) ? saved : []);
-      expSel = [null, null, null];
-      for (let i = 0; i < 3 && i < start.length; i++) expSel[i] = start[i];
-      updateExpPath();
       if (preset && preset.perProcess) {
-        if (expSettings.type === 'code') expSettings.type = 'image';
-        updateExpPath();
-        if (expSettings.split === 'one') {
-          const n = Math.max(1, expScopeLevel() + 1);
-          expSettings.split = n > 3 ? 'one' : String(n);
-          if (expSettings.split !== 'one') expSettings.advOpen = true;
-        }
+        if (expSettings.type === 'code' || expSettings.type === 'dashboard') expSettings.type = 'image';
+        expSettings.files = 'each';
+        expSaveSettings();
       }
-      buildAllPickerCols();
+      $('expCodeStart').value = expDefaultCodeStart();
+      expPvIndex = 0;
       exportModal.classList.remove('hidden');
-      expScopeChanged();
+      expRefresh();
       const active = exportModal.querySelector('.exp-type.active');
       if (active) active.focus();
     }
@@ -9179,14 +9222,14 @@
     // ── Wiring ──
     exportModal.querySelectorAll('.exp-type').forEach(b => b.addEventListener('click', () => {
       if (expSettings.type === b.dataset.type) return;
-      expSettings.type = b.dataset.type; expSaveSettings();
-      updateExpPath(); expScopeChanged();
+      expSettings.type = b.dataset.type;
+      expPvIndex = 0; expChanged();
     }));
-    // Arrow keys move between the three type cards
+    // Arrow keys move between the four type tiles
     $('expTypes').addEventListener('keydown', e => {
-      if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
       const types = Object.keys(EXP_TYPES);
-      const i = types.indexOf(expSettings.type) + (e.key === 'ArrowRight' ? 1 : -1);
+      const i = types.indexOf(expSettings.type) + (e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : -1);
       const next = types[(i + types.length) % types.length];
       e.preventDefault();
       exportModal.querySelector('.exp-type[data-type="' + next + '"]').click();
@@ -9194,10 +9237,13 @@
     });
     exportModal.querySelectorAll('.exp-seg[data-key]').forEach(seg => seg.addEventListener('click', e => {
       const b = e.target.closest('button[data-v]');
-      if (!b) return;
+      if (!b || b.disabled) return;
       expSet(seg.dataset.key, seg.hasAttribute('data-num') ? Number(b.dataset.v) : b.dataset.v);
+      if (['files', 'layout'].includes(seg.dataset.key)) expPvIndex = 0;
       expChanged();
     }));
+    $('expProcAll').addEventListener('click', () => expToggle(expPathsAt(expStart()), true));
+    $('expProcNone').addEventListener('click', () => expToggle(expPathsAt(expStart()), false));
     $('expPadding').addEventListener('input', e => {
       const v = parseInt(e.target.value, 10);
       if (Number.isFinite(v) && v >= 0) { expSettings.image.padding = Math.min(400, v); expSaveSettings(); expSchedulePreview(); }
@@ -9206,19 +9252,17 @@
       const v = parseInt(e.target.value, 10);
       if (Number.isFinite(v) && v >= 200) { expSettings.code.width = Math.min(4000, v); expSaveSettings(); expSchedulePreview(); }
     });
-    $('expAdvanced').addEventListener('toggle', () => { expSettings.advOpen = $('expAdvanced').open; expSaveSettings(); });
-    $('expSplit').addEventListener('change', e => { expSettings.split = e.target.value; expPvIndex = 0; expChanged(); });
     $('expDeepest').addEventListener('change', e => { expSettings.deepest = Number(e.target.value); expChanged(); });
-    $('expParents').addEventListener('change', e => { expSettings.parents = e.target.checked; expChanged(); });
     $('expLaneField').addEventListener('change', e => { expSettings.laneField = e.target.value; expChanged(); });
     $('expShowCodes').addEventListener('change', e => { expSettings.showCodes = e.target.checked; expChanged(); });
     $('expCodeMode').addEventListener('change', e => { expSettings.codeMode = e.target.value; expChanged(); });
     $('expCodePos').addEventListener('change', e => { expSettings.codePos = e.target.value; expChanged(); });
-    $('expCodeStart').addEventListener('input', expSchedulePreview);
+    $('expCodeStart').addEventListener('input', () => { expRenderFileList(expOut); expSchedulePreview(); });
     $('expReset').addEventListener('click', () => {
       const type = expSettings.type;
       expSettings = expMergeDefaults(null); expSettings.type = type;
-      expSaveSettings(); updateExpPath(); expScopeChanged();
+      $('expCodeStart').value = expDefaultCodeStart();
+      expPvIndex = 0; expChanged();
     });
     window.addEventListener('resize', () => { if (!exportModal.classList.contains('hidden')) expSchedulePreview(); });
 
@@ -9278,8 +9322,9 @@
     async function expDownload() {
       if (!expOut) return;
       const fmt = expFmt();
-      if (fmt === 'html' && expOut.total > 1) {
-        await saveFiles(expFileEntries().map((e, i) => ({ name: e.base + '.html', make: () => expItemBlob(i) })));
+      if (expOut.total > 1) {
+        const ext = expItemExt();
+        await saveFiles(expFileEntries().map((e, i) => ({ name: e.base + ext, make: () => expItemBlob(i) })));
         return;
       }
       if (fmt === 'html') {
@@ -9287,17 +9332,10 @@
         showExportToast('Exported HTML');
         return;
       }
-      const ext = EXPORT_EXT[fmt];
-      if (expOut.total === 1) {
-        const blob = await expFileBlob(expOut.fr, expOut.title);
-        if (!blob) { showExportToast('Export failed: diagram too large for ' + fmt.toUpperCase() + ' at this scale'); return; }
-        saveBlob(blob, expOut.base + ext);
-        showExportToast('Exported ' + EXPORT_LABEL[fmt]);
-        return;
-      }
-      const { items } = expBuildItems();
-      await saveFiles(items.map(it => ({ name: it.base + ext,
-        make: () => expFileBlob(expFramed(it.result), it.title) })));
+      const blob = await expFileBlob(expOut.fr, expOut.title);
+      if (!blob) { showExportToast('Export failed: diagram too large for ' + fmt.toUpperCase() + ' at this scale'); return; }
+      saveBlob(blob, expOut.base + EXPORT_EXT[fmt]);
+      showExportToast('Exported ' + EXPORT_LABEL[fmt]);
     }
 
     $('btnExpGo').addEventListener('click', expDownload);
@@ -9424,8 +9462,11 @@
       // Legacy boolean: leafHorizontal=false means the deepest level is 'v'
       const isLegacyBool = typeof leafHorizontalOrOrientations === 'boolean';
 
-      let subtree = getNodesAtPath(usePath);
-      if (usePath.length > 0) {
+      // opts.rootNodes: a ready-made (virtual) set of top nodes, used as is.
+      // Virtual nodes may carry _path (the real path, for codes) and _name
+      // (the text shown; the key can then be any unique id).
+      let subtree = opts.rootNodes || getNodesAtPath(usePath);
+      if (!opts.rootNodes && usePath.length > 0) {
         const i = usePath.length - 1;
         let cur = tree;
         for (let j = 0; j < i; j++) cur = cur[usePath[j]]._children;
@@ -9442,11 +9483,14 @@
       const tx = TB ? (x, y, w, h) => ({ x: y, y: x, w: h, h: w }) : (x, y, w, h) => ({ x, y, w, h });
 
       const exportRootAbsDepth = Math.max(0, usePath.length - 1) + levelOffset;
-      const maxExportLevel     = Math.min(useMaxAbs - exportRootAbsDepth + 1,
-                                          6 - exportRootAbsDepth);
+      // opts.depthLevels: absolute level per depth (levels may be skipped)
+      const depthLevels = Array.isArray(opts.depthLevels) && opts.depthLevels.length ? opts.depthLevels : null;
+      const absAt = depth => depthLevels ? depthLevels[depth] : exportRootAbsDepth + depth;
+      const maxExportLevel     = depthLevels ? depthLevels.length
+                               : Math.min(useMaxAbs - exportRootAbsDepth + 1, 6 - exportRootAbsDepth);
 
       function isVertical(depth) {
-        const abs = exportRootAbsDepth + depth;
+        const abs = absAt(depth);
         if (isLegacyBool) {
           // legacy: only the leaf level can be vertical
           return depth === maxExportLevel - 1 && leafHorizontalOrOrientations === false;
@@ -9574,7 +9618,7 @@
       }
 
       function renderLevel(items, depth, xBase, yBase, parentCode, parentPath) {
-        const absLevelBase = exportRootAbsDepth + depth;
+        const absLevelBase = absAt(depth);
         const placed = [];
         items.forEach((item, idx) => {
           const absX  = xBase + item.x;
@@ -9590,9 +9634,9 @@
             levelLabel(absLevelBase, nodeY);
           }
 
-          const path = parentPath.concat(item.key);
+          const path = (item.nodeObj && item.nodeObj._path) || parentPath.concat(item.key);
           const code = codeFor(item.nodeObj, parentCode, idx, path);
-          const shapeIdx = drawNode(nodeX, nodeY, nodeW, nodeH, cx, item.key, absLevelBase, item.nodeObj, code);
+          const shapeIdx = drawNode(nodeX, nodeY, nodeW, nodeH, cx, (item.nodeObj && item.nodeObj._name) || item.key, absLevelBase, item.nodeObj, code);
           placed.push({ shapeIdx, x: nodeX, y: nodeY, w: nodeW, subtreeH: item.subtreeH,
                         hasKids: item.child.items.length > 0 });
 
