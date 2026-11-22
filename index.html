@@ -2922,7 +2922,7 @@
               </div>
               <div class="exp-section" id="expFilesBox">
                 <div class="exp-sublabel">Files</div>
-                <div class="exp-seg" data-key="files" title="One file with everything, or a file per process"><button type="button" data-v="one">All in one file</button><button type="button" data-v="each">One file per process</button></div>
+                <div class="exp-seg" data-key="files" title="One file with everything, a file per process, or a file per parent with its processes"><button type="button" data-v="one">All in one file</button><button type="button" data-v="each">One file per process</button><button type="button" data-v="parent" id="expFilesParent">One file per parent</button></div>
                 <div class="exp-hint" id="expFilesHint"></div>
               </div>
             </div>
@@ -8645,7 +8645,7 @@
       if (![1, 2, 4].includes(d.image.scale)) d.image.scale = 2;
       if (!['full', 'simple'].includes(d.dashView)) d.dashView = 'full';
       if (!['standard', 'swimlane'].includes(d.layout)) d.layout = 'standard';
-      if (!['one', 'each'].includes(d.files)) d.files = 'one';
+      if (!['one', 'each', 'parent'].includes(d.files)) d.files = 'one';
       if (!['landscape', 'portrait', 'auto'].includes(d.orient)) d.orient = 'auto';
       if (!['off', 'on'].includes(d.sameSize)) d.sameSize = 'off';
       if (!['center', 'topleft'].includes(d.align)) d.align = 'center';
@@ -8739,7 +8739,17 @@
           .map(p => ({ paths: [p], swim: true }));
       }
       if (!checked.length) return [];
-      if (expSettings.files === 'each') return checked.map(p => ({ paths: [p] }));
+      if (expSettings.files === 'parent' && expStart() > 1) {
+        // One file per parent: its ticked processes together (with their flow)
+        const groups = new Map();
+        checked.forEach(p => {
+          const k = expKey(p.slice(0, -1));
+          if (!groups.has(k)) groups.set(k, { paths: [], parent: p.slice(0, -1) });
+          groups.get(k).paths.push(p);
+        });
+        return Array.from(groups.values());
+      }
+      if (expSettings.files !== 'one') return checked.map(p => ({ paths: [p] }));
       return [{ paths: checked }];
     }
 
@@ -8820,6 +8830,10 @@
     }
     // File name and title of one diagram
     function expSpecName(spec, codeOf) {
+      if (spec.parent) {
+        const lvl = expStart();
+        return { base: expFileBase(spec.parent, codeOf) + ' (L' + lvl + ')', title: spec.parent[spec.parent.length - 1] };
+      }
       if (spec.paths.length === 1) {
         const p = spec.paths[0];
         return { base: expFileBase(p, codeOf) + (spec.swim ? ' (swimlanes)' : ''), title: p[p.length - 1] };
@@ -9522,10 +9536,13 @@
       $('expFilesBox').hidden = n <= 1;
       const seg = $('expFilesBox').querySelector('.exp-seg');
       seg.querySelectorAll('button').forEach(b => { b.disabled = swim; });
+      $('expFilesParent').hidden = expStart() === 1;
       const files = expSpecCount();
       $('expFilesHint').textContent = swim
         ? 'Swimlanes always give one file per process' + (files ? ' (' + files + ' files).' : '.')
-        : expSettings.files === 'each'
+        : expSettings.files === 'parent' && expStart() > 1
+          ? files + ' file' + (files === 1 ? '' : 's') + ', one per parent with its ticked L' + expStart() + ' processes together.'
+        : expSettings.files !== 'one'
           ? files + ' files, each with its own buttons under the preview.'
           : 'All ' + n + ' processes in one diagram.';
     }
@@ -9608,7 +9625,8 @@
       });
       exportModal.querySelectorAll('.exp-seg[data-key]').forEach(seg => {
         // Swimlanes always write one file per process
-        const cur = seg.dataset.key === 'files' && expSwimOn() ? 'each' : String(expGet(seg.dataset.key));
+        let cur = seg.dataset.key === 'files' && expSwimOn() ? 'each' : String(expGet(seg.dataset.key));
+        if (seg.dataset.key === 'files' && cur === 'parent' && expStart() === 1) cur = 'each';   // L1 has no parent
         seg.querySelectorAll('button[data-v]').forEach(b => {
           b.classList.toggle('active', b.dataset.v === cur);
           b.setAttribute('aria-pressed', b.dataset.v === cur ? 'true' : 'false');
