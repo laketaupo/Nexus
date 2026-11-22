@@ -5931,7 +5931,7 @@
         for (const [key, node] of Object.entries(children)) {
           if (node._meta) {
             orderedNodes.push({ name: key, meta: node._meta,
-              l2Key: l2, l3Key: l3 });
+              l2Key: l2, l3Key: l3, parent: children });
           } else {
             dfsCollect(node._children, depth + 1,
               depth === 0 ? key : l2,
@@ -6028,6 +6028,8 @@
         nodeEl.dataset.seqIdx = seqIdx;
         nodeEl.dataset.l2Key  = n.l2Key || '';
         nodeEl.dataset.l3Key  = n.l3Key || '';
+        nodeEl.dataset.name   = n.name;
+        nodeEl._flowParent    = n.parent;
         nodeEl.style.left        = x + 'px';
         nodeEl.style.top         = y + 'px';
         nodeEl.style.width       = nodeW + 'px';
@@ -6043,6 +6045,42 @@
       requestAnimationFrame(function () { requestAnimationFrame(function () {
         drawSysOverviewConnectors();
       }); });
+    }
+
+    // Connector pairs for the system / responsibility overviews: consecutive
+    // steps of one parent, or that parent's Previous / Next links. [a, b, isLoop]
+    function overviewFlowPairs(nodeEls) {
+      const pairs = [];
+      for (let i = 0; i < nodeEls.length; ) {
+        let j = i;
+        while (j + 1 < nodeEls.length && nodeEls[j + 1]._flowParent === nodeEls[i]._flowParent) j++;
+        const flow = nodeEls[i]._flowParent ? flowOf(nodeEls[i]._flowParent) : null;
+        if (flow) {
+          const byName = new Map(nodeEls.slice(i, j + 1).map(el => [el.dataset.name, el]));
+          flow.edges.forEach(e => {
+            const a = byName.get(e.from), b = byName.get(e.to);
+            if (a && b) pairs.push([a, b, e.back || parseFloat(b.style.left) <= parseFloat(a.style.left)]);
+          });
+        } else {
+          for (let k = i; k < j; k++) pairs.push([nodeEls[k], nodeEls[k + 1], false]);
+        }
+        i = j + 1;
+      }
+      return pairs;
+    }
+    function overviewLoopPath(a, b, offX, offY) {
+      const ax = offX + parseFloat(a.style.left) + a.offsetWidth / 2, ay = offY + parseFloat(a.style.top);
+      const bx = offX + parseFloat(b.style.left) + b.offsetWidth / 2, by = offY + parseFloat(b.style.top);
+      const lift = 46;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M ' + ax + ' ' + ay + ' C ' + ax + ' ' + (Math.min(ay, by) - lift) + ', ' + bx + ' ' + (Math.min(ay, by) - lift) + ', ' + bx + ' ' + by);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke-linecap', 'round');
+      path.setAttribute('stroke', 'var(--acc)');
+      path.setAttribute('stroke-width', '1.8');
+      path.setAttribute('stroke-dasharray', '5 4');
+      path.setAttribute('opacity', '0.6');
+      return path;
     }
 
     function drawSysOverviewConnectors() {
@@ -6076,11 +6114,10 @@
       if (nodeEls.length < 1) return;
 
       // Draw solid connectors — same L2 AND same L3 only
-      for (let i = 0; i < nodeEls.length - 1; i++) {
-        const a = nodeEls[i];
-        const b = nodeEls[i + 1];
-        if (a.dataset.l2Key !== b.dataset.l2Key) continue;
-        if (a.dataset.l3Key !== b.dataset.l3Key) continue;
+      // Steps in order, or along their Previous / Next links (loops dashed over the top)
+      overviewFlowPairs(nodeEls).forEach(function (pr) {
+        const a = pr[0], b = pr[1];
+        if (pr[2]) { svg.appendChild(overviewLoopPath(a, b, areaOffX, areaOffY)); return; }
 
         const ax_abs = parseFloat(a.style.left) + parseFloat(a.style.width || a.offsetWidth);
         const ay_abs = parseFloat(a.style.top)  + a.offsetHeight / 2;
@@ -6107,7 +6144,7 @@
         path.setAttribute('stroke-width', '1.8');
         path.setAttribute('opacity', '0.6');
         svg.appendChild(path);
-      }
+      });
 
       // Collect section boundaries in order: L2 changes take priority over L3 changes
       const nodeGap = 80;
@@ -6307,7 +6344,7 @@
       function dfsCollect(children, depth, l2, l3) {
         for (const [key, node] of Object.entries(children)) {
           if (node._meta) {
-            orderedNodes.push({ name: key, meta: node._meta, l2Key: l2, l3Key: l3 });
+            orderedNodes.push({ name: key, meta: node._meta, l2Key: l2, l3Key: l3, parent: children });
           } else {
             dfsCollect(node._children, depth + 1,
               depth === 0 ? key : l2,
@@ -6402,6 +6439,8 @@
         nodeEl.dataset.seqIdx = seqIdx;
         nodeEl.dataset.l2Key  = n.l2Key || '';
         nodeEl.dataset.l3Key  = n.l3Key || '';
+        nodeEl.dataset.name   = n.name;
+        nodeEl._flowParent    = n.parent;
         nodeEl.style.left        = x + 'px';
         nodeEl.style.top         = y + 'px';
         nodeEl.style.width       = nodeW + 'px';
@@ -6445,11 +6484,10 @@
       if (nodeEls.length < 1) return;
 
       // Solid bezier connectors — same L2 and same L3 only
-      for (let i = 0; i < nodeEls.length - 1; i++) {
-        const a = nodeEls[i];
-        const b = nodeEls[i + 1];
-        if (a.dataset.l2Key !== b.dataset.l2Key) continue;
-        if (a.dataset.l3Key !== b.dataset.l3Key) continue;
+      // Steps in order, or along their Previous / Next links (loops dashed over the top)
+      overviewFlowPairs(nodeEls).forEach(function (pr) {
+        const a = pr[0], b = pr[1];
+        if (pr[2]) { svg.appendChild(overviewLoopPath(a, b, areaOffX, areaOffY)); return; }
 
         const ax = areaOffX + parseFloat(a.style.left) + parseFloat(a.style.width || a.offsetWidth);
         const ay = areaOffY + parseFloat(a.style.top)  + a.offsetHeight / 2;
@@ -6470,7 +6508,7 @@
         path.setAttribute('stroke-width', '1.8');
         path.setAttribute('opacity', '0.6');
         svg.appendChild(path);
-      }
+      });
 
       // Section boundaries
       const nodeGap = 80;
