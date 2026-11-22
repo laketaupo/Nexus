@@ -2875,13 +2875,19 @@
               <div class="exp-col" id="expCol2"></div>
             </div>
             <div id="expSelInfo" class="exp-summary" data-contents="selection"></div>
-            <div class="exp-opt-line" data-hide-contents="dashboard">
+            <div class="exp-opt-line" data-hide-contents="dashboard" data-hide-swim>
               <label class="exp-opt" title="How deep the diagram goes">Levels down to <select id="expDeepest" class="exp-opt-input"></select></label>
             </div>
             <div class="exp-grid" data-hide-contents="dashboard">
               <span class="exp-k">Flow</span>
               <div class="exp-seg" data-key="direction" title="Which way the process steps run"><button type="button" data-v="lr">Left to right</button><button type="button" data-v="tb">Top to bottom</button></div>
+              <span class="exp-k" data-formats="svg png html drawio">Layout</span>
+              <div class="exp-seg" data-key="layout" data-formats="svg png html drawio" title="Standard levels, or one process in swimlanes"><button type="button" data-v="standard">Standard</button><button type="button" data-v="swimlane">Swimlanes</button></div>
+              <span class="exp-k" data-swim>Lanes by</span>
+              <select id="expLaneField" class="exp-opt-input" data-swim aria-label="Lanes by" title="The field that puts each step in a lane"></select>
             </div>
+            <div class="exp-hint" data-swim>The process and its steps one level down, one lane per value. Steps without a value go in Unassigned. Left to right gives lanes as rows, top to bottom as columns.</div>
+            <div class="exp-hint" data-formats="vsdx" data-when="layout:swimlane">Swimlanes are available for draw.io, SVG, PNG and HTML. Visio uses the standard layout.</div>
             <div class="exp-grid exp-dash-view" data-contents="dashboard">
               <span class="exp-k">View</span>
               <div class="exp-seg" data-key="code.dashView"><button type="button" data-v="full">Full</button><button type="button" data-v="simple">Simplified</button></div>
@@ -2940,7 +2946,7 @@
                   <label class="exp-opt" title="Show the direct parent processes as bars above each diagram"><input type="checkbox" id="expParents"> Include parent chain</label>
                 </div>
               </div>
-              <div class="exp-section">
+              <div class="exp-section" data-hide-swim>
                 <div class="exp-sublabel">Levels</div>
                 <div id="expLevelChecks" class="exp-level-checks"></div>
               </div>
@@ -8171,6 +8177,13 @@
       code:      { formats: [['html', 'HTML']],                             contents: ['overview', 'process', 'dashboard'] },
       flowchart: { formats: [['drawio', 'draw.io'], ['vsdx', 'Visio (.vsdx)']], contents: ['overview', 'process'] },
     };
+    // Fields that can group the steps into swimlanes (see buildSwimlaneSvg)
+    const EXP_LANE_FIELDS = [
+      ['R', 'Responsible (R)'], ['A', 'Accountable (A)'], ['S', 'Support (S)'],
+      ['BPO', 'Process owner (BPO)'], ['BPE', 'Process expert (BPE)'], ['SME', 'Subject matter expert (SME)'],
+      ['Tool', 'System (Tool)'], ['Tool_function', 'System function'], ['Type', 'Type'],
+      ['Supplier', 'Supplier'], ['Customer', 'Customer'],
+    ];
     const EXP_CONTENT_LABEL = { overview: 'Full overview', process: 'Single process',
                                 selection: 'Current selection', dashboard: 'Interactive dashboard' };
     const EXP_DEFAULTS = {
@@ -8184,6 +8197,7 @@
       flowchart: { orient: 'auto' },
       advOpen: false,
       split: 'one', parents: false, direction: 'lr',
+      layout: 'standard', laneField: 'R',
       levels: { 1: { o: 'h', a: true }, 2: { o: 'h', a: true }, 3: { o: 'h', a: true }, 4: { o: 'v', a: false } },
       showCodes: false, codeMode: 'auto', codePos: 'inline',
     };
@@ -8208,6 +8222,8 @@
       });
       if (![1, 2, 4].includes(d.image.scale)) d.image.scale = 2;
       if (!['full', 'simple'].includes(d.code.dashView)) d.code.dashView = 'full';
+      if (!['standard', 'swimlane'].includes(d.layout)) d.layout = 'standard';
+      if (!EXP_LANE_FIELDS.some(([f]) => f === d.laneField)) d.laneField = 'R';
       return d;
     }
     function expLoadSettings() {
@@ -8240,6 +8256,9 @@
     const expContent = () => expSettings.content[expSettings.type];
     // The interactive dashboard is always one file; diagrams can be written one per process
     const expSplitVal = () => (expSettings.type === 'code' && expContent() === 'dashboard') ? 'one' : String(expSettings.split);
+    // Swimlanes: SVG, PNG, HTML and draw.io (not Visio, not the dashboard)
+    const EXP_SWIM_FORMATS = ['svg', 'png', 'html', 'drawio'];
+    const expSwimOn = () => expSettings.layout === 'swimlane' && EXP_SWIM_FORMATS.includes(expFmt()) && expContent() !== 'dashboard';
     // "tree<N>": the starting process and every process up to N levels below it, one file each
     const expTreeDepth = split => /^tree\d$/.test(split) ? Number(split.slice(4)) : 0;
 
@@ -8428,7 +8447,18 @@
       const paths = expDiagramPaths();
       const items = [];
       const at = from || 0;
+      const swim = expSwimOn();
       (limit ? paths.slice(at, at + limit) : paths).forEach(path => {
+        if (swim) {
+          const result = buildSwimlaneSvg(path, {
+            laneField: s.laneField, direction: s.direction === 'tb' ? 'tb' : 'lr',
+            showCodes: s.showCodes, codeOwnLine: s.codePos === 'line', codeOf: codeOf || undefined,
+            parentChain: s.parents ? expParentChain(path) : [],
+          });
+          if (result) items.push({ result, base: expFileBase(path, codeOf) + ' (swimlanes)',
+                                   title: path.length ? path[path.length - 1] : 'All processes' });
+          return;
+        }
         // Each file goes at least one level below its own process
         const deepest = Math.max(s.deepest, Math.min(EXP_MAX_LEVEL, path.length + 1));
         const result = buildSvgString(path, deepest, orientations, {
@@ -8459,6 +8489,7 @@
       const grow = (x, y, w, h) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x + w); y1 = Math.max(y1, y + h); };
       (result.shapes || []).forEach(sh => grow(sh.x, sh.y, sh.w, sh.h));
       (result.levelTags || []).forEach(t => grow(t.x, t.y, t.w, t.h));
+      if (result.swim) grow(result.swim.pool.x, result.swim.pool.y, result.swim.pool.w, result.swim.pool.h);
       if (!Number.isFinite(x0)) { x0 = 0; y0 = 0; x1 = result.svgW; y1 = result.svgH; }
       const bw = x1 - x0, bh = y1 - y0;
       let W = bw + 2 * pad, H = bh + 2 * pad;
@@ -8473,6 +8504,10 @@
         shapes: (result.shapes || []).map(sh => Object.assign({}, sh, { x: sh.x + dx, y: sh.y + dy })),
         levelTags: (result.levelTags || []).map(t => Object.assign({}, t, { x: t.x + dx, y: t.y + dy })),
         arrows: (result.arrows || []).map(a => Object.assign({}, a, { x1: a.x1 + dx, y1: a.y1 + dy, x2: a.x2 + dx, y2: a.y2 + dy })),
+        swim: result.swim ? Object.assign({}, result.swim, {
+          pool: Object.assign({}, result.swim.pool, { x: result.swim.pool.x + dx, y: result.swim.pool.y + dy }),
+          lanes: result.swim.lanes.map(l => Object.assign({}, l, { x: l.x + dx, y: l.y + dy })),
+        }) : null,
       };
     }
 
@@ -8680,7 +8715,7 @@
         'html,body{margin:0;height:100%;background:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}\n' +
         frameCss + '\n' +
         '.frame svg{display:block;width:100%;height:100%}\n' +
-        '#d rect{cursor:pointer;transition:filter .12s}\n#d rect:hover,#d rect.hc-on{filter:brightness(.93)}\n' +
+        '#d rect:not(.sl){cursor:pointer;transition:filter .12s}\n#d rect:not(.sl):hover,#d rect.hc-on{filter:brightness(.93)}\n' +
         '#d text{pointer-events:none}\n' +
         hoverCardCss(false) +
         '</style>\n</head>\n<body>\n<div class="frame">\n' +
@@ -8688,12 +8723,12 @@
         '</div>\n<div class="hcard" id="card" role="tooltip"></div>\n' +
         '<script>\n(function () {\n' +
         '  var D = ' + expJsonForScript(data) + ';\n' +
-        '  var rects = document.querySelectorAll("#d rect");\n' +
+        '  var rects = document.querySelectorAll("#d rect:not(.sl)");\n' +
         '  function idx(r) { return Array.prototype.indexOf.call(rects, r); }\n' +
         '  ' + hoverCardFill.toString() + '\n' +
         '  ' + hoverCardKit.toString() + '\n' +
         '  hoverCardKit({ root: document, tap: "show", clickShows: true,\n' +
-        '    find: function (t) { var r = t && t.closest ? t.closest("#d rect") : null; return r && D[idx(r)] ? r : null; },\n' +
+        '    find: function (t) { var r = t && t.closest ? t.closest("#d rect:not(.sl)") : null; return r && D[idx(r)] ? r : null; },\n' +
         '    data: function (r) { var n = D[idx(r)]; return { t: n.t, f: n.f }; } });\n' +
         '})();\n</' + 'script>\n</body>\n</html>\n';
     }
@@ -8794,7 +8829,8 @@
     function expFileEntries() {
       const s = expSettings, start = parseInt($('expCodeStart').value, 10);
       const codeOf = s.showCodes ? expBuildCodeOf(s.codeMode, Number.isFinite(start) ? start : 1) : null;
-      return expDiagramPaths().map(path => ({ base: expFileBase(path, codeOf), title: path.length ? path[path.length - 1] : 'All processes' }));
+      const tag = expSwimOn() ? ' (swimlanes)' : '';
+      return expDiagramPaths().map(path => ({ base: expFileBase(path, codeOf) + tag, title: path.length ? path[path.length - 1] : 'All processes' }));
     }
     // One file of several, ready to save
     async function expItemBlob(i) {
@@ -8890,7 +8926,8 @@
           const o = fr.pageOrient === 'portrait' ? 'Portrait' : 'Landscape';
           const lab = fmt === 'vsdx' ? 'Visio' : 'draw.io';
           meta.textContent = lab + ' · ' + o + ' page' + (expSettings.flowchart.orient === 'auto' ? ' sized to the diagram' : ' (A4 proportions)') +
-            ' · ' + fr.shapes.length + ' shapes' + (fr.arrows.length ? ', ' + fr.arrows.length + ' connectors' : '') + more;
+            ' · ' + (fr.swim ? fr.swim.lanes.length + ' lane' + (fr.swim.lanes.length === 1 ? '' : 's') + ', ' : '') +
+            fr.shapes.length + ' shapes' + (fr.arrows.length ? ', ' + fr.arrows.length + ' connectors' : '') + more;
           meta.classList.remove('is-warn');
         }
       } else {
@@ -9031,7 +9068,7 @@
     function expApplyVisibility() {
       const type = expType(), fmt = expFmt(), content = expContent();
       const has = (attr, v) => attr.split(' ').includes(v);
-      exportModal.querySelectorAll('[data-types],[data-formats],[data-contents],[data-hide-contents],[data-when]').forEach(el => {
+      exportModal.querySelectorAll('[data-types],[data-formats],[data-contents],[data-hide-contents],[data-when],[data-swim],[data-hide-swim]').forEach(el => {
         const d = el.dataset;
         let show = true;
         if (d.types)        show = show && has(d.types, type);
@@ -9039,6 +9076,8 @@
         if (d.contents)     show = show && has(d.contents, content);
         if (d.hideContents) show = show && !has(d.hideContents, content);
         if (d.when) { const [k, v] = d.when.split(':'); show = show && String(expGet(k)) === v; }
+        if (d.swim !== undefined) show = show && expSwimOn();
+        if (d.hideSwim !== undefined) show = show && !expSwimOn();
         el.hidden = !show;
       });
     }
@@ -9069,6 +9108,10 @@
       $('expCodeMode').value = s.codeMode;
       $('expCodePos').value = s.codePos;
       $('expParents').checked = !!s.parents;
+      const laneSel = $('expLaneField'), inData = swimFieldsInData();
+      const laneOpts = inData.some(([f]) => f === s.laneField) ? inData : inData.concat(EXP_LANE_FIELDS.filter(([f]) => f === s.laneField));
+      laneSel.innerHTML = laneOpts.map(([f, l]) => '<option value="' + f + '">' + escHtml(l) + '</option>').join('');
+      laneSel.value = s.laneField;
       ['expCodeMode', 'expCodePos', 'expCodeStart'].forEach(id => { $(id).disabled = !s.showCodes; });
       $('expAdvanced').open = !!s.advOpen;
 
@@ -9167,6 +9210,7 @@
     $('expSplit').addEventListener('change', e => { expSettings.split = e.target.value; expPvIndex = 0; expChanged(); });
     $('expDeepest').addEventListener('change', e => { expSettings.deepest = Number(e.target.value); expChanged(); });
     $('expParents').addEventListener('change', e => { expSettings.parents = e.target.checked; expChanged(); });
+    $('expLaneField').addEventListener('change', e => { expSettings.laneField = e.target.value; expChanged(); });
     $('expShowCodes').addEventListener('change', e => { expSettings.showCodes = e.target.checked; expChanged(); });
     $('expCodeMode').addEventListener('change', e => { expSettings.codeMode = e.target.value; expChanged(); });
     $('expCodePos').addEventListener('change', e => { expSettings.codePos = e.target.value; expChanged(); });
@@ -9630,6 +9674,156 @@
       };
     }
 
+    // ── SWIMLANE LAYOUT ──────────────────────────────────────────────────────
+    // One process and its direct steps, with one lane per value of a chosen
+    // field (Responsible, Tool, BPO, ...). Steps without a value go in an
+    // "Unassigned" lane. Left to right: lanes are rows and the steps run to the
+    // right; top to bottom: lanes are columns and the steps run down. Each
+    // step gets its own column (row) so the flow reads in order across lanes.
+    // Returns the same shape as buildSvgString plus `swim` (pool and lanes),
+    // which the draw.io exporter turns into native swimlane containers.
+    const EXP_UNASSIGNED = 'Unassigned';
+    const SWIM = { HEAD: 30, M: 30, GAP: 60 };   // title strip, margin round the steps, gap between steps
+    const SWIM_COLORS = { poolHead: '#D7F5CB', laneHead: '#EBFFDF', laneBody: '#ffffff', stroke: '#6ab062', text: '#1c3620' };
+
+    function swimFieldValue(meta, field) {
+      const v = meta && meta[field] != null ? String(meta[field]).trim() : '';
+      return v.toLowerCase() === 'n/a' ? '' : v;
+    }
+    // A step's lane: its own value, else the most common value among the
+    // lowest-level processes below it (process data sits on those rows).
+    function swimLaneOf(nodeObj, field) {
+      const own = swimFieldValue(nodeObj && nodeObj._meta, field);
+      if (own) return own;
+      const counts = new Map();
+      (function walk(n) {
+        const kids = Object.keys(n._children || {});
+        if (!kids.length) { const v = swimFieldValue(n._meta, field); if (v) counts.set(v, (counts.get(v) || 0) + 1); return; }
+        kids.forEach(k => walk(n._children[k]));
+      })(nodeObj || { _children: {} });
+      let best = '', n = 0;
+      counts.forEach((c, v) => { if (c > n) { best = v; n = c; } });
+      return best;
+    }
+    // Lane fields that have at least one value in the data
+    function swimFieldsInData() {
+      const found = new Set();
+      (function walk(nodes) {
+        Object.keys(nodes).forEach(k => {
+          const n = nodes[k];
+          EXP_LANE_FIELDS.forEach(([f]) => { if (!found.has(f) && swimFieldValue(n._meta, f)) found.add(f); });
+          walk(n._children);
+        });
+      })(tree);
+      return EXP_LANE_FIELDS.filter(([f]) => found.has(f));
+    }
+
+    // opts: { laneField, direction: 'lr'|'tb', showCodes, codeOwnLine, codeOf(path), parentChain }
+    function buildSwimlaneSvg(path, opts) {
+      opts = opts || {};
+      const field = opts.laneField || 'R';
+      const TB = opts.direction === 'tb';
+      const parentObj = path.length ? expNodeAt(path) : null;
+      const steps = path.length ? (parentObj ? parentObj._children : {}) : tree;
+      const keys = Object.keys(steps);
+      if (!keys.length) return null;
+      const { NW, NH, PAD, FONT, CORNER } = SVG_LAYOUT;
+      const { HEAD, M, GAP } = SWIM;
+      const FF = "-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif";
+      const stepAbs = levelOffset + path.length;          // absolute level of the steps
+      const ci = Math.min(stepAbs, EXP_FILLS.length - 1);
+
+      // Lanes in order of first use; Unassigned always last
+      const laneOfKey = {}, laneNames = [];
+      keys.forEach(k => {
+        const v = swimLaneOf(steps[k], field) || EXP_UNASSIGNED;
+        laneOfKey[k] = v;
+        if (v !== EXP_UNASSIGNED && !laneNames.includes(v)) laneNames.push(v);
+      });
+      if (keys.some(k => laneOfKey[k] === EXP_UNASSIGNED)) laneNames.push(EXP_UNASSIGNED);
+
+      // Pool title: the process (with its code), after its parents when the chain is on
+      const codeOf = opts.codeOf || (() => '');
+      const procName = path.length ? path[path.length - 1] : 'All processes';
+      const procCode = path.length && opts.showCodes ? codeOf(path) : '';
+      const chain = (opts.parentChain || []).map(p => p.key);
+      const poolTitle = chain.concat((procCode ? procCode + ' ' : '') + procName).join(' › ');
+
+      // Geometry: "along" runs with the flow, "across" over the lanes
+      const n = keys.length;
+      const laneAcross = (TB ? NW : NH) + 2 * M;                  // lane thickness
+      const laneAlong  = HEAD + M + n * ((TB ? NH : NW) + GAP) - GAP + M;
+      const pool = TB
+        ? { x: PAD, y: PAD, w: laneNames.length * laneAcross, h: HEAD + laneAlong, title: poolTitle }
+        : { x: PAD, y: PAD, w: HEAD + laneAlong, h: laneNames.length * laneAcross, title: poolTitle };
+      const lanes = laneNames.map((name, i) => TB
+        ? { x: pool.x + i * laneAcross, y: pool.y + HEAD, w: laneAcross, h: laneAlong, title: name }
+        : { x: pool.x + HEAD, y: pool.y + i * laneAcross, w: laneAlong, h: laneAcross, title: name });
+
+      const shapes = [], arrows = [];
+      keys.forEach((k, i) => {
+        const li = laneNames.indexOf(laneOfKey[k]), ln = lanes[li];
+        const p = path.concat(k), code = opts.showCodes ? codeOf(p) : '';
+        const x = TB ? ln.x + M : ln.x + HEAD + M + i * (NW + GAP);
+        const y = TB ? ln.y + HEAD + M + i * (NH + GAP) : ln.y + M;
+        shapes.push({ x, y, w: NW, h: NH, name: k, level: stepAbs, lane: li,
+          text: code ? code + (opts.codeOwnLine ? '\n' : ' ') + k : k,
+          fill: EXP_FILLS[ci], stroke: EXP_STROKES[ci], color: EXP_TEXTS[ci],
+          code, desc: steps[k]._desc || '', meta: steps[k]._meta || null });
+      });
+      for (let i = 0; i + 1 < shapes.length; i++) {
+        const a = shapes[i], b = shapes[i + 1];
+        arrows.push(TB
+          ? { x1: a.x + NW / 2, y1: a.y + NH, x2: b.x + NW / 2, y2: b.y, from: i, to: i + 1, tb: true, vertical: true }
+          : { x1: a.x + NW, y1: a.y + NH / 2, x2: b.x, y2: b.y + NH / 2, from: i, to: i + 1 });
+      }
+
+      const svgW = pool.x + pool.w + PAD, svgH = pool.y + pool.h + PAD;
+      const out = [];
+      const fit = (t, px) => { const max = Math.max(4, Math.floor(px / (11 * 0.58))); return t.length > max ? t.slice(0, max - 1) + '…' : t; };
+      const title = (t, box, bold, size) => {
+        // Title strip: on the left, turned (left to right), or along the top (top to bottom)
+        const along = TB ? box.w : box.h, cx = TB ? box.x + box.w / 2 : box.x + HEAD / 2, cy = TB ? box.y + HEAD / 2 : box.y + box.h / 2;
+        const rot = TB ? '' : ' transform="rotate(-90 ' + cx + ' ' + cy + ')"';
+        return '<text x="' + cx + '" y="' + (cy + 4) + '"' + rot + ' text-anchor="middle" fill="' + SWIM_COLORS.text + '" font-size="' + size + '"' +
+          (bold ? ' font-weight="700"' : ' font-weight="600"') + ' font-family="' + FF + '">' + escHtml(fit(t, along - 16)) + '</text>';
+      };
+      const strip = b => TB ? { x: b.x, y: b.y, w: b.w, h: HEAD } : { x: b.x, y: b.y, w: HEAD, h: b.h };
+      const rect = (b, fill) => '<rect class="sl" x="' + b.x + '" y="' + b.y + '" width="' + b.w + '" height="' + b.h +
+        '" fill="' + fill + '" stroke="' + SWIM_COLORS.stroke + '" stroke-width="1"/>';
+      out.push(rect(pool, SWIM_COLORS.laneBody), rect(strip(pool), SWIM_COLORS.poolHead), title(pool.title, pool, true, 12));
+      lanes.forEach(l => { out.push(rect(l, SWIM_COLORS.laneBody), rect(strip(l), SWIM_COLORS.laneHead), title(l.title, l, false, 11)); });
+      // Steps (the only rects without class="sl", so the HTML export can find them)
+      shapes.forEach(sh => {
+        out.push('<rect x="' + sh.x + '" y="' + sh.y + '" width="' + sh.w + '" height="' + sh.h + '" rx="' + CORNER + '" ry="' + CORNER +
+          '" fill="' + sh.fill + '" stroke="' + sh.stroke + '" stroke-width="1.5"/>');
+      });
+      shapes.forEach(sh => {
+        const lines = String(sh.text).split('\n').flatMap(part => wrapText(part, sh.w - 20, FONT));
+        const lh = FONT * 1.4, y0 = sh.y + sh.h / 2 - (lines.length * lh) / 2 + FONT;
+        lines.forEach((ln, li) => out.push('<text x="' + (sh.x + sh.w / 2) + '" y="' + (y0 + li * lh) + '" text-anchor="middle" fill="' + sh.color +
+          '" font-size="' + FONT + '" font-family="' + FF + '">' + escHtml(ln) + '</text>'));
+      });
+      arrows.forEach(a => {
+        const end = TB ? [a.x2, a.y2 - 1] : [a.x2 - 1, a.y2];
+        let pts;
+        if (TB) { const my = (a.y1 + a.y2) / 2; pts = a.x1 === a.x2 ? [[a.x1, a.y1], end] : [[a.x1, a.y1], [a.x1, my], [a.x2, my], end]; }
+        else    { const mx = (a.x1 + a.x2) / 2; pts = a.y1 === a.y2 ? [[a.x1, a.y1], end] : [[a.x1, a.y1], [mx, a.y1], [mx, a.y2], end]; }
+        out.push('<polyline points="' + pts.map(p => p.join(',')).join(' ') + '" fill="none" stroke="' + EXP_ARROW_COLOR +
+          '" stroke-width="1.5" marker-end="url(#expArrow)"/>');
+      });
+      return {
+        svg: '<?xml version="1.0" encoding="UTF-8"?>\n' +
+          '<svg xmlns="http://www.w3.org/2000/svg" width="' + svgW + '" height="' + svgH + '" viewBox="0 0 ' + svgW + ' ' + svgH + '">\n' +
+          '  <rect width="' + svgW + '" height="' + svgH + '" fill="none"/>\n' +
+          '  <defs><marker id="expArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"' +
+          ' orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="' + EXP_ARROW_COLOR + '"/></marker></defs>\n' +
+          out.map(s => '  ' + s).join('\n') + '\n</svg>',
+        svgW, svgH, shapes, levelTags: [], arrows,
+        swim: { horizontal: !TB, pool, lanes },
+      };
+    }
+
     // ── VISIO (.VSDX) EXPORT ──────────────────────────────────────────────────
     // Builds a native Visio file from the layout produced by buildSvgString().
     // Every node becomes an editable Visio shape (same position, colours and
@@ -9905,6 +10099,24 @@
       const label = t => vsdxEsc(String(t).split('\n').map(escHtml).join('<br>'));
       const cells = [];
       let id = 2;
+      // Swimlanes: one pool with a lane per group, as native draw.io containers.
+      // Lanes are children of the pool and steps children of their lane, with
+      // coordinates relative to the container; connectors stay on the page.
+      const swim = result.swim;
+      const parentOf = sh => swim ? 'lane' + sh.lane : '1';
+      const relGeo = sh => swim ? Object.assign({}, sh, { x: sh.x - swim.lanes[sh.lane].x, y: sh.y - swim.lanes[sh.lane].y }) : sh;
+      if (swim) {
+        const st = (head, body) => 'swimlane;' + (swim.horizontal ? 'horizontal=0;' : '') + 'startSize=' + SWIM.HEAD +
+          ';html=1;whiteSpace=wrap;collapsible=0;fillColor=' + head + ';swimlaneFillColor=' + body + ';strokeColor=' + SWIM_COLORS.stroke +
+          ';fontColor=' + SWIM_COLORS.text + ';';
+        const P = swim.pool;
+        cells.push('<mxCell id="pool" value="' + label(P.title) + '" style="' + st(SWIM_COLORS.poolHead, SWIM_COLORS.laneBody) +
+          'fontStyle=1;fontSize=12;" vertex="1" parent="1">' + geo(P) + '</mxCell>');
+        swim.lanes.forEach((l, i) => {
+          cells.push('<mxCell id="lane' + i + '" value="' + label(l.title) + '" style="' + st(SWIM_COLORS.laneHead, SWIM_COLORS.laneBody) +
+            'fontSize=11;fontStyle=0;" vertex="1" parent="pool">' + geo({ x: l.x - P.x, y: l.y - P.y, w: l.w, h: l.h }) + '</mxCell>');
+        });
+      }
       (result.levelTags || []).forEach(t => {
         cells.push('<mxCell id="n' + (id++) + '" value="' + label(t.text) + '" style="text;html=1;align=right;' +
           'verticalAlign=middle;fontStyle=1;fontSize=11;fontColor=' + t.color + ';" vertex="1" parent="1">' +
@@ -9918,12 +10130,14 @@
         cells.push('<object id="s' + i + '" label="' + label(sh.text) + '"' + attrs + '>' +
           '<mxCell style="' + shapeStyle + 'whiteSpace=wrap;html=1;' +
           'fillColor=' + sh.fill + ';strokeColor=' + sh.stroke + ';strokeWidth=1.5;fontColor=' + sh.color +
-          ';fontSize=' + SVG_LAYOUT.FONT + ';spacing=10;" vertex="1" parent="1">' + geo(sh) + '</mxCell></object>');
+          ';fontSize=' + SVG_LAYOUT.FONT + ';spacing=10;" vertex="1" parent="' + parentOf(sh) + '">' + geo(relGeo(sh)) + '</mxCell></object>');
       });
       (result.arrows || []).forEach((a, i) => {
         // Vertical arrow from a block with children goes round the left side
         // Top to bottom: steps flow downwards; a sideways arrow from a block with children goes over the top
-        const ports = a.tb
+        const ports = swim
+          ? (a.tb ? 'exitX=0.5;exitY=1;entryX=0.5;entryY=0;' : 'exitX=1;exitY=0.5;entryX=0;entryY=0.5;')
+          : a.tb
           ? (a.vertical ? 'exitX=0.5;exitY=1;entryX=0.5;entryY=0;'
              : a.fromHasKids ? 'exitX=0.5;exitY=0;entryX=0.5;entryY=0;' : 'exitX=1;exitY=0.5;entryX=0;entryY=0.5;')
           : !a.vertical ? 'exitX=1;exitY=0.5;entryX=0;entryY=0.5;'
