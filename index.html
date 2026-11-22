@@ -8566,32 +8566,18 @@
         'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;' +
         'pointer-events:none;opacity:0;transition:opacity .1s;max-height:calc(100vh - 16px);overflow:auto;overscroll-behavior:contain}\n' +
         '.hcard.show{opacity:1;pointer-events:auto}\n' +
-        '.hcard-dock{z-index:400;top:12px;right:12px;left:auto;width:min(' + px(360) + ',calc(100vw - 24px));max-width:none;' +
-        'max-height:calc(100vh - 24px);border-left:4px solid #619a60;box-shadow:0 10px 32px rgba(20,40,20,.24);visibility:hidden}\n' +
-        '.hcard-dock.show{visibility:visible}\n' +
-        '.hcard .hc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:' + px(8) + ';margin:0 0 ' + px(8) + '}\n' +
-        '.hcard h3{margin:0;font-size:' + px(14) + ';line-height:1.3;font-weight:650;color:#1c3620;overflow-wrap:anywhere}\n' +
-        '.hcard .hc-btn{flex:none;display:inline-flex;align-items:center;justify-content:center;width:' + px(24) + ';height:' + px(24) + ';' +
-        'margin:-' + px(3) + ' -' + px(4) + ' 0 0;padding:0;border:1px solid #d5dfd3;border-radius:' + px(6) + ';background:#f6f9f5;color:#4d6b4d;' +
-        'cursor:pointer;font:inherit;font-size:' + px(15) + ';line-height:1}\n' +
-        '.hcard .hc-btn:hover{background:#e6f2e2;border-color:#9cc596;color:#1c3620}\n' +
-        '.hcard .hc-btn svg{width:' + px(13) + ';height:' + px(13) + '}\n' +
+        '.hcard h3{margin:0 0 ' + px(8) + ';font-size:' + px(14) + ';line-height:1.3;font-weight:650;color:#1c3620;overflow-wrap:anywhere}\n' +
         '.hcard dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:' + px(4) + ' ' + px(12) + '}\n' +
         '.hcard dt{color:#6a776a;white-space:nowrap}\n' +
         '.hcard dd{margin:0;overflow-wrap:anywhere;white-space:pre-line}\n' +
         '.hcard .none{color:#8a948a;font-style:italic}\n' +
         '.hcard .hint{margin-top:' + px(10) + ';padding-top:' + px(8) + ';border-top:1px solid #e6ece4;color:#4d6b4d;font-size:' + px(11.5) + '}\n';
     }
-    // Fills the card for n = { t: title, f: [[label, value], ...], hint, btn: 'pin' | 'unpin' }.
+    // Fills the card for n = { t: title, f: [[label, value], ...], hint }.
     // Self-contained: its source is also written into exported pages.
     function hoverCardFill(card, n) {
       function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-      var b = n.btn === 'pin'
-        ? '<button type="button" class="hc-btn hc-pin" title="Keep this card open at the side of the screen" aria-label="Pin to the side">' +
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
-          '<line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.8a2 2 0 0 0-1.1-1.8l-1.8-.9a2 2 0 0 1-1.1-1.8V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.7a2 2 0 0 1-1.1 1.8l-1.8.9A2 2 0 0 0 5 15.2Z"/></svg></button>'
-        : n.btn === 'unpin' ? '<button type="button" class="hc-btn hc-unpin" title="Unpin" aria-label="Unpin">&times;</button>' : '';
-      var h = '<div class="hc-head"><h3>' + esc(n.t) + '</h3>' + b + '</div>';
+      var h = '<h3>' + esc(n.t) + '</h3>';
       if (n.f.length) { h += '<dl>'; n.f.forEach(function (r) { h += '<dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd>'; }); h += '</dl>'; }
       else h += '<div class="none">No details</div>';
       if (n.hint) h += '<div class="hint">' + esc(n.hint) + '</div>';
@@ -8599,18 +8585,15 @@
     }
     // Hover card behaviour. Self-contained too (written into exported pages).
     // With a mouse the card appears after a short delay, right against the
-    // process, and goes away as soon as the pointer leaves both. The pin button
-    // keeps a copy docked at the side of the screen until it is unpinned.
+    // process, and goes away as soon as the pointer leaves both.
     // o: { root, find(target) -> el|null, data(el, touch) -> { t, f, hint },
-    //      delay, dockTop, id, tap: 'show' | 'open' | 'none', clickShows,
+    //      delay, id, tap: 'show' | 'open' | 'none', clickShows,
     //      opens(el) -> bool, open(el) }
     function hoverCardKit(o) {
-      var card = document.createElement('div'), dock = document.createElement('div');
+      var card = document.createElement('div');
       card.className = 'hcard'; card.setAttribute('role', 'tooltip');
-      dock.className = 'hcard hcard-dock'; dock.setAttribute('role', 'complementary'); dock.setAttribute('aria-label', 'Pinned process');
-      if (o.id) { card.id = o.id; dock.id = o.id + 'Dock'; }
-      if (o.dockTop) { dock.style.top = o.dockTop + 'px'; dock.style.maxHeight = 'calc(100vh - ' + (o.dockTop + 12) + 'px)'; }
-      document.body.appendChild(card); document.body.appendChild(dock);
+      if (o.id) card.id = o.id;
+      document.body.appendChild(card);
       var on = null, pend = null, timer = 0, held = false, touch = false, keyboard = false;
       var delay = o.delay == null ? 400 : o.delay;
       function inside(box, n) { return !!(n && box && box.contains(n)); }
@@ -8627,8 +8610,7 @@
         clearTimeout(timer); pend = null;
         if (on && on !== el) on.classList.remove('hc-on');
         on = el; el.classList.add('hc-on');
-        var n = o.data(el, touch); n.btn = 'pin';
-        hoverCardFill(card, n);
+        hoverCardFill(card, o.data(el, touch));
         card.classList.add('show');
         place(el);
       }
@@ -8641,13 +8623,6 @@
         if (pend === el || on === el) return;
         clearTimeout(timer); pend = el;
         timer = setTimeout(function () { if (pend === el && document.body.contains(el)) show(el); }, delay);
-      }
-      function pin() {
-        if (!on) return;
-        var n = o.data(on, touch); n.btn = 'unpin'; n.hint = '';
-        hoverCardFill(dock, n);
-        dock.classList.add('show');
-        hide();
       }
       document.addEventListener('pointerdown', function (e) { touch = e.pointerType !== 'mouse'; keyboard = false; }, true);
       document.addEventListener('pointermove', function (e) { if (e.pointerType === 'mouse') touch = false; }, true);
@@ -8673,12 +8648,8 @@
       });
       card.addEventListener('click', function (e) {
         e.stopPropagation();
-        if (e.target.closest && e.target.closest('.hc-pin')) { pin(); return; }
         // Tapping the card of a process with steps opens it
         if (o.tap === 'open' && on && o.opens && o.opens(on) && o.open) { var el = on; hide(); o.open(el); }
-      });
-      dock.addEventListener('click', function (e) {
-        if (e.target.closest && e.target.closest('.hc-unpin')) dock.classList.remove('show');
       });
       // Capture phase: decides before the process's own click
       o.root.addEventListener('click', function (e) {
@@ -8706,11 +8677,11 @@
       });
       document.addEventListener('keydown', function (e) { if (e.key === 'Escape' || e.key === 'Enter') hide(); });
       window.addEventListener('scroll', function (e) {
-        if (inside(card, e.target) || inside(dock, e.target)) return;
+        if (inside(card, e.target)) return;
         if (held && on) place(on); else hide();
       }, true);
       window.addEventListener('resize', hide);
-      return { hide: hide, unpin: function () { dock.classList.remove('show'); } };
+      return { hide: hide };
     }
     // Card rows for a node: all filled-in fields except the name (the title)
     const hoverCardRows = sh => exportDataRows(sh).filter(([k]) => k !== 'Name').map(([, label, v]) => [label, String(v).trim()]);
@@ -8768,7 +8739,7 @@
       clone.querySelector('#shortcutsDropdown').classList.add('hidden');
       clone.querySelector('#importOverlay').className = 'imp-overlay hidden';
       clone.classList.toggle('pf-simple', simple);
-      ['#pfHoverCard', '#pfHoverCardDock', '#pfHoverCss'].forEach(sel => { const n = clone.querySelector(sel); if (n) n.remove(); });
+      ['#pfHoverCard', '#pfHoverCss'].forEach(sel => { const n = clone.querySelector(sel); if (n) n.remove(); });
 
       const topKeys = Object.keys(tree);
       const dt = new Date();
@@ -10120,7 +10091,7 @@
     }
     // ── HOVER CARDS AND THE SIMPLIFIED VIEW ─────────────────────────────────
     // Every view shows a large hover card with the full name and all filled-in
-    // details of a process (after a short delay; pin keeps it at the side).
+    // details of a process (after a short delay).
     // The "Simplified" dashboard export also hides menus and panels: a mouse
     // click opens a process; on touch the first tap shows the card and a
     // second tap opens it.
@@ -10133,7 +10104,7 @@
       style.textContent = hoverCardCss(true);
       document.head.appendChild(style);
       hoverKit = hoverCardKit({
-        root: flowContainer, id: 'pfHoverCard', delay: 400, dockTop: 68,
+        root: flowContainer, id: 'pfHoverCard', delay: 400,
         tap: simpleView ? 'open' : 'none', clickShows: simpleView,
         find: t => (t && t.closest) ? t.closest('.node, .erp-node:not(.erp-empty)') : null,
         opens: el => el.classList.contains('has-children'),
