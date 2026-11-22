@@ -1410,6 +1410,10 @@
     .imp-btn-continue:disabled { opacity: .5; cursor: not-allowed; }
     .imp-preview-meta { font-size: .75rem; color: var(--txt4); margin-bottom: .6rem; }
     .imp-preview-meta strong { color: var(--txt3); }
+    .imp-flow-warn { margin-top: .5rem; padding: .45rem .65rem; border-radius: 6px;
+      background: rgba(234,179,8,.10); border: 1px solid rgba(234,179,8,.45); color: var(--txt3); }
+    .imp-flow-warn ul { margin: .25rem 0 0 1rem; padding: 0; }
+    .imp-flow-warn li { margin: .1rem 0; }
     .imp-preview-scroll { overflow-x: auto; border: 1px solid var(--bdr-s); border-radius: 6px; }
     .imp-preview-table { width: 100%; border-collapse: collapse; font-size: .72rem; white-space: nowrap; }
     .imp-preview-table th {
@@ -1992,6 +1996,17 @@
     #detailScreen .dt-nav-prev { left: 1rem; }
     #detailScreen .dt-nav-next { right: 1rem; }
     #detailScreen .dt-nav-btn.hidden { display: none; }
+    #detailScreen .ds-nav-menu {
+      position: absolute; z-index: 9; min-width: 220px; max-width: 340px;
+      background: var(--surf); border: 1px solid var(--bdr); border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.25); padding: .3rem; display: flex; flex-direction: column;
+    }
+    #detailScreen .ds-nav-menu button {
+      background: none; border: none; color: var(--txt); font: inherit; font-size: .82rem;
+      text-align: left; padding: .45rem .6rem; border-radius: 6px; cursor: pointer;
+    }
+    #detailScreen .ds-nav-menu button:hover, #detailScreen .ds-nav-menu button:focus { background: var(--bdr); outline: none; }
+    #detailScreen .ds-nav-menu-code { color: var(--txt4); margin-right: .45rem; font-variant-numeric: tabular-nums; }
     #detailScreen .ds-wrap {
       flex: 1 1 auto; min-height: 0; max-width: 1500px; width: 100%; margin: 0 auto;
       display: grid; grid-template-rows: auto minmax(0, 1.5fr) minmax(0, 1fr);
@@ -3073,32 +3088,32 @@
   <script id="pfEmbedData">/* embed slot — do not edit */</script>
   <!-- Demo process map of a fictional company. Loaded via the demo button or with ?demo in the URL.
        Source: demo/harbour-cycles-demo.csv (keep both in sync). -->
-  <script type="text/plain" id="pfDemoCsv">L1_code;L1;L2_code;L2;L2_goal;L3_code;L3;L4_code;L4;BPO;BPE;SME;Frequency;Time_UoM;Start;End;R;A;S;C;I;Supplier;Input;Output;Customer;Type;KPI;Goal;Tool;Tool_function;Tool_desc;L1_Desc;L2_Desc;L3_Desc;L4_Desc
-1;S&OP;1.1;1. Prepare data;Start the cycle on clean, complete data;1.1.1;Close the previous period;1.1.1.1;Load sales and shipment actuals;S&OP Manager;Business Process Engineer;Data Analyst;Monthly;Week;1;1;Demand Planner;S&OP Manager;Data Analyst;;Sales Manager;ERP;"Sales orders; Shipments";Actuals dataset;Demand Planner;System activity;Data load on time;Actuals available on day 1;Planning platform;Data integration;Automated nightly import from ERP into the planning platform.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Close last month, refresh master data and actuals so every planner starts from the same baseline.;Lock last month's actuals.;Import last month's orders, shipments and returns from ERP.
-1;S&OP;1.1;1. Prepare data;Start the cycle on clean, complete data;1.1.1;Close the previous period;1.1.1.2;Validate data quality;S&OP Manager;Business Process Engineer;Demand Planner;Monthly;Week;1;1;Data Analyst;S&OP Manager;Demand Planner;IT Support;;Planning platform;"Actuals dataset; Master data";"Validated dataset; Data issue log";"Demand Planner; Supply Planner";Human activity;% records without errors;Fewer than 1% data issues;BI dashboard;Data quality report;Dashboard showing missing and outlier records.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Close last month, refresh master data and actuals so every planner starts from the same baseline.;Lock last month's actuals.;Check actuals and master data for gaps and outliers.
-1;S&OP;1.1;1. Prepare data;Start the cycle on clean, complete data;1.1.2;Refresh master data;1.1.2.1;Update product portfolio;S&OP Manager;Business Process Engineer;Demand Planner;Monthly;Week;1;1;Product Manager;S&OP Manager;Demand Planner;Marketing;Supply Planner;Product management;Launch and phase-out list;Updated product portfolio;"Demand Planner; Supply Planner";Human activity;Portfolio changes processed;No forecasts on obsolete items;Planning platform;Item maintenance;Maintain item status and lifecycle dates.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Close last month, refresh master data and actuals so every planner starts from the same baseline.;Keep products, routings and lead times current.;Add new models, phase out discontinued ones.
-1;S&OP;1.1;1. Prepare data;Start the cycle on clean, complete data;1.1.2;Refresh master data;1.1.2.2;Update lead times and capacities;S&OP Manager;Business Process Engineer;Procurement;Monthly;Week;1;2;Supply Planner;Supply Chain Director;Procurement;Production Manager;;"Procurement; Production";"Supplier confirmations; Line rates";"Updated lead times; Capacity profile";Supply Planner;Human activity;Lead time accuracy;Lead times within 10% of actuals;Planning platform;Resource maintenance;Maintain capacities per assembly line.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Close last month, refresh master data and actuals so every planner starts from the same baseline.;Keep products, routings and lead times current.;Refresh supplier lead times and line capacities.
-1;S&OP;1.2;2. Demand review;Agree one unconstrained demand plan;1.2.1;Generate baseline forecast;1.2.1.1;Run statistical forecast;S&OP Manager;Business Process Engineer;Data Analyst;Monthly;Week;2;2;Demand Planner;S&OP Manager;Data Analyst;;Sales Manager;Planning platform;Validated dataset;Baseline forecast;Demand Planner;System activity;Forecast accuracy (MAPE);MAPE below 25% at model level;Planning platform;Statistical forecasting;Best-fit model selection with seasonality for spring peak.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Build and challenge the statistical forecast with sales and marketing input.;Statistical forecast per model and channel.;Generate an 18-month baseline per model and sales channel.
-1;S&OP;1.2;2. Demand review;Agree one unconstrained demand plan;1.2.1;Generate baseline forecast;1.2.1.2;Review forecast exceptions;S&OP Manager;Business Process Engineer;Data Analyst;Monthly;Week;2;2;Demand Planner;S&OP Manager;Data Analyst;Sales Manager;;Planning platform;"Baseline forecast; Exception list";Reviewed baseline forecast;Sales Manager;Human activity;Bias;Bias within ±5%;BI dashboard;Exception report;Ranks models by forecast error and bias.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Build and challenge the statistical forecast with sales and marketing input.;Statistical forecast per model and channel.;Investigate models with high error or bias.
-1;S&OP;1.2;2. Demand review;Agree one unconstrained demand plan;1.2.2;Enrich with market intelligence;1.2.2.1;Collect sales input;S&OP Manager;Business Process Engineer;Demand Planner;Monthly;Week;2;2;Sales Manager;Commercial Director;Demand Planner;Key Account Manager;;Sales;"Reviewed baseline forecast; Promotion calendar";Sales input;Demand Planner;Human activity;Input submitted on time;All regions submit before week 2;Spreadsheet;Input template;Structured template per region.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Build and challenge the statistical forecast with sales and marketing input.;Add commercial knowledge the data cannot see.;Capture dealer promotions, tenders and key account changes.
-1;S&OP;1.2;2. Demand review;Agree one unconstrained demand plan;1.2.2;Enrich with market intelligence;1.2.2.2;Add marketing events;S&OP Manager;Business Process Engineer;Demand Planner;Monthly;Week;2;2;Marketing Manager;Commercial Director;Demand Planner;Product Manager;;Marketing;Campaign plan;Event uplift;Demand Planner;Human activity;Uplift accuracy;Event uplift within 20%;Planning platform;Event planning;Overlay campaign uplift on the baseline.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Build and challenge the statistical forecast with sales and marketing input.;Add commercial knowledge the data cannot see.;Include launches, campaigns and trade fairs.
-1;S&OP;1.2;2. Demand review;Agree one unconstrained demand plan;1.2.2;Enrich with market intelligence;1.2.2.3;Consolidate demand plan;S&OP Manager;Business Process Engineer;"Sales Manager; Marketing Manager";Monthly;Week;2;3;Demand Planner;S&OP Manager;;"Sales Manager; Marketing Manager";Supply Planner;"Sales; Marketing";"Reviewed baseline forecast; Sales input; Event uplift";Consensus demand plan (draft);Demand review meeting;Human activity;Forecast value add;Consensus beats baseline accuracy;Planning platform;Consensus forecasting;Layered forecast with audit trail per contributor.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Build and challenge the statistical forecast with sales and marketing input.;Add commercial knowledge the data cannot see.;Merge baseline, sales and marketing input into one plan.
-1;S&OP;1.2;2. Demand review;Agree one unconstrained demand plan;1.2.3;Hold demand review;1.2.3.1;Demand review meeting;S&OP Manager;Business Process Engineer;Demand Planner;Monthly;Week;3;3;S&OP Manager;Commercial Director;Demand Planner;"Sales Manager; Marketing Manager; Finance Controller";Supply Planner;Demand Planner;Consensus demand plan (draft);Approved demand plan;Supply Planner;Meeting;Decisions documented;Demand plan approved in week 3;N/A;;;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Build and challenge the statistical forecast with sales and marketing input.;Agree the unconstrained demand plan.;Challenge assumptions and agree the demand plan.
-1;S&OP;1.3;3. Supply review;Find a feasible supply plan and its constraints;1.3.1;Plan supply;1.3.1.1;Run supply plan;S&OP Manager;Business Process Engineer;Production Manager;Monthly;Week;3;3;Supply Planner;Supply Chain Director;;Production Manager;Procurement;Demand Planner;"Approved demand plan; Capacity profile; Updated lead times";Constrained supply plan;Supply Planner;System activity;Plan run on time;Plan available within 1 day;Planning platform;Supply optimisation;Constraint-based planning across lines and suppliers.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Plan assembly capacity, frame and battery supply against the agreed demand.;Translate demand into a feasible supply plan.;Calculate assembly, frame and battery requirements against constraints.
-1;S&OP;1.3;3. Supply review;Find a feasible supply plan and its constraints;1.3.1;Plan supply;1.3.1.2;Analyse capacity bottlenecks;S&OP Manager;Business Process Engineer;Production Manager;Monthly;Week;3;3;Supply Planner;Supply Chain Director;Production Manager;Procurement;;Planning platform;Constrained supply plan;Bottleneck overview;Supply review meeting;Human activity;Capacity utilisation;No line above 95% for more than 2 weeks;BI dashboard;Capacity heatmap;Utilisation per line per week.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Plan assembly capacity, frame and battery supply against the agreed demand.;Translate demand into a feasible supply plan.;Identify overloaded lines and critical components.
-1;S&OP;1.3;3. Supply review;Find a feasible supply plan and its constraints;1.3.1;Plan supply;1.3.1.3;Align critical components;S&OP Manager;Business Process Engineer;Supply Planner;Monthly;Week;3;4;Procurement;Supply Chain Director;Supply Planner;Supplier;;Supplier;"Bottleneck overview; Component requirements";Supplier commitments;Supply Planner;Human activity;Supplier confirmation rate;95% of critical volume confirmed;Supplier portal;Collaboration;Share forecasts and collect confirmations.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Plan assembly capacity, frame and battery supply against the agreed demand.;Translate demand into a feasible supply plan.;Confirm battery and motor availability with suppliers.
-1;S&OP;1.3;3. Supply review;Find a feasible supply plan and its constraints;1.3.2;Hold supply review;1.3.2.1;Supply review meeting;S&OP Manager;Business Process Engineer;Production Manager;Monthly;Week;4;4;Supply Planner;Supply Chain Director;Production Manager;"Procurement; Finance Controller";S&OP Manager;Supply Planner;"Constrained supply plan; Supplier commitments";"Approved supply plan; Gap list";S&OP Manager;Meeting;Gaps with owner;Every gap has an owner and option;N/A;;;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Plan assembly capacity, frame and battery supply against the agreed demand.;Agree the supply plan and open constraints.;Agree the supply plan and escalate unresolved gaps.
-1;S&OP;1.4;4. Integrated reconciliation;Translate gaps into decisions with financial impact;1.4.1;Build scenarios;1.4.1.1;Create gap-closing scenarios;S&OP Manager;Business Process Engineer;"Supply Planner; Demand Planner";Monthly;Week;4;4;S&OP Manager;Supply Chain Director;"Supply Planner; Demand Planner";Finance Controller;;S&OP Manager;"Gap list; Approved demand plan; Approved supply plan";Scenario set;Finance Controller;Human activity;Scenarios per gap;At least 2 options per major gap;Planning platform;Scenario planning;Copy the plan into scenarios and compare side by side.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Compare demand and supply scenarios in volume and euros and prepare decisions.;Quantify the options to close the gaps.;Model options such as overtime, extra supplier or allocation.
-1;S&OP;1.4;4. Integrated reconciliation;Translate gaps into decisions with financial impact;1.4.1;Build scenarios;1.4.1.2;Assess financial impact;S&OP Manager;Business Process Engineer;S&OP Manager;Monthly;Week;4;4;Finance Controller;CFO;S&OP Manager;;Commercial Director;S&OP Manager;Scenario set;Scenario financials;Executive S&OP meeting;Human activity;Plan-to-budget gap;Gap explained per scenario;BI dashboard;Financial bridge;Volume-to-value bridge per scenario.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Compare demand and supply scenarios in volume and euros and prepare decisions.;Quantify the options to close the gaps.;Value each scenario in revenue, margin and working capital.
-1;S&OP;1.5;5. Executive S&OP;Take and communicate decisions;1.5.1;Decide and release;1.5.1.1;Executive S&OP meeting;S&OP Manager;Business Process Engineer;Finance Controller;Monthly;Week;4;4;S&OP Manager;CEO;Finance Controller;"Commercial Director; Supply Chain Director; CFO";All planners;S&OP Manager;"Scenario set; Scenario financials";"Decisions; Released S&OP plan";"Planners; Operations";Meeting;Decisions taken on time;All open decisions closed;N/A;;;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Leadership decides on the open trade-offs and the plan is released.;Leadership decision and plan release.;Decide on scenarios and confirm the plan.
-1;S&OP;1.5;5. Executive S&OP;Take and communicate decisions;1.5.1;Decide and release;1.5.1.2;Release plan and communicate;S&OP Manager;Business Process Engineer;"Demand Planner; Supply Planner";Monthly;Week;4;4;S&OP Manager;Supply Chain Director;"Demand Planner; Supply Planner";;"Sales; Production; Procurement";Executive S&OP meeting;"Released S&OP plan; Decisions";"Published plan; Decision log";S&OE;Human activity;Plan published within 1 day;Everyone works from the same numbers;Planning platform;Plan publishing;Promote the approved scenario to the official plan.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Leadership decides on the open trade-offs and the plan is released.;Leadership decision and plan release.;Publish the plan and decisions to all stakeholders.
-2;S&OE;2.1;1. Monitor execution;Spot deviations early;2.1.1;Track performance;2.1.1.1;Refresh execution data;Supply Chain Director;Business Process Engineer;IT Support;Weekly;Day;1;1;Data Analyst;Operations Planner;;IT Support;;ERP;"Open orders; Production output; Inbound shipments";Execution dataset;Operations Planner;System activity;Data freshness;Data no older than 24 hours;Planning platform;Data integration;Daily refresh from ERP.;Weekly Sales & Operations Execution: keeps the first 8 weeks of the plan feasible and resolves short-term deviations.;Compare actual orders, production and supply against the released plan.;Daily view on orders, output and supply.;Load open orders, production output and inbound supply.
-2;S&OE;2.1;1. Monitor execution;Spot deviations early;2.1.1;Track performance;2.1.1.2;Review deviation dashboard;Supply Chain Director;Business Process Engineer;Demand Planner;Weekly;Day;1;2;Operations Planner;Supply Chain Director;Demand Planner;Customer Service;;Planning platform;"Execution dataset; Published plan";Deviation list;Operations Planner;Human activity;Deviations detected;Deviations flagged within 1 day;BI dashboard;Deviation dashboard;Plan versus actual per model and line.;Weekly Sales & Operations Execution: keeps the first 8 weeks of the plan feasible and resolves short-term deviations.;Compare actual orders, production and supply against the released plan.;Daily view on orders, output and supply.;Compare actuals with the released plan and flag deviations.
-2;S&OE;2.2;2. Resolve deviations;Restore a feasible short-term plan;2.2.1;Rebalance the short term;2.2.1.1;Re-plan production sequence;Supply Chain Director;Business Process Engineer;Supply Planner;Weekly;Day;2;3;Operations Planner;Production Manager;Supply Planner;Procurement;Customer Service;Operations Planner;"Deviation list; Published plan";Revised production schedule;Production;Human activity;Schedule adherence;Above 90% adherence;Planning platform;Detailed scheduling;Drag-and-drop sequencing per line.;Weekly Sales & Operations Execution: keeps the first 8 weeks of the plan feasible and resolves short-term deviations.;Rebalance capacity, allocation and supply within the agreed boundaries.;Fix deviations within the S&OP boundaries.;Adjust line sequence for late components or rush orders.
-2;S&OE;2.2;2. Resolve deviations;Restore a feasible short-term plan;2.2.1;Rebalance the short term;2.2.1.2;Allocate scarce stock;Supply Chain Director;Business Process Engineer;Customer Service;Weekly;Day;3;3;Operations Planner;Commercial Director;Customer Service;Sales Manager;Key Account Manager;Operations Planner;"Deviation list; Allocation rules";Allocation plan;Customer Service;Human activity;Order fill rate;Fill rate above 95% for priority dealers;Planning platform;Allocation;Rule-based allocation by channel priority.;Weekly Sales & Operations Execution: keeps the first 8 weeks of the plan feasible and resolves short-term deviations.;Rebalance capacity, allocation and supply within the agreed boundaries.;Fix deviations within the S&OP boundaries.;Allocate constrained models to channels according to agreed rules.
-2;S&OE;2.2;2. Resolve deviations;Restore a feasible short-term plan;2.2.1;Rebalance the short term;2.2.1.3;Escalate out-of-bounds issues;Supply Chain Director;Business Process Engineer;S&OP Manager;Weekly;Day;3;3;Operations Planner;Supply Chain Director;;S&OP Manager;Commercial Director;Operations Planner;Deviation list;Escalation;S&OP;Human activity;Escalations resolved;Resolved before next cycle;Spreadsheet;Escalation log;Shared log with owner and due date.;Weekly Sales & Operations Execution: keeps the first 8 weeks of the plan feasible and resolves short-term deviations.;Rebalance capacity, allocation and supply within the agreed boundaries.;Fix deviations within the S&OP boundaries.;Escalate deviations that need an S&OP decision.
-2;S&OE;2.3;3. Release weekly plan;Give operations one plan to execute;2.3.1;Weekly S&OE meeting;2.3.1.1;S&OE meeting;Supply Chain Director;Business Process Engineer;"Production Manager; Customer Service";Weekly;Day;4;4;Operations Planner;Supply Chain Director;"Production Manager; Customer Service";Procurement;Sales Manager;Operations Planner;"Revised production schedule; Allocation plan";Agreed weekly plan;Operations;Meeting;Meeting held weekly;One agreed plan every week;N/A;;;Weekly Sales & Operations Execution: keeps the first 8 weeks of the plan feasible and resolves short-term deviations.;Freeze and publish the weekly production and allocation plan.;Agree and release the weekly plan.;Confirm the revised schedule and allocation.
-2;S&OE;2.3;3. Release weekly plan;Give operations one plan to execute;2.3.1;Weekly S&OE meeting;2.3.1.2;Release weekly plan;Supply Chain Director;Business Process Engineer;;Weekly;Day;5;5;Operations Planner;Production Manager;;;"Production; Warehouse";S&OE meeting;Agreed weekly plan;Released production orders;ERP;System activity;Orders released on time;Released before Friday 12:00;Planning platform;Order release;Push firm orders to ERP.;Weekly Sales & Operations Execution: keeps the first 8 weeks of the plan feasible and resolves short-term deviations.;Freeze and publish the weekly production and allocation plan.;Agree and release the weekly plan.;Freeze the next week and send orders to ERP.
+  <script type="text/plain" id="pfDemoCsv">L1_code;L1;L2_code;L2;L2_goal;L3_code;L3;L4_code;L4;BPO;BPE;SME;Frequency;Time_UoM;Start;End;R;A;S;C;I;Supplier;Input;Output;Customer;Type;KPI;Goal;Tool;Tool_function;Tool_desc;L1_Desc;L2_Desc;L3_Desc;L4_Desc;ID;Previous;Next
+1;S&OP;1.1;1. Prepare data;Start the cycle on clean, complete data;1.1.1;Close the previous period;1.1.1.1;Load sales and shipment actuals;S&OP Manager;Business Process Engineer;Data Analyst;Monthly;Week;1;1;Demand Planner;S&OP Manager;Data Analyst;;Sales Manager;ERP;"Sales orders; Shipments";Actuals dataset;Demand Planner;System activity;Data load on time;Actuals available on day 1;Planning platform;Data integration;Automated nightly import from ERP into the planning platform.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Close last month, refresh master data and actuals so every planner starts from the same baseline.;Lock last month's actuals.;Import last month's orders, shipments and returns from ERP.;101;;
+1;S&OP;1.1;1. Prepare data;Start the cycle on clean, complete data;1.1.1;Close the previous period;1.1.1.2;Validate data quality;S&OP Manager;Business Process Engineer;Demand Planner;Monthly;Week;1;1;Data Analyst;S&OP Manager;Demand Planner;IT Support;;Planning platform;"Actuals dataset; Master data";"Validated dataset; Data issue log";"Demand Planner; Supply Planner";Human activity;% records without errors;Fewer than 1% data issues;BI dashboard;Data quality report;Dashboard showing missing and outlier records.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Close last month, refresh master data and actuals so every planner starts from the same baseline.;Lock last month's actuals.;Check actuals and master data for gaps and outliers.;102;;
+1;S&OP;1.1;1. Prepare data;Start the cycle on clean, complete data;1.1.2;Refresh master data;1.1.2.1;Update product portfolio;S&OP Manager;Business Process Engineer;Demand Planner;Monthly;Week;1;1;Product Manager;S&OP Manager;Demand Planner;Marketing;Supply Planner;Product management;Launch and phase-out list;Updated product portfolio;"Demand Planner; Supply Planner";Human activity;Portfolio changes processed;No forecasts on obsolete items;Planning platform;Item maintenance;Maintain item status and lifecycle dates.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Close last month, refresh master data and actuals so every planner starts from the same baseline.;Keep products, routings and lead times current.;Add new models, phase out discontinued ones.;103;;
+1;S&OP;1.1;1. Prepare data;Start the cycle on clean, complete data;1.1.2;Refresh master data;1.1.2.2;Update lead times and capacities;S&OP Manager;Business Process Engineer;Procurement;Monthly;Week;1;2;Supply Planner;Supply Chain Director;Procurement;Production Manager;;"Procurement; Production";"Supplier confirmations; Line rates";"Updated lead times; Capacity profile";Supply Planner;Human activity;Lead time accuracy;Lead times within 10% of actuals;Planning platform;Resource maintenance;Maintain capacities per assembly line.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Close last month, refresh master data and actuals so every planner starts from the same baseline.;Keep products, routings and lead times current.;Refresh supplier lead times and line capacities.;104;;
+1;S&OP;1.2;2. Demand review;Agree one unconstrained demand plan;1.2.1;Generate baseline forecast;1.2.1.1;Run statistical forecast;S&OP Manager;Business Process Engineer;Data Analyst;Monthly;Week;2;2;Demand Planner;S&OP Manager;Data Analyst;;Sales Manager;Planning platform;Validated dataset;Baseline forecast;Demand Planner;System activity;Forecast accuracy (MAPE);MAPE below 25% at model level;Planning platform;Statistical forecasting;Best-fit model selection with seasonality for spring peak.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Build and challenge the statistical forecast with sales and marketing input.;Statistical forecast per model and channel.;Generate an 18-month baseline per model and sales channel.;105;;
+1;S&OP;1.2;2. Demand review;Agree one unconstrained demand plan;1.2.1;Generate baseline forecast;1.2.1.2;Review forecast exceptions;S&OP Manager;Business Process Engineer;Data Analyst;Monthly;Week;2;2;Demand Planner;S&OP Manager;Data Analyst;Sales Manager;;Planning platform;"Baseline forecast; Exception list";Reviewed baseline forecast;Sales Manager;Human activity;Bias;Bias within ±5%;BI dashboard;Exception report;Ranks models by forecast error and bias.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Build and challenge the statistical forecast with sales and marketing input.;Statistical forecast per model and channel.;Investigate models with high error or bias.;106;;
+1;S&OP;1.2;2. Demand review;Agree one unconstrained demand plan;1.2.2;Enrich with market intelligence;1.2.2.1;Collect sales input;S&OP Manager;Business Process Engineer;Demand Planner;Monthly;Week;2;2;Sales Manager;Commercial Director;Demand Planner;Key Account Manager;;Sales;"Reviewed baseline forecast; Promotion calendar";Sales input;Demand Planner;Human activity;Input submitted on time;All regions submit before week 2;Spreadsheet;Input template;Structured template per region.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Build and challenge the statistical forecast with sales and marketing input.;Add commercial knowledge the data cannot see.;Capture dealer promotions, tenders and key account changes.;107;;
+1;S&OP;1.2;2. Demand review;Agree one unconstrained demand plan;1.2.2;Enrich with market intelligence;1.2.2.2;Add marketing events;S&OP Manager;Business Process Engineer;Demand Planner;Monthly;Week;2;2;Marketing Manager;Commercial Director;Demand Planner;Product Manager;;Marketing;Campaign plan;Event uplift;Demand Planner;Human activity;Uplift accuracy;Event uplift within 20%;Planning platform;Event planning;Overlay campaign uplift on the baseline.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Build and challenge the statistical forecast with sales and marketing input.;Add commercial knowledge the data cannot see.;Include launches, campaigns and trade fairs.;108;;
+1;S&OP;1.2;2. Demand review;Agree one unconstrained demand plan;1.2.2;Enrich with market intelligence;1.2.2.3;Consolidate demand plan;S&OP Manager;Business Process Engineer;"Sales Manager; Marketing Manager";Monthly;Week;2;3;Demand Planner;S&OP Manager;;"Sales Manager; Marketing Manager";Supply Planner;"Sales; Marketing";"Reviewed baseline forecast; Sales input; Event uplift";Consensus demand plan (draft);Demand review meeting;Human activity;Forecast value add;Consensus beats baseline accuracy;Planning platform;Consensus forecasting;Layered forecast with audit trail per contributor.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Build and challenge the statistical forecast with sales and marketing input.;Add commercial knowledge the data cannot see.;Merge baseline, sales and marketing input into one plan.;109;"107; 108";
+1;S&OP;1.2;2. Demand review;Agree one unconstrained demand plan;1.2.3;Hold demand review;1.2.3.1;Demand review meeting;S&OP Manager;Business Process Engineer;Demand Planner;Monthly;Week;3;3;S&OP Manager;Commercial Director;Demand Planner;"Sales Manager; Marketing Manager; Finance Controller";Supply Planner;Demand Planner;Consensus demand plan (draft);Approved demand plan;Supply Planner;Meeting;Decisions documented;Demand plan approved in week 3;N/A;;;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Build and challenge the statistical forecast with sales and marketing input.;Agree the unconstrained demand plan.;Challenge assumptions and agree the demand plan.;110;;
+1;S&OP;1.3;3. Supply review;Find a feasible supply plan and its constraints;1.3.1;Plan supply;1.3.1.1;Run supply plan;S&OP Manager;Business Process Engineer;Production Manager;Monthly;Week;3;3;Supply Planner;Supply Chain Director;;Production Manager;Procurement;Demand Planner;"Approved demand plan; Capacity profile; Updated lead times";Constrained supply plan;Supply Planner;System activity;Plan run on time;Plan available within 1 day;Planning platform;Supply optimisation;Constraint-based planning across lines and suppliers.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Plan assembly capacity, frame and battery supply against the agreed demand.;Translate demand into a feasible supply plan.;Calculate assembly, frame and battery requirements against constraints.;111;;
+1;S&OP;1.3;3. Supply review;Find a feasible supply plan and its constraints;1.3.1;Plan supply;1.3.1.2;Analyse capacity bottlenecks;S&OP Manager;Business Process Engineer;Production Manager;Monthly;Week;3;3;Supply Planner;Supply Chain Director;Production Manager;Procurement;;Planning platform;Constrained supply plan;Bottleneck overview;Supply review meeting;Human activity;Capacity utilisation;No line above 95% for more than 2 weeks;BI dashboard;Capacity heatmap;Utilisation per line per week.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Plan assembly capacity, frame and battery supply against the agreed demand.;Translate demand into a feasible supply plan.;Identify overloaded lines and critical components.;112;;
+1;S&OP;1.3;3. Supply review;Find a feasible supply plan and its constraints;1.3.1;Plan supply;1.3.1.3;Align critical components;S&OP Manager;Business Process Engineer;Supply Planner;Monthly;Week;3;4;Procurement;Supply Chain Director;Supply Planner;Supplier;;Supplier;"Bottleneck overview; Component requirements";Supplier commitments;Supply Planner;Human activity;Supplier confirmation rate;95% of critical volume confirmed;Supplier portal;Collaboration;Share forecasts and collect confirmations.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Plan assembly capacity, frame and battery supply against the agreed demand.;Translate demand into a feasible supply plan.;Confirm battery and motor availability with suppliers.;113;;111
+1;S&OP;1.3;3. Supply review;Find a feasible supply plan and its constraints;1.3.2;Hold supply review;1.3.2.1;Supply review meeting;S&OP Manager;Business Process Engineer;Production Manager;Monthly;Week;4;4;Supply Planner;Supply Chain Director;Production Manager;"Procurement; Finance Controller";S&OP Manager;Supply Planner;"Constrained supply plan; Supplier commitments";"Approved supply plan; Gap list";S&OP Manager;Meeting;Gaps with owner;Every gap has an owner and option;N/A;;;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Plan assembly capacity, frame and battery supply against the agreed demand.;Agree the supply plan and open constraints.;Agree the supply plan and escalate unresolved gaps.;114;;
+1;S&OP;1.4;4. Integrated reconciliation;Translate gaps into decisions with financial impact;1.4.1;Build scenarios;1.4.1.1;Create gap-closing scenarios;S&OP Manager;Business Process Engineer;"Supply Planner; Demand Planner";Monthly;Week;4;4;S&OP Manager;Supply Chain Director;"Supply Planner; Demand Planner";Finance Controller;;S&OP Manager;"Gap list; Approved demand plan; Approved supply plan";Scenario set;Finance Controller;Human activity;Scenarios per gap;At least 2 options per major gap;Planning platform;Scenario planning;Copy the plan into scenarios and compare side by side.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Compare demand and supply scenarios in volume and euros and prepare decisions.;Quantify the options to close the gaps.;Model options such as overtime, extra supplier or allocation.;115;;
+1;S&OP;1.4;4. Integrated reconciliation;Translate gaps into decisions with financial impact;1.4.1;Build scenarios;1.4.1.2;Assess financial impact;S&OP Manager;Business Process Engineer;S&OP Manager;Monthly;Week;4;4;Finance Controller;CFO;S&OP Manager;;Commercial Director;S&OP Manager;Scenario set;Scenario financials;Executive S&OP meeting;Human activity;Plan-to-budget gap;Gap explained per scenario;BI dashboard;Financial bridge;Volume-to-value bridge per scenario.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Compare demand and supply scenarios in volume and euros and prepare decisions.;Quantify the options to close the gaps.;Value each scenario in revenue, margin and working capital.;116;;
+1;S&OP;1.5;5. Executive S&OP;Take and communicate decisions;1.5.1;Decide and release;1.5.1.1;Executive S&OP meeting;S&OP Manager;Business Process Engineer;Finance Controller;Monthly;Week;4;4;S&OP Manager;CEO;Finance Controller;"Commercial Director; Supply Chain Director; CFO";All planners;S&OP Manager;"Scenario set; Scenario financials";"Decisions; Released S&OP plan";"Planners; Operations";Meeting;Decisions taken on time;All open decisions closed;N/A;;;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Leadership decides on the open trade-offs and the plan is released.;Leadership decision and plan release.;Decide on scenarios and confirm the plan.;117;;
+1;S&OP;1.5;5. Executive S&OP;Take and communicate decisions;1.5.1;Decide and release;1.5.1.2;Release plan and communicate;S&OP Manager;Business Process Engineer;"Demand Planner; Supply Planner";Monthly;Week;4;4;S&OP Manager;Supply Chain Director;"Demand Planner; Supply Planner";;"Sales; Production; Procurement";Executive S&OP meeting;"Released S&OP plan; Decisions";"Published plan; Decision log";S&OE;Human activity;Plan published within 1 day;Everyone works from the same numbers;Planning platform;Plan publishing;Promote the approved scenario to the official plan.;Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.;Leadership decides on the open trade-offs and the plan is released.;Leadership decision and plan release.;Publish the plan and decisions to all stakeholders.;118;;
+2;S&OE;2.1;1. Monitor execution;Spot deviations early;2.1.1;Track performance;2.1.1.1;Refresh execution data;Supply Chain Director;Business Process Engineer;IT Support;Weekly;Day;1;1;Data Analyst;Operations Planner;;IT Support;;ERP;"Open orders; Production output; Inbound shipments";Execution dataset;Operations Planner;System activity;Data freshness;Data no older than 24 hours;Planning platform;Data integration;Daily refresh from ERP.;Weekly Sales & Operations Execution: keeps the first 8 weeks of the plan feasible and resolves short-term deviations.;Compare actual orders, production and supply against the released plan.;Daily view on orders, output and supply.;Load open orders, production output and inbound supply.;119;;
+2;S&OE;2.1;1. Monitor execution;Spot deviations early;2.1.1;Track performance;2.1.1.2;Review deviation dashboard;Supply Chain Director;Business Process Engineer;Demand Planner;Weekly;Day;1;2;Operations Planner;Supply Chain Director;Demand Planner;Customer Service;;Planning platform;"Execution dataset; Published plan";Deviation list;Operations Planner;Human activity;Deviations detected;Deviations flagged within 1 day;BI dashboard;Deviation dashboard;Plan versus actual per model and line.;Weekly Sales & Operations Execution: keeps the first 8 weeks of the plan feasible and resolves short-term deviations.;Compare actual orders, production and supply against the released plan.;Daily view on orders, output and supply.;Compare actuals with the released plan and flag deviations.;120;;
+2;S&OE;2.2;2. Resolve deviations;Restore a feasible short-term plan;2.2.1;Rebalance the short term;2.2.1.1;Re-plan production sequence;Supply Chain Director;Business Process Engineer;Supply Planner;Weekly;Day;2;3;Operations Planner;Production Manager;Supply Planner;Procurement;Customer Service;Operations Planner;"Deviation list; Published plan";Revised production schedule;Production;Human activity;Schedule adherence;Above 90% adherence;Planning platform;Detailed scheduling;Drag-and-drop sequencing per line.;Weekly Sales & Operations Execution: keeps the first 8 weeks of the plan feasible and resolves short-term deviations.;Rebalance capacity, allocation and supply within the agreed boundaries.;Fix deviations within the S&OP boundaries.;Adjust line sequence for late components or rush orders.;121;;"122; 123"
+2;S&OE;2.2;2. Resolve deviations;Restore a feasible short-term plan;2.2.1;Rebalance the short term;2.2.1.2;Allocate scarce stock;Supply Chain Director;Business Process Engineer;Customer Service;Weekly;Day;3;3;Operations Planner;Commercial Director;Customer Service;Sales Manager;Key Account Manager;Operations Planner;"Deviation list; Allocation rules";Allocation plan;Customer Service;Human activity;Order fill rate;Fill rate above 95% for priority dealers;Planning platform;Allocation;Rule-based allocation by channel priority.;Weekly Sales & Operations Execution: keeps the first 8 weeks of the plan feasible and resolves short-term deviations.;Rebalance capacity, allocation and supply within the agreed boundaries.;Fix deviations within the S&OP boundaries.;Allocate constrained models to channels according to agreed rules.;122;;
+2;S&OE;2.2;2. Resolve deviations;Restore a feasible short-term plan;2.2.1;Rebalance the short term;2.2.1.3;Escalate out-of-bounds issues;Supply Chain Director;Business Process Engineer;S&OP Manager;Weekly;Day;3;3;Operations Planner;Supply Chain Director;;S&OP Manager;Commercial Director;Operations Planner;Deviation list;Escalation;S&OP;Human activity;Escalations resolved;Resolved before next cycle;Spreadsheet;Escalation log;Shared log with owner and due date.;Weekly Sales & Operations Execution: keeps the first 8 weeks of the plan feasible and resolves short-term deviations.;Rebalance capacity, allocation and supply within the agreed boundaries.;Fix deviations within the S&OP boundaries.;Escalate deviations that need an S&OP decision.;123;;
+2;S&OE;2.3;3. Release weekly plan;Give operations one plan to execute;2.3.1;Weekly S&OE meeting;2.3.1.1;S&OE meeting;Supply Chain Director;Business Process Engineer;"Production Manager; Customer Service";Weekly;Day;4;4;Operations Planner;Supply Chain Director;"Production Manager; Customer Service";Procurement;Sales Manager;Operations Planner;"Revised production schedule; Allocation plan";Agreed weekly plan;Operations;Meeting;Meeting held weekly;One agreed plan every week;N/A;;;Weekly Sales & Operations Execution: keeps the first 8 weeks of the plan feasible and resolves short-term deviations.;Freeze and publish the weekly production and allocation plan.;Agree and release the weekly plan.;Confirm the revised schedule and allocation.;124;;
+2;S&OE;2.3;3. Release weekly plan;Give operations one plan to execute;2.3.1;Weekly S&OE meeting;2.3.1.2;Release weekly plan;Supply Chain Director;Business Process Engineer;;Weekly;Day;5;5;Operations Planner;Production Manager;;;"Production; Warehouse";S&OE meeting;Agreed weekly plan;Released production orders;ERP;System activity;Orders released on time;Released before Friday 12:00;Planning platform;Order release;Push firm orders to ERP.;Weekly Sales & Operations Execution: keeps the first 8 weeks of the plan feasible and resolves short-term deviations.;Freeze and publish the weekly production and allocation plan.;Agree and release the weekly plan.;Freeze the next week and send orders to ERP.;125;;
 </script>
   <script>
   (function () {
@@ -3215,6 +3230,8 @@
           const codeKey = 'L' + (startDepth + i) + '_code';
           if (!cur[k]._code && row[codeKey]) cur[k]._code = String(row[codeKey]).trim();
           if (i === levels.length - 1) {
+            // Row ID (for Previous / Next links) — first non-empty value wins
+            if (!cur[k]._rowId && row.ID != null && String(row.ID).trim()) cur[k]._rowId = String(row.ID).trim();
             const rawUoM = row['Time Unit-of-Measure'] || row['Time_UoM'] || row['Time UoM'] || '';
             const rawStart = row['Start'];
             const rawEnd   = row['End'];
@@ -3225,6 +3242,7 @@
               BPO:row.BPO, BPE:row.BPE, SME:row.SME,
               Tool_function:row.Tool_function, Tool_navigation:row.Tool_navigation, Tool_desc:row.Tool_desc,
               Tool_link:row.Tool_link, TestScript_link:row.TestScript_link,
+              ID:row.ID, Previous:row.Previous, Next:row.Next,
               Time_UoM: rawUoM ? String(rawUoM).trim() : '',
               Frequency: rawFreq ? String(rawFreq).trim() : '',
               Start: (rawStart !== '' && rawStart != null && !isNaN(Number(rawStart))) ? Number(rawStart) : null,
@@ -3234,6 +3252,202 @@
         }
       }
       return t;
+    }
+
+    // ── PROCESS FLOW (ID / Previous / Next) ───────────────────────────────
+    // A CSV row can carry its own ID plus the IDs of the rows before it
+    // (Previous) and after it (Next), several separated by ";". A link in
+    // either column draws one arrow; links only count between steps under the
+    // same parent, anything else (other parent, unknown ID, itself) is ignored
+    // and listed by flowWarnings(). A group without links keeps its CSV order
+    // as one straight line. In a group with links, a step that no link touches
+    // is put back in CSV order between its neighbours.
+    const FLOW_SPLIT = v => v == null ? [] : String(v).split(';').map(s => s.trim()).filter(Boolean);
+    const _flowCache = new WeakMap();
+
+    function flowOf(children) {
+      if (!children || typeof children !== 'object') return null;
+      if (_flowCache.has(children)) return _flowCache.get(children);
+      const keys = Object.keys(children);
+      const byId = new Map();
+      keys.forEach(k => {
+        const id = children[k] && children[k]._rowId;
+        if (id && !byId.has(id.toLowerCase())) byId.set(id.toLowerCase(), k);
+      });
+      const edges = [], seen = new Set();
+      const add = (a, b) => {
+        if (!a || !b || a === b) return;
+        const sig = a + '\u0000' + b;
+        if (seen.has(sig)) return;
+        seen.add(sig);
+        edges.push({ from: a, to: b, back: false });
+      };
+      keys.forEach(k => {
+        const m = children[k] && children[k]._meta;
+        if (!m) return;
+        FLOW_SPLIT(m.Next).forEach(id => add(k, byId.get(id.toLowerCase())));
+        FLOW_SPLIT(m.Previous).forEach(id => add(byId.get(id.toLowerCase()), k));
+      });
+      let result = null;
+      if (edges.length) {
+        const touched = new Set();
+        edges.forEach(e => { touched.add(e.from); touched.add(e.to); });
+        keys.forEach((k, i) => {
+          if (touched.has(k)) return;
+          if (i > 0) add(keys[i - 1], k);
+          if (i < keys.length - 1) add(k, keys[i + 1]);
+        });
+        result = flowLayout(keys, edges);
+      }
+      _flowCache.set(children, result);
+      return result;
+    }
+
+    // Layered layout: col = longest path from a start step (loops ignored),
+    // y = row position in half steps (0, 0.5, 1, ...), so a step sits level
+    // with or between the steps that lead to it. Back edges (loops) are found
+    // with a depth-first walk in CSV order and flagged back: true.
+    function flowLayout(keys, edges) {
+      const idx = new Map(keys.map((k, i) => [k, i]));
+      const out = new Map(keys.map(k => [k, []])), inc = new Map(keys.map(k => [k, []]));
+      edges.forEach(e => { out.get(e.from).push(e); inc.get(e.to).push(e); });
+      const state = new Map();
+      function dfs(k) {
+        state.set(k, 1);
+        out.get(k).slice().sort((a, b) => idx.get(a.to) - idx.get(b.to)).forEach(e => {
+          const st = state.get(e.to);
+          if (st === 1) e.back = true;
+          else if (!st) dfs(e.to);
+        });
+        state.set(k, 2);
+      }
+      keys.filter(k => !inc.get(k).length).forEach(k => { if (!state.get(k)) dfs(k); });
+      keys.forEach(k => { if (!state.get(k)) dfs(k); });
+
+      const col = new Map(keys.map(k => [k, 0]));
+      const indeg = new Map(keys.map(k => [k, inc.get(k).filter(e => !e.back).length]));
+      let ready = keys.filter(k => !indeg.get(k));
+      while (ready.length) {
+        const k = ready.shift();
+        out.get(k).forEach(e => {
+          if (e.back) return;
+          col.set(e.to, Math.max(col.get(e.to), col.get(k) + 1));
+          indeg.set(e.to, indeg.get(e.to) - 1);
+          if (!indeg.get(e.to)) { ready.push(e.to); ready.sort((a, b) => idx.get(a) - idx.get(b)); }
+        });
+      }
+      const cols = Math.max(0, ...col.values()) + 1;
+      const byCol = Array.from({ length: cols }, () => []);
+      keys.forEach(k => byCol[col.get(k)].push(k));
+
+      const half = v => Math.round(v * 2) / 2;
+      const y = new Map();
+      byCol.forEach((list, c) => {
+        const want = list.map(k => {
+          const preds = inc.get(k).filter(e => !e.back && y.has(e.from)).map(e => y.get(e.from));
+          return { k, d: preds.length ? half(preds.reduce((a, b) => a + b, 0) / preds.length) : null };
+        });
+        // Steps without a placed step before them go below the others
+        let free = want.filter(w => w.d != null).reduce((m, w) => Math.max(m, w.d + 1), 0);
+        if (c === 0) free = 0;
+        want.forEach(w => { if (w.d == null) w.d = free++; });
+        want.sort((a, b) => (a.d - b.d) || (idx.get(a.k) - idx.get(b.k)));
+        let prev = -Infinity;
+        const placed = want.map(w => { const v = Math.max(w.d, prev + 1); prev = v; return v; });
+        // Shift the column back towards where its steps want to be
+        const shift = half((want.reduce((a, w) => a + w.d, 0) - placed.reduce((a, v) => a + v, 0)) / want.length);
+        want.forEach((w, i) => y.set(w.k, placed[i] + shift));
+      });
+      const minY = Math.min(...y.values());
+      keys.forEach(k => y.set(k, y.get(k) - minY));
+      const rows = Math.max(...y.values()) + 1;
+      // Reading order: by column, then top to bottom
+      const order = keys.slice().sort((a, b) => (col.get(a) - col.get(b)) || (y.get(a) - y.get(b)) || (idx.get(a) - idx.get(b)));
+      return { keys, edges, col, y, cols, rows, order };
+    }
+
+    // Steps a step leads to / comes from (loops included), in reading order
+    function flowNext(flow, key) {
+      return flow.edges.filter(e => e.from === key).map(e => e.to).sort((a, b) => flow.order.indexOf(a) - flow.order.indexOf(b));
+    }
+    function flowPrev(flow, key) {
+      return flow.edges.filter(e => e.to === key).map(e => e.from).sort((a, b) => flow.order.indexOf(a) - flow.order.indexOf(b));
+    }
+
+    // Orthogonal arrow routes in a left-to-right layout.
+    // boxes: Map key -> { x, y, w, h }; gap: horizontal space between columns.
+    // Returns { routes: [{ from, to, back, points: [[x, y], ...] }], above, below }
+    // where above / below is the extra room the loop and bypass tracks need.
+    function flowRoutes(flow, boxes, gap, track) {
+      track = track || 14;
+      const all = Array.from(boxes.values());
+      const top = Math.min(...all.map(b => b.y)), bottom = Math.max(...all.map(b => b.y + b.h));
+      const cy = b => b.y + b.h / 2;
+      const clearAt = (yy, x1, x2) => !all.some(b => b.x + b.w > x1 + 1 && b.x < x2 - 1 && yy > b.y - 6 && yy < b.y + b.h + 6);
+      let nAbove = 0, nBelow = 0;
+      const routes = flow.edges.map(e => {
+        const a = boxes.get(e.from), b = boxes.get(e.to);
+        if (!a || !b) return null;
+        const ax = a.x + a.w, ay = cy(a), bx = b.x, by = cy(b);
+        let pts;
+        if (e.back || bx <= ax) {
+          const ty = top - track * (++nAbove);
+          const o = gap / 3;
+          pts = [[ax, ay], [ax + o, ay], [ax + o, ty], [bx - o, ty], [bx - o, by], [bx, by]];
+        } else if (Math.abs(ay - by) < 0.5 && clearAt(ay, ax, bx)) {
+          pts = [[ax, ay], [bx, by]];
+        } else if (bx - ax <= gap + 1) {
+          const mx = ax + gap / 2;
+          pts = [[ax, ay], [mx, ay], [mx, by], [bx, by]];
+        } else if (clearAt(ay, ax, bx - gap)) {
+          const mx = bx - gap / 2;
+          pts = [[ax, ay], [mx, ay], [mx, by], [bx, by]];
+        } else if (clearAt(by, ax + gap, bx)) {
+          const mx = ax + gap / 2;
+          pts = [[ax, ay], [mx, ay], [mx, by], [bx, by]];
+        } else {
+          const ty = bottom + track * (++nBelow);
+          pts = [[ax, ay], [ax + gap / 2, ay], [ax + gap / 2, ty], [bx - gap / 2, ty], [bx - gap / 2, by], [bx, by]];
+        }
+        return { from: e.from, to: e.to, back: !!e.back, points: pts };
+      }).filter(Boolean);
+      return { routes, above: nAbove ? nAbove * track + track : 0, below: nBelow ? nBelow * track + track : 0 };
+    }
+
+    // Problems with ID / Previous / Next in the data, for the import preview
+    function flowWarnings(t) {
+      const warn = [];
+      const allIds = new Map();
+      (function walk(nodes, path) {
+        Object.keys(nodes).forEach(k => {
+          const n = nodes[k], p = path.concat(k);
+          if (n._rowId) {
+            const id = n._rowId.toLowerCase();
+            if (allIds.has(id)) warn.push('ID "' + n._rowId + '" is used more than once');
+            else allIds.set(id, p);
+          }
+          walk(n._children, p);
+        });
+      })(t, []);
+      (function walk(nodes, path) {
+        const local = new Set(Object.keys(nodes).map(k => nodes[k]._rowId).filter(Boolean).map(s => s.toLowerCase()));
+        Object.keys(nodes).forEach(k => {
+          const n = nodes[k], m = n._meta;
+          if (m) {
+            ['Previous', 'Next'].forEach(col => {
+              FLOW_SPLIT(m[col]).forEach(id => {
+                const low = id.toLowerCase();
+                const where = (n._rowId ? 'ID ' + n._rowId : '"' + k + '"') + ', ' + col;
+                if (n._rowId && low === n._rowId.toLowerCase()) warn.push(where + ': points to itself (ignored)');
+                else if (!allIds.has(low)) warn.push(where + ': ID "' + id + '" not found (ignored)');
+                else if (!local.has(low)) warn.push(where + ': ID "' + id + '" sits under another parent (ignored)');
+              });
+            });
+          }
+          walk(n._children, path.concat(k));
+        });
+      })(t, []);
+      return warn;
     }
 
     function getNodesAtPath(path) {
@@ -3250,34 +3464,75 @@
       return { names: names, idx: names.indexOf(currentName) };
     }
 
+    function dsNavGo(name) {
+      const sib = getNodesAtPath(currentPath)[name];
+      if (sib) openDetailScreen(name, sib._meta, sib._desc);
+    }
+    function dsNavCloseMenu() {
+      const m = document.getElementById('dsNavMenu');
+      if (m) m.remove();
+    }
+    // More than one step before / after: a small list to pick from
+    function dsNavOpenMenu(btn, names) {
+      dsNavCloseMenu();
+      const sibs = getNodesAtPath(currentPath);
+      const menu = document.createElement('div');
+      menu.id = 'dsNavMenu';
+      menu.className = 'ds-nav-menu';
+      menu.setAttribute('role', 'menu');
+      names.forEach(n => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.setAttribute('role', 'menuitem');
+        const code = sibs[n] && sibs[n]._code;
+        b.innerHTML = (code ? '<span class="ds-nav-menu-code">' + escHtml(code) + '</span>' : '') + escHtml(n);
+        b.addEventListener('click', e => { e.stopPropagation(); dsNavCloseMenu(); dsNavGo(n); });
+        b.addEventListener('keydown', e => {
+          const items = Array.from(menu.querySelectorAll('button'));
+          const i = items.indexOf(b);
+          if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); (items[i + 1] || items[0]).focus(); }
+          else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); (items[i - 1] || items[items.length - 1]).focus(); }
+          else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); dsNavCloseMenu(); btn.focus(); }
+          else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.stopPropagation(); }
+        });
+        menu.appendChild(b);
+      });
+      $('detailScreen').appendChild(menu);
+      const r = btn.getBoundingClientRect(), host = $('detailScreen').getBoundingClientRect();
+      const isNext = btn.id === 'dsNavNext';
+      menu.style.top = (r.bottom - host.top + 8) + 'px';
+      if (isNext) menu.style.right = (host.right - r.right) + 'px';
+      else menu.style.left = (r.left - host.left) + 'px';
+      const first = menu.querySelector('button');
+      if (first) first.focus();
+      setTimeout(() => document.addEventListener('click', dsNavCloseMenu, { once: true }), 0);
+    }
+    function dsNavSetup(btn, names, label) {
+      if (!names.length) {
+        btn.classList.add('hidden');
+        btn.onclick = null;
+        return;
+      }
+      btn.classList.remove('hidden');
+      btn.title = names.length > 1 ? names.length + ' ' + label + ' processes' : names[0];
+      btn.onclick = names.length === 1
+        ? () => { dsNavCloseMenu(); dsNavGo(names[0]); }
+        : e => { e.stopPropagation(); dsNavOpenMenu(btn, names); };
+    }
+
+    // ‹ / › on the detail screen: the steps before / after this one. With
+    // Previous / Next links that is the flow (loops included), else CSV order.
     function updateDetailNav(currentName) {
-      const prevBtn = $('dsNavPrev');
-      const nextBtn = $('dsNavNext');
+      dsNavCloseMenu();
+      const flow = flowOf(getNodesAtPath(currentPath));
+      if (flow && flow.keys.includes(currentName)) {
+        dsNavSetup($('dsNavPrev'), flowPrev(flow, currentName), 'previous');
+        dsNavSetup($('dsNavNext'), flowNext(flow, currentName), 'next');
+        return;
+      }
       const info = getDetailNavSiblings(currentName);
-
-      if (info.idx <= 0) {
-        prevBtn.classList.add('hidden');
-        prevBtn.onclick = null;
-      } else {
-        prevBtn.classList.remove('hidden');
-        const prevName = info.names[info.idx - 1];
-        prevBtn.onclick = function() {
-          const sib = getNodesAtPath(currentPath)[prevName];
-          openDetailScreen(prevName, sib._meta, sib._desc);
-        };
-      }
-
-      if (info.idx === -1 || info.idx >= info.names.length - 1) {
-        nextBtn.classList.add('hidden');
-        nextBtn.onclick = null;
-      } else {
-        nextBtn.classList.remove('hidden');
-        const nextName = info.names[info.idx + 1];
-        nextBtn.onclick = function() {
-          const sib = getNodesAtPath(currentPath)[nextName];
-          openDetailScreen(nextName, sib._meta, sib._desc);
-        };
-      }
+      dsNavSetup($('dsNavPrev'), info.idx > 0 ? [info.names[info.idx - 1]] : [], 'previous');
+      dsNavSetup($('dsNavNext'), info.idx !== -1 && info.idx < info.names.length - 1 ? [info.names[info.idx + 1]] : [], 'next');
     }
 
     function getNodeAtPath(pathArr) {
@@ -10694,9 +10949,19 @@
       function impShowPreview(rows) {
         const available = PREVIEW_COLS.filter(c => rows.some(r => r[c] !== ''));
         const l1Count = new Set(rows.map(r => r.L1).filter(Boolean)).size;
+        let flowNote = '';
+        try {
+          const fw = flowWarnings(buildTree(rows));
+          if (fw.length) {
+            flowNote = '<div class="imp-flow-warn"><strong>ID / Previous / Next: ' + fw.length + ' issue' + (fw.length > 1 ? 's' : '') +
+              '</strong><ul>' +
+              fw.slice(0, 8).map(w => '<li>' + impEsc(w) + '</li>').join('') +
+              (fw.length > 8 ? '<li>+ ' + (fw.length - 8) + ' more</li>' : '') + '</ul></div>';
+          }
+        } catch (_) { /* the preview still works without the check */ }
         impPreviewMeta.innerHTML =
           '<strong>' + rows.length + '</strong> rows · ' +
-          '<strong>' + l1Count + '</strong> L1 processes';
+          '<strong>' + l1Count + '</strong> L1 processes' + flowNote;
 
         let thead = '<thead><tr>';
         available.forEach(c => { thead += '<th>' + impEsc(c) + '</th>'; });
