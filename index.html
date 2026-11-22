@@ -1238,6 +1238,21 @@
     .exp-block-note { font-size: .78rem; color: var(--txt3); background: var(--surf2); border-radius: 6px; padding: .4rem .6rem; }
     .exp-sub-head { display: flex; align-items: baseline; justify-content: space-between; gap: .6rem; }
     .exp-sub-links { display: inline-flex; gap: .7rem; }
+    .exp-tabs { display: flex; flex-direction: column; gap: .45rem; margin-top: .2rem; }
+    .exp-tabs .exp-sub-links { align-items: center; }
+    .exp-tab-rules { display: flex; flex-direction: column; gap: .3rem; }
+    .exp-tab-rule { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; font-size: .8rem; color: var(--txt3);
+      border: 1px solid var(--bdr-s); border-radius: 8px; background: var(--surf); padding: .3rem .45rem; }
+    .exp-tab-rule select { width: auto; }
+    .exp-tab-rule .exp-tab-n { min-width: 1.1rem; color: var(--txt4); font-variant-numeric: tabular-nums; }
+    .exp-tab-rule .exp-tab-count { color: var(--txt4); font-size: .74rem; }
+    .exp-tab-rule .exp-tab-tools { margin-left: auto; display: inline-flex; gap: .1rem; }
+    .exp-tab-rule .exp-tab-tools button { background: none; border: none; color: var(--txt4); cursor: pointer; font-size: .85rem; padding: .05rem .3rem; border-radius: 5px; }
+    .exp-tab-rule .exp-tab-tools button:hover:not(:disabled) { background: var(--bdr-xs); color: var(--txt); }
+    .exp-tab-rule .exp-tab-tools button:disabled { opacity: .3; cursor: default; }
+    .exp-tab-foot { display: flex; align-items: center; justify-content: space-between; gap: .6rem; flex-wrap: wrap; }
+    .exp-tabset-save { display: inline-flex; align-items: center; gap: .5rem; }
+    .exp-tabset-save input { width: 11.5rem; }
     .exp-proc-list { border: 1px solid var(--bdr-s); border-radius: 8px; background: var(--surf); max-height: 210px; overflow-y: auto; padding: .25rem 0; }
     .exp-proc-group { font-size: .7rem; font-weight: 600; color: var(--txt4); padding: .35rem .65rem .1rem; text-transform: uppercase; letter-spacing: .03em;
       display: flex; align-items: center; gap: .4rem; cursor: pointer; }
@@ -2908,8 +2923,8 @@
               <div class="exp-grid">
                 <span class="exp-k">Start level</span>
                 <div class="exp-seg" id="expStartSeg" title="The level of the processes you export"></div>
-                <span class="exp-k" data-hide-swim>Down to</span>
-                <select id="expDeepest" class="exp-opt-input" data-hide-swim aria-label="Down to" title="How deep each diagram goes"></select>
+                <span class="exp-k" data-hide-swim data-hide-tabs>Down to</span>
+                <select id="expDeepest" class="exp-opt-input" data-hide-swim data-hide-tabs aria-label="Down to" title="How deep each diagram goes"></select>
               </div>
               <div class="exp-section">
                 <div class="exp-sub-head">
@@ -2924,8 +2939,26 @@
               </div>
               <div class="exp-section" id="expFilesBox">
                 <div class="exp-sublabel">Files</div>
-                <div class="exp-seg" data-key="files" title="One file with everything, a file per process, a file per parent with its processes, or (draw.io) one file with a tab per process"><button type="button" data-v="one">All in one file</button><button type="button" data-v="each">One file per process</button><button type="button" data-v="parent" id="expFilesParent">One file per parent</button><button type="button" data-v="tabs" id="expFilesTabs" title="draw.io: one file with an overview tab and a tab per process, linked to each other">All tabs in one file</button></div>
+                <div class="exp-seg" data-key="files" title="One file with everything, a file per process, a file per parent with its processes, or (draw.io) one file with a tab per process"><button type="button" data-v="one">All in one file</button><button type="button" data-v="each">One file per process</button><button type="button" data-v="parent" id="expFilesParent">One file per parent</button><button type="button" data-v="tabs" id="expFilesTabs" title="draw.io: one file with several tabs, built from your tab rules">All tabs in one file</button></div>
                 <div class="exp-hint" id="expFilesHint"></div>
+                <div class="exp-tabs" id="expTabsBox" hidden>
+                  <div class="exp-sub-head">
+                    <span class="exp-sublabel">Tab rules</span>
+                    <span class="exp-sub-links">
+                      <select id="expTabSet" class="exp-opt-input" aria-label="Saved tab sets" title="Load a saved set of tab rules"></select>
+                      <button type="button" class="exp-link" id="expTabSetDel" title="Delete the chosen saved set">Delete</button>
+                    </span>
+                  </div>
+                  <div class="exp-tab-rules" id="expTabRules"></div>
+                  <div class="exp-tab-foot">
+                    <button type="button" class="exp-link" id="expTabAdd">+ Tab rule</button>
+                    <span class="exp-tabset-save">
+                      <input type="text" id="expTabSetName" class="exp-opt-input" placeholder="Name, e.g. Management set" aria-label="Name for this set of tab rules" maxlength="60">
+                      <button type="button" class="exp-link" id="expTabSetSave">Save set</button>
+                    </span>
+                  </div>
+                  <label class="exp-opt" title="Off: plain tabs. On: a block with its own tab opens it (small arrow in its corner) and each tab gets a small ↑ Back button"><input type="checkbox" id="expTabNav"> Clickable navigation between tabs</label>
+                </div>
               </div>
             </div>
           </div>
@@ -8626,7 +8659,34 @@
       code:  { size: 'fluid', width: 960 },
       levels: { 1: { o: 'h', a: true }, 2: { o: 'h', a: true }, 3: { o: 'h', a: true }, 4: { o: 'v', a: false } },
       showCodes: false, codeMode: 'auto', codePos: 'inline', l1Code: true,
+      // All tabs in one file (draw.io): the tab rules, in tab order. u: one
+      // tab for the whole overview (0) or for each process at L1..L3; f..t:
+      // the levels each tab shows. tabNav: clickable blocks and back buttons.
+      tabRules: [{ u: 0, f: 1, t: 2 }, { u: 2, f: 2, t: 3 }], tabNav: false,
     };
+
+    // Tab rules as saved (settings or a saved set), made valid
+    function expCleanRules(rules) {
+      return (Array.isArray(rules) ? rules : []).filter(r => r && typeof r === 'object').map(r => {
+        const u = Math.max(0, Math.min(EXP_MAX_LEVEL - 1, Math.round(r.u) || 0));
+        const f = Math.max(1, Math.min(EXP_MAX_LEVEL, Math.round(r.f) || 1));
+        const t = Math.max(f, u, Math.min(EXP_MAX_LEVEL, Math.round(r.t) || f));
+        return { u, f, t };
+      });
+    }
+    // Saved tab sets ({ name, rules }), kept apart from the settings so that
+    // Reset to defaults leaves them alone
+    const EXP_TABSETS_KEY = 'nexus.export.tabsets.v1';
+    function expLoadTabSets() {
+      try {
+        const v = JSON.parse(localStorage.getItem(EXP_TABSETS_KEY));
+        return Array.isArray(v) ? v.filter(x => x && typeof x.name === 'string' && x.name.trim())
+          .map(x => ({ name: x.name.trim(), rules: expCleanRules(x.rules) })).filter(x => x.rules.length) : [];
+      } catch (_) { return []; }
+    }
+    function expSaveTabSets(sets) {
+      try { localStorage.setItem(EXP_TABSETS_KEY, JSON.stringify(sets)); } catch (_) {}
+    }
 
     // Saved values win where they have the same type as the default
     function expMerge(d, saved) {
@@ -8657,6 +8717,8 @@
       d.deepest = Math.max(d.startLevel, Math.min(EXP_MAX_LEVEL, Math.round(d.deepest) || EXP_MAX_LEVEL));
       d.excluded = d.excluded.filter(k => typeof k === 'string');
       d.parentLevels = d.parentLevels.filter(l => Number.isInteger(l) && l >= 1 && l < EXP_MAX_LEVEL);
+      d.tabRules = expCleanRules(d.tabRules);
+      if (!d.tabRules.length) d.tabRules = EXP_DEFAULTS.tabRules.map(r => Object.assign({}, r));
       return d;
     }
     function expLoadSettings() {
@@ -8761,34 +8823,60 @@
       return [{ paths: checked }];
     }
 
-    // All tabs in one file (draw.io): the tabs follow the tree. First an
-    // overview of the ticked processes (with the chosen levels above), then a
-    // tab per process that has steps, down to `deepest`, in tree order. Each
-    // tab shows the process with its steps one level down; with swimlanes the
-    // tabs whose steps are the last level get lanes. `links` maps a process
-    // to its tab, so its block can jump there; `parentId` is the tab one up.
+    // All tabs in one file (draw.io): the tabs come from the tab rules, in
+    // rule order. A rule gives one tab for the whole overview, or one tab per
+    // process at L1..L3, showing levels f to t. Only processes in line with a
+    // ticked one (above, at or below it) are drawn. A tab per process shows
+    // that process (and, when f is higher, its parents) with what is below it.
+    // Swimlanes: a per-process tab that shows just the process and its steps.
+    const EXP_TAB_UNITS = [[0, 'Whole overview'], [1, 'Each L1'], [2, 'Each L2'], [3, 'Each L3']];
+    const expRuleRange = r => 'L' + r.f + (r.t > r.f ? '–L' + r.t : '');
     function expTabSpecs() {
       const checked = expChecked();
       if (!checked.length) return [];
-      const deepest = expDeepest(), swim = expSwimOn();
+      const S = expStart(), swim = expSwimOn();
+      const chk = new Set(checked.map(expKey)), up = new Set();
+      checked.forEach(p => { for (let i = 1; i <= p.length; i++) up.add(expKey(p.slice(0, i))); });
+      const inScope = q => up.has(expKey(q)) || (q.length > S && chk.has(expKey(q.slice(0, S))));
       const codeOf = expCodeOfNow() || expBuildCodeOf('data', expDefaultCodeStart());
       const tabName = p => { const c = codeOf(p); return (c ? c + ' ' : '') + p[p.length - 1]; };
-      const links = new Map();
-      const tabs = [{ tab: 'overview', id: 'nx-overview', name: 'Overview', paths: checked, links }];
-      (function add(paths, parent) {
-        paths.forEach(p => {
-          const n = expNodeAt(p), kids = n ? Object.keys(n._children) : [];
-          if (!kids.length || p.length >= deepest) return;
-          const kidPaths = kids.map(k => p.concat(k));
-          const last = p.length + 1 >= deepest || kidPaths.every(c => !Object.keys(expNodeAt(c)._children).length);
-          const t = { tab: 'proc', id: 'nx-' + tabs.length, name: tabName(p), paths: [p], path: p,
-                      parentId: parent.id, parentName: parent.name, swim: swim && last, links };
-          links.set(expKey(p), t.id);
-          tabs.push(t);
-          add(kidPaths, t);
+      const rules = expSettings.tabRules, perUnit = {};
+      rules.forEach(r => { perUnit[r.u] = (perUnit[r.u] || 0) + 1; });
+      const tabs = [];
+      rules.forEach(r => {
+        // Two rules for the same unit: tell their tabs apart by their levels
+        const suffix = perUnit[r.u] > 1 ? ' (' + expRuleRange(r) + ')' : '';
+        if (!r.u) {
+          tabs.push({ tab: 'overview', id: 'nx-' + tabs.length, name: 'Overview' + suffix, rule: r, paths: checked, inScope });
+          return;
+        }
+        expPathsAt(r.u).filter(inScope).forEach(p => {
+          const n = expNodeAt(p);
+          const kids = n ? Object.keys(n._children).map(k => p.concat(k)).filter(inScope) : [];
+          if (r.t > r.u && !kids.length) return;   // nothing below it to show
+          tabs.push({ tab: 'proc', id: 'nx-' + tabs.length, name: tabName(p) + suffix, rule: r, paths: [p], path: p, inScope,
+                      swim: swim && r.t === r.u + 1 && r.u >= S && r.f <= r.u });
         });
-      })(checked, tabs[0]);
+      });
       return tabs;
+    }
+    // The tree a tab draws: levels f..t, in line with a ticked process and,
+    // for a per-process tab, in line with that process
+    function expTabTree(spec) {
+      const { f, t } = spec.rule, subj = spec.path;
+      const related = q => !subj || (q.length <= subj.length ? expKey(subj.slice(0, q.length)) === expKey(q) : expKey(q.slice(0, subj.length)) === expKey(subj));
+      const ok = q => spec.inScope(q) && related(q);
+      const build = p => {
+        const n = expNodeAt(p);
+        const node = { _children: {}, _meta: n._meta, _desc: n._desc, _code: n._code, _rowId: n._rowId, _path: p, _name: p[p.length - 1] };
+        if (p.length < t) Object.keys(n._children).map(k => p.concat(k)).filter(ok).forEach(c => { node._children[expKey(c)] = build(c); });
+        return node;
+      };
+      const nodes = {};
+      expPathsAt(f).filter(ok).forEach(p => { nodes[expKey(p)] = build(p); });
+      const depthLevels = [];
+      for (let l = f; l <= t; l++) depthLevels.push(l);
+      return { nodes, depthLevels };
     }
 
     // The tree one diagram draws: the chosen levels above (only processes with
@@ -8813,6 +8901,11 @@
     }
     // Levels that appear in the diagrams (for the Levels rows)
     function expShownLevels() {
+      if (expTabsOn()) {
+        const set = new Set();
+        expSettings.tabRules.forEach(r => { for (let l = r.f; l <= r.t; l++) set.add(l); });
+        return [...set].sort((a, b) => a - b);
+      }
       const out = expParentLvls();
       for (let l = expStart(); l <= expDeepest(); l++) out.push(l);
       return out;
@@ -8908,19 +9001,10 @@
         const names = spec.tab ? { base: spec.name, title: spec.name } : expSpecName(spec, codeOf);
         let result;
         if (spec.tab && !spec.swim) {
-          // A tab: the overview (ticked processes and the levels above), or one
-          // process with its steps one level down
-          let rootNodes, depthLevels;
-          if (spec.tab === 'overview') {
-            const v = expVirtualTree(spec.paths);
-            rootNodes = v.nodes; depthLevels = v.depthLevels.slice(0, keep.length + 1);
-          } else {
-            const p = spec.path, n = expNodeAt(p);
-            rootNodes = { [expKey(p)]: { _children: n._children, _meta: n._meta, _desc: n._desc, _code: n._code, _rowId: n._rowId, _path: p, _name: p[p.length - 1] } };
-            depthLevels = [p.length, p.length + 1];
-          }
+          // A tab: the levels of its rule, in line with the ticked processes
+          const v = expTabTree(spec);
           result = buildSvgString([], EXP_MAX_LEVEL, orientations, {
-            rootNodes, depthLevels, arrowLevels, showCodes: s.showCodes, codeOwnLine: s.codePos === 'line',
+            rootNodes: v.nodes, depthLevels: v.depthLevels, arrowLevels, showCodes: s.showCodes, codeOwnLine: s.codePos === 'line',
             direction: s.direction === 'tb' ? 'tb' : 'lr', codeOf: codeOf || undefined,
           });
         } else if (spec.swim) {
@@ -8928,7 +9012,7 @@
           result = buildSwimlaneSvg(path, {
             laneField: s.laneField, direction: s.direction === 'tb' ? 'tb' : 'lr',
             showCodes: s.showCodes, codeOwnLine: s.codePos === 'line', codeOf: codeOf || undefined,
-            parentChain: expParentChain(path).filter(c => keep.includes(c.abs)),
+            parentChain: expParentChain(path).filter(c => spec.tab ? c.abs >= spec.rule.f : keep.includes(c.abs)),
           });
         } else {
           const v = expVirtualTree(spec.paths);
@@ -9305,8 +9389,8 @@
       const { items, total } = expBuildItems(1, expPvAt(expSpecCount()));
       if (expTabsOn() && items.length) {
         // One file with several tabs: the preview shows the chosen tab
-        const it = items[0], spec0 = expDiagramSpecs()[0];
-        const base = expSpecName({ paths: spec0.paths }, expCodeOfNow()).base;
+        const it = items[0];
+        const base = expSpecName({ paths: expChecked() }, expCodeOfNow()).base;
         return { kind: t, total: 1, tabs: total, fr: expFramed(it.result), base: base + ' (tabs)', title: it.title };
       }
       if (!items.length) return { empty: expSwimOn() ? 'The ticked processes have no steps to put in lanes' : 'Nothing to export' };
@@ -9584,7 +9668,7 @@
     // One tick box per level above the start level
     function expBuildParentChecks() {
       const box = $('expParentChecks'), start = expStart();
-      $('expParentsBox').hidden = start === 1;
+      $('expParentsBox').hidden = start === 1 || expTabsOn();   // tabs: the tab rules set the levels
       box.innerHTML = '';
       for (let l = 1; l < start; l++) {
         const lab = document.createElement('label');
@@ -9602,6 +9686,93 @@
       }
     }
 
+    // ── Tab rules (draw.io, all tabs in one file) ──
+    function expBuildTabRules() {
+      const box = $('expTabRules'), rules = expSettings.tabRules;
+      const specs = expDiagramSpecs();
+      box.innerHTML = '';
+      const sel = (opts, v, label, onPick) => {
+        const el = document.createElement('select');
+        el.className = 'exp-opt-input'; el.setAttribute('aria-label', label);
+        el.innerHTML = opts.map(([ov, t]) => '<option value="' + ov + '">' + escHtml(t) + '</option>').join('');
+        el.value = String(v);
+        el.addEventListener('change', () => onPick(Number(el.value)));
+        return el;
+      };
+      const lvls = from => { const o = []; for (let l = from; l <= EXP_MAX_LEVEL; l++) o.push([l, 'L' + l]); return o; };
+      const set = (i, r) => { rules[i] = expCleanRules([r])[0]; expPvIndex = 0; expChanged(); };
+      rules.forEach((r, i) => {
+        const row = document.createElement('div');
+        row.className = 'exp-tab-rule';
+        const n = document.createElement('span'); n.className = 'exp-tab-n'; n.textContent = (i + 1) + '.';
+        row.appendChild(n);
+        row.appendChild(sel(EXP_TAB_UNITS, r.u, 'One tab for', u => set(i, u ? { u, f: u, t: Math.max(r.t, u + 1) } : { u, f: r.f, t: r.t })));
+        row.appendChild(sel(lvls(1), r.f, 'From level', f => set(i, { u: r.u, f, t: Math.max(r.t, f) })));
+        const t2 = document.createElement('span'); t2.textContent = '\u2013';
+        row.appendChild(t2);
+        row.appendChild(sel(lvls(Math.max(r.f, r.u)), r.t, 'To level', t => set(i, { u: r.u, f: r.f, t })));
+        const cnt = specs.filter(sp => sp.rule === r).length;
+        const c = document.createElement('span'); c.className = 'exp-tab-count';
+        c.textContent = cnt + ' tab' + (cnt === 1 ? '' : 's');
+        row.appendChild(c);
+        const tools = document.createElement('span'); tools.className = 'exp-tab-tools';
+        const tool = (txt, title, dis, fn) => {
+          const b = document.createElement('button');
+          b.type = 'button'; b.textContent = txt; b.title = title; b.disabled = dis;
+          b.addEventListener('click', fn);
+          tools.appendChild(b);
+        };
+        const move = d => { const [x] = rules.splice(i, 1); rules.splice(i + d, 0, x); expPvIndex = 0; expChanged(); };
+        tool('\u2191', 'Move up', i === 0, () => move(-1));
+        tool('\u2193', 'Move down', i === rules.length - 1, () => move(1));
+        tool('\u00d7', 'Remove this rule', rules.length === 1, () => { rules.splice(i, 1); expPvIndex = 0; expChanged(); });
+        row.appendChild(tools);
+        box.appendChild(row);
+      });
+      // Saved sets
+      const sets = expLoadTabSets(), same = x => JSON.stringify(x.rules) === JSON.stringify(rules);
+      const cur = sets.find(same);
+      const ss = $('expTabSet');
+      ss.innerHTML = '<option value="">' + (sets.length ? 'Saved sets\u2026' : 'No saved sets') + '</option>' +
+        sets.map((x, i) => '<option value="' + i + '">' + escHtml(x.name) + '</option>').join('');
+      ss.value = cur ? String(sets.indexOf(cur)) : '';
+      ss.disabled = !sets.length;
+      $('expTabSetDel').hidden = !cur;
+      $('expTabNav').checked = !!expSettings.tabNav;
+    }
+    $('expTabAdd').addEventListener('click', () => {
+      const rules = expSettings.tabRules, last = rules[rules.length - 1];
+      // A new rule one level deeper than the last one
+      const u = Math.min(EXP_MAX_LEVEL - 1, (last ? last.u : 0) + 1);
+      rules.push(expCleanRules([{ u, f: u, t: u + 1 }])[0]);
+      expChanged();
+    });
+    $('expTabSet').addEventListener('change', e => {
+      const sets = expLoadTabSets(), x = sets[Number(e.target.value)];
+      if (e.target.value === '' || !x) return;
+      expSettings.tabRules = x.rules.map(r => Object.assign({}, r));
+      $('expTabSetName').value = x.name;
+      expPvIndex = 0; expChanged();
+    });
+    $('expTabSetSave').addEventListener('click', () => {
+      const inp = $('expTabSetName'), name = inp.value.trim();
+      if (!name) { inp.focus(); return; }
+      const sets = expLoadTabSets().filter(x => x.name.toLowerCase() !== name.toLowerCase());
+      sets.push({ name, rules: expSettings.tabRules.map(r => Object.assign({}, r)) });
+      sets.sort((a, b) => a.name.localeCompare(b.name));
+      expSaveTabSets(sets);
+      expBuildTabRules();
+    });
+    $('expTabSetName').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('expTabSetSave').click(); } });
+    $('expTabSetDel').addEventListener('click', () => {
+      const sets = expLoadTabSets(), i = Number($('expTabSet').value);
+      if ($('expTabSet').value === '' || !sets[i]) return;
+      sets.splice(i, 1);
+      expSaveTabSets(sets);
+      expBuildTabRules();
+    });
+    $('expTabNav').addEventListener('change', e => { expSettings.tabNav = e.target.checked; expChanged(); });
+
     function expBuildFilesBox() {
       const n = expChecked().length, swim = expSwimOn();
       const drawio = expType() === 'flowchart' && expFmt() === 'drawio', tabs = expTabsOn();
@@ -9610,10 +9781,11 @@
       seg.querySelectorAll('button').forEach(b => { b.disabled = swim && b.dataset.v !== 'tabs'; });
       $('expFilesParent').hidden = expStart() === 1;
       $('expFilesTabs').hidden = !drawio;
+      $('expTabsBox').hidden = !tabs;
+      if (tabs) expBuildTabRules();
       const files = expSpecCount();
       $('expFilesHint').textContent = tabs
-        ? files + ' tab' + (files === 1 ? '' : 's') + ' in one .drawio file: an overview, then a tab per process down to L' + expDeepest() +
-          '. Click a block in draw.io to open its tab; each tab links back to the one above.'
+        ? files + ' tab' + (files === 1 ? '' : 's') + ' in one .drawio file, in the order of the rules below. Only ticked processes get tabs.'
         : swim
         ? 'Swimlanes always give one file per process' + (files ? ' (' + files + ' files).' : '.')
         : expFilesMode() === 'parent' && expStart() > 1
@@ -9674,7 +9846,7 @@
     function expApplyVisibility() {
       const type = expType(), fmt = expFmt();
       const has = (attr, v) => attr.split(' ').includes(v);
-      exportModal.querySelectorAll('[data-types],[data-hide-types],[data-formats],[data-hide-formats],[data-when],[data-swim],[data-hide-swim]').forEach(el => {
+      exportModal.querySelectorAll('[data-types],[data-hide-types],[data-formats],[data-hide-formats],[data-when],[data-swim],[data-hide-swim],[data-hide-tabs]').forEach(el => {
         const d = el.dataset;
         let show = true;
         if (d.types)        show = show && has(d.types, type);
@@ -9684,6 +9856,7 @@
         if (d.when) { const [k, v] = d.when.split(':'); show = show && String(expGet(k)) === v; }
         if (d.swim !== undefined) show = show && expSwimOn();
         if (d.hideSwim !== undefined) show = show && (!expSwimOn() || expTabsOn());   // tabs: only the last tabs get lanes
+        if (d.hideTabs !== undefined) show = show && !expTabsOn();                    // tabs: the tab rules set the levels
         el.hidden = !show;
       });
     }
@@ -10772,8 +10945,9 @@
       return '<mxfile host="Nexus" type="device">\n' + buildDrawioDiagram(result, pageName) + '</mxfile>\n';
     }
     // One page (<diagram>) of a draw.io file. opts (all tabs in one file):
-    // id: the page id; linkOf(shape): the page id its block jumps to, or
-    // null; back: { id, text }, a link to the page one up, top left.
+    // id: the page id; linkOf(shape): { id, name } of the tab its block opens,
+    // or null (the block gets a small arrow in its corner); back: { id, name },
+    // a small "↑ Back" button top left that opens the tab one up.
     function buildDrawioDiagram(result, pageName, opts) {
       opts = opts || {};
       const r1 = n => String(Math.round(n * 10) / 10);
@@ -10781,7 +10955,7 @@
         '" height="' + r1(o.h) + '" as="geometry"/>';
       // Labels are rendered as HTML (html=1, needed for wrapping), so escape twice.
       const label = t => vsdxEsc(String(t).split('\n').map(escHtml).join('<br>'));
-      const cells = [];
+      const cells = [], icons = [];
       let id = 2;
       // Swimlanes: one pool with a lane per group, as native draw.io containers.
       // Lanes are children of the pool and steps children of their lane, with
@@ -10812,7 +10986,14 @@
           .filter(([k]) => k !== 'Name')
           .map(([k, , v]) => ' ' + k.replace(/[^A-Za-z0-9_]/g, '_') + '="' + vsdxEsc(String(v).trim()) + '"').join('');
         const to = opts.linkOf ? opts.linkOf(sh) : null;
-        const link = to ? ' link="data:page/id,' + vsdxEsc(to) + '" tooltip="Open the tab with its steps"' : '';
+        const link = to ? ' link="data:page/id,' + vsdxEsc(to.id) + '" tooltip="' + vsdxEsc('Open tab: ' + to.name) + '"' : '';
+        if (to) {
+          // Small arrow in the top right corner: this block has its own tab
+          const g = relGeo(sh);
+          icons.push('<object id="s' + i + 'go" label="\u2197"' + link + '>' +
+            '<mxCell style="text;html=1;align=center;verticalAlign=middle;fontSize=13;fontStyle=1;fontColor=' + sh.stroke +
+            ';" vertex="1" parent="' + parentOf(sh) + '">' + geo({ x: g.x + g.w - 22, y: g.y + 2, w: 20, h: 20 }) + '</mxCell></object>');
+        }
         cells.push('<object id="s' + i + '" label="' + label(sh.text) + '"' + link + attrs + '>' +
           '<mxCell style="' + shapeStyle + 'whiteSpace=wrap;html=1;' +
           'fillColor=' + sh.fill + ';strokeColor=' + sh.stroke + ';strokeWidth=1.5;fontColor=' + sh.color +
@@ -10845,10 +11026,13 @@
           ports + 'strokeColor=' + EXP_ARROW_COLOR + ';strokeWidth=1.5;" edge="1" parent="1" source="s' + a.from +
           '" target="s' + a.to + '"><mxGeometry relative="1" as="geometry"/></mxCell>');
       });
+      cells.push(...icons);
       if (opts.back) {
-        cells.push('<object id="back" label="' + label(opts.back.text) + '" link="data:page/id,' + vsdxEsc(opts.back.id) + '">' +
-          '<mxCell style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=4;fontColor=#2563eb;" vertex="1" parent="1">' +
-          geo({ x: 16, y: 8, w: 420, h: 24 }) + '</mxCell></object>');
+        cells.push('<object id="back" label="\u2191 Back" link="data:page/id,' + vsdxEsc(opts.back.id) + '" tooltip="' +
+          vsdxEsc('Back to ' + opts.back.name) + '">' +
+          '<mxCell style="rounded=1;arcSize=50;html=1;align=center;verticalAlign=middle;fontSize=11;fillColor=#ffffff;' +
+          'strokeColor=#cbd5e1;fontColor=#475569;" vertex="1" parent="1">' +
+          geo({ x: 12, y: 8, w: 64, h: 22 }) + '</mxCell></object>');
       }
       const name = vsdxEsc(pageName || 'Process');
       return '<diagram id="' + vsdxEsc(opts.id || 'nexus-process') + '" name="' + name + '">\n' +
@@ -10857,15 +11041,43 @@
         '<root>\n<mxCell id="0"/>\n<mxCell id="1" parent="0"/>\n' + cells.join('\n') + '\n</root>\n' +
         '</mxGraphModel>\n</diagram>\n';
     }
-    // All tabs in one file: every tab of expTabSpecs as a page, linked
+    // All tabs in one file: every tab of expTabSpecs as a page. With
+    // navigation on, a block opens the next deeper tab of that process (the
+    // one that shows the most levels below it, the shallowest of those
+    // first), and each tab gets a back button to the first tab that opens it.
     function expDrawioTabsXml() {
       const { items } = expBuildItems();
-      const pages = items.map(it => {
-        const sp = it.spec;
+      const nav = !!expSettings.tabNav;
+      const byPath = new Map();
+      items.forEach(it => { if (it.spec.path) { const k = expKey(it.spec.path); if (!byPath.has(k)) byPath.set(k, []); byPath.get(k).push(it.spec); } });
+      const target = (sp, path) => {
+        const own = sp.path && expKey(sp.path) === expKey(path);
+        let best = null;
+        (byPath.get(expKey(path)) || []).forEach(t => {
+          if (t === sp || !(t.rule.t > sp.rule.t || (t.rule.t === sp.rule.t && !own))) return;
+          if (!best || t.rule.t < best.rule.t) best = t;
+        });
+        return best;
+      };
+      const backOf = new Map();
+      const linkMaps = items.map(it => {
+        const m = new Map();
+        if (!nav) return m;
+        (it.result.shapes || []).forEach(sh => {
+          if (!sh.path) return;
+          const t = target(it.spec, sh.path);
+          if (!t) return;
+          m.set(expKey(sh.path), t);
+          if (!backOf.has(t.id)) backOf.set(t.id, it.spec);
+        });
+        return m;
+      });
+      const pages = items.map((it, i) => {
+        const sp = it.spec, back = backOf.get(sp.id);
         return buildDrawioDiagram(expFramed(it.result), it.title, {
           id: sp.id,
-          linkOf: sh => { const to = sh.path && sp.links.get(expKey(sh.path)); return to && to !== sp.id ? to : null; },
-          back: sp.parentId ? { id: sp.parentId, text: '\u2190 ' + sp.parentName } : null,
+          linkOf: nav ? sh => (sh.path && linkMaps[i].get(expKey(sh.path))) || null : null,
+          back: back ? { id: back.id, name: back.name } : null,
         });
       });
       return '<mxfile host="Nexus" type="device" pages="' + pages.length + '">\n' + pages.join('') + '</mxfile>\n';
