@@ -2924,7 +2924,7 @@
               </div>
               <div class="exp-section" id="expFilesBox">
                 <div class="exp-sublabel">Files</div>
-                <div class="exp-seg" data-key="files" title="One file with everything, a file per process, or a file per parent with its processes"><button type="button" data-v="one">All in one file</button><button type="button" data-v="each">One file per process</button><button type="button" data-v="parent" id="expFilesParent">One file per parent</button></div>
+                <div class="exp-seg" data-key="files" title="One file with everything, a file per process, a file per parent with its processes, or (draw.io) one file with a tab per process"><button type="button" data-v="one">All in one file</button><button type="button" data-v="each">One file per process</button><button type="button" data-v="parent" id="expFilesParent">One file per parent</button><button type="button" data-v="tabs" id="expFilesTabs" title="draw.io: one file with an overview tab and a tab per process, linked to each other">All tabs in one file</button></div>
                 <div class="exp-hint" id="expFilesHint"></div>
               </div>
             </div>
@@ -3023,7 +3023,7 @@
           <div class="exp-preview" id="expPreview" aria-label="Preview"></div>
           <div class="exp-preview-meta" id="expPreviewMeta" aria-live="polite"></div>
           <div class="exp-files" id="expFiles" hidden>
-            <div class="exp-files-head"><span id="expFilesCount"></span><span class="exp-files-sub">Click a name to preview it</span></div>
+            <div class="exp-files-head"><span id="expFilesCount"></span><span class="exp-files-sub" id="expFilesSub">Click a name to preview it</span></div>
             <ul class="exp-files-list" id="expFilesList"></ul>
           </div>
           <textarea id="expCodeBox" class="drawio-xml exp-code" readonly spellcheck="false" data-types="code dashboard" aria-label="Code"></textarea>
@@ -8647,7 +8647,7 @@
       if (![1, 2, 4].includes(d.image.scale)) d.image.scale = 2;
       if (!['full', 'simple'].includes(d.dashView)) d.dashView = 'full';
       if (!['standard', 'swimlane'].includes(d.layout)) d.layout = 'standard';
-      if (!['one', 'each', 'parent'].includes(d.files)) d.files = 'one';
+      if (!['one', 'each', 'parent', 'tabs'].includes(d.files)) d.files = 'one';
       if (!['landscape', 'portrait', 'auto'].includes(d.orient)) d.orient = 'auto';
       if (!['off', 'on'].includes(d.sameSize)) d.sameSize = 'off';
       if (!['center', 'topleft'].includes(d.align)) d.align = 'center';
@@ -8692,6 +8692,10 @@
     // Swimlanes: SVG, PNG, HTML and draw.io (not Visio, not the dashboard)
     const EXP_SWIM_FORMATS = ['svg', 'png', 'html', 'drawio'];
     const expSwimOn = () => expSettings.layout === 'swimlane' && expType() !== 'dashboard' && EXP_SWIM_FORMATS.includes(expFmt());
+    // draw.io only: all tabs in one file (an overview tab and a tab per process)
+    const expTabsOn = () => expSettings.files === 'tabs' && expType() === 'flowchart' && expFmt() === 'drawio';
+    // The Files choice in effect ('tabs' falls back to one file for other formats)
+    const expFilesMode = () => expSettings.files === 'tabs' && !expTabsOn() ? 'one' : expSettings.files;
 
     function expNodeAt(path) {
       if (!path.length) return null;
@@ -8735,13 +8739,14 @@
     // with every ticked process, or one per ticked process.
     function expDiagramSpecs() {
       if (expType() === 'dashboard') return [];
+      if (expTabsOn()) return expTabSpecs();
       const checked = expChecked();
       if (expSwimOn()) {
         return checked.filter(p => { const n = expNodeAt(p); return n && Object.keys(n._children).length; })
           .map(p => ({ paths: [p], swim: true }));
       }
       if (!checked.length) return [];
-      if (expSettings.files === 'parent' && expStart() > 1) {
+      if (expFilesMode() === 'parent' && expStart() > 1) {
         // One file per parent: its ticked processes together (with their flow)
         const groups = new Map();
         checked.forEach(p => {
@@ -8751,8 +8756,38 @@
         });
         return Array.from(groups.values());
       }
-      if (expSettings.files !== 'one') return checked.map(p => ({ paths: [p] }));
+      if (expFilesMode() !== 'one') return checked.map(p => ({ paths: [p] }));
       return [{ paths: checked }];
+    }
+
+    // All tabs in one file (draw.io): the tabs follow the tree. First an
+    // overview of the ticked processes (with the chosen levels above), then a
+    // tab per process that has steps, down to `deepest`, in tree order. Each
+    // tab shows the process with its steps one level down; with swimlanes the
+    // tabs whose steps are the last level get lanes. `links` maps a process
+    // to its tab, so its block can jump there; `parentId` is the tab one up.
+    function expTabSpecs() {
+      const checked = expChecked();
+      if (!checked.length) return [];
+      const deepest = expDeepest(), swim = expSwimOn();
+      const codeOf = expCodeOfNow() || expBuildCodeOf('data', expDefaultCodeStart());
+      const tabName = p => { const c = codeOf(p); return (c ? c + ' ' : '') + p[p.length - 1]; };
+      const links = new Map();
+      const tabs = [{ tab: 'overview', id: 'nx-overview', name: 'Overview', paths: checked, links }];
+      (function add(paths, parent) {
+        paths.forEach(p => {
+          const n = expNodeAt(p), kids = n ? Object.keys(n._children) : [];
+          if (!kids.length || p.length >= deepest) return;
+          const kidPaths = kids.map(k => p.concat(k));
+          const last = p.length + 1 >= deepest || kidPaths.every(c => !Object.keys(expNodeAt(c)._children).length);
+          const t = { tab: 'proc', id: 'nx-' + tabs.length, name: tabName(p), paths: [p], path: p,
+                      parentId: parent.id, parentName: parent.name, swim: swim && last, links };
+          links.set(expKey(p), t.id);
+          tabs.push(t);
+          add(kidPaths, t);
+        });
+      })(checked, tabs[0]);
+      return tabs;
     }
 
     // The tree one diagram draws: the chosen levels above (only processes with
@@ -8862,9 +8897,25 @@
       const items = [];
       const keep = expParentLvls();
       (limit ? specs.slice(at, at + limit) : specs).forEach(spec => {
-        const names = expSpecName(spec, codeOf);
+        const names = spec.tab ? { base: spec.name, title: spec.name } : expSpecName(spec, codeOf);
         let result;
-        if (spec.swim) {
+        if (spec.tab && !spec.swim) {
+          // A tab: the overview (ticked processes and the levels above), or one
+          // process with its steps one level down
+          let rootNodes, depthLevels;
+          if (spec.tab === 'overview') {
+            const v = expVirtualTree(spec.paths);
+            rootNodes = v.nodes; depthLevels = v.depthLevels.slice(0, keep.length + 1);
+          } else {
+            const p = spec.path, n = expNodeAt(p);
+            rootNodes = { [expKey(p)]: { _children: n._children, _meta: n._meta, _desc: n._desc, _code: n._code, _rowId: n._rowId, _path: p, _name: p[p.length - 1] } };
+            depthLevels = [p.length, p.length + 1];
+          }
+          result = buildSvgString([], EXP_MAX_LEVEL, orientations, {
+            rootNodes, depthLevels, arrowLevels, showCodes: s.showCodes, codeOwnLine: s.codePos === 'line',
+            direction: s.direction === 'tb' ? 'tb' : 'lr', codeOf: codeOf || undefined,
+          });
+        } else if (spec.swim) {
           const path = spec.paths[0];
           result = buildSwimlaneSvg(path, {
             laneField: s.laneField, direction: s.direction === 'tb' ? 'tb' : 'lr',
@@ -8880,7 +8931,7 @@
             codeOf: codeOf || undefined,
           });
         }
-        if (result) items.push(Object.assign({ result }, names));
+        if (result) items.push(Object.assign({ result, spec }, names));
       });
       return { items, total: specs.length };
     }
@@ -9244,6 +9295,12 @@
       }
       if (!expChecked().length) return { empty: 'Tick at least one process' };
       const { items, total } = expBuildItems(1, expPvAt(expSpecCount()));
+      if (expTabsOn() && items.length) {
+        // One file with several tabs: the preview shows the chosen tab
+        const it = items[0], spec0 = expDiagramSpecs()[0];
+        const base = expSpecName({ paths: spec0.paths }, expCodeOfNow()).base;
+        return { kind: t, total: 1, tabs: total, fr: expFramed(it.result), base: base + ' (tabs)', title: it.title };
+      }
       if (!items.length) return { empty: expSwimOn() ? 'The ticked processes have no steps to put in lanes' : 'Nothing to export' };
       const it = items[0], fr = expFramed(it.result);
       if (t === 'code') {
@@ -9257,7 +9314,7 @@
     // Names and titles of every file, without laying the diagrams out
     function expFileEntries() {
       const codeOf = expCodeOfNow();
-      return expDiagramSpecs().map(spec => expSpecName(spec, codeOf));
+      return expDiagramSpecs().map(spec => spec.tab ? { base: spec.name, title: spec.name } : expSpecName(spec, codeOf));
     }
     // One file of several: its text (HTML, draw.io XML) or null
     function expItemText(i) {
@@ -9285,10 +9342,12 @@
     // Lists the files when there are several, each with its own buttons
     function expRenderFileList(out) {
       const box = $('expFiles'), list = $('expFilesList');
-      if (!out || out.total < 2) { box.hidden = true; list.innerHTML = ''; return; }
-      const entries = expFileEntries(), ext = expItemExt(), canCopy = expCanCopyItems();
+      if (!out || (out.total < 2 && !out.tabs)) { box.hidden = true; list.innerHTML = ''; return; }
+      const tabs = !!out.tabs;
+      const entries = expFileEntries(), ext = tabs ? '' : expItemExt(), canCopy = !tabs && expCanCopyItems();
       box.hidden = false;
-      $('expFilesCount').textContent = entries.length + ' files';
+      $('expFilesCount').textContent = tabs ? entries.length + ' tabs in one file' : entries.length + ' files';
+      $('expFilesSub').textContent = tabs ? 'Click a tab to preview it' : 'Click a name to preview it';
       list.innerHTML = '';
       const flash = (b, txt) => {
         b.textContent = txt; b.classList.add('done');
@@ -9316,6 +9375,7 @@
           });
           li.appendChild(cp);
         }
+        if (tabs) { list.appendChild(li); return; }
         const dl = document.createElement('button');
         dl.type = 'button'; dl.className = 'exp-file-dl'; dl.textContent = 'Download';
         dl.setAttribute('aria-label', 'Download ' + e.base + ext);
@@ -9375,7 +9435,8 @@
         const svg = pv.querySelector('svg');
         svg.setAttribute('width', Math.max(1, Math.round(fr.svgW * k)));
         svg.setAttribute('height', Math.max(1, Math.round(fr.svgH * k)));
-        const more = out.total > 1 ? ' · file ' + (expPvIndex + 1) + ' of ' + out.total : '';
+        const more = out.tabs ? ' · tab ' + (expPvIndex + 1) + ' of ' + out.tabs + ' in one file'
+          : out.total > 1 ? ' · file ' + (expPvIndex + 1) + ' of ' + out.total : '';
         if (isImage) {
           const sc = expSettings.image.scale, w = Math.round(fr.svgW * sc), h = Math.round(fr.svgH * sc);
           const big = fmt === 'png' && expPngTooBig(w, h) ? ' · too large for PNG at ' + sc + 'x, pick a smaller scale or SVG' : '';
@@ -9535,16 +9596,21 @@
 
     function expBuildFilesBox() {
       const n = expChecked().length, swim = expSwimOn();
-      $('expFilesBox').hidden = n <= 1;
+      const drawio = expType() === 'flowchart' && expFmt() === 'drawio', tabs = expTabsOn();
+      $('expFilesBox').hidden = n <= 1 && !drawio;
       const seg = $('expFilesBox').querySelector('.exp-seg');
-      seg.querySelectorAll('button').forEach(b => { b.disabled = swim; });
+      seg.querySelectorAll('button').forEach(b => { b.disabled = swim && b.dataset.v !== 'tabs'; });
       $('expFilesParent').hidden = expStart() === 1;
+      $('expFilesTabs').hidden = !drawio;
       const files = expSpecCount();
-      $('expFilesHint').textContent = swim
+      $('expFilesHint').textContent = tabs
+        ? files + ' tab' + (files === 1 ? '' : 's') + ' in one .drawio file: an overview, then a tab per process down to L' + expDeepest() +
+          '. Click a block in draw.io to open its tab; each tab links back to the one above.'
+        : swim
         ? 'Swimlanes always give one file per process' + (files ? ' (' + files + ' files).' : '.')
-        : expSettings.files === 'parent' && expStart() > 1
+        : expFilesMode() === 'parent' && expStart() > 1
           ? files + ' file' + (files === 1 ? '' : 's') + ', one per parent with its ticked L' + expStart() + ' processes together.'
-        : expSettings.files !== 'one'
+        : expFilesMode() !== 'one'
           ? files + ' files, each with its own buttons under the preview.'
           : 'All ' + n + ' processes in one diagram.';
     }
@@ -9609,7 +9675,7 @@
         if (d.hideFormats)  show = show && !has(d.hideFormats, fmt);
         if (d.when) { const [k, v] = d.when.split(':'); show = show && String(expGet(k)) === v; }
         if (d.swim !== undefined) show = show && expSwimOn();
-        if (d.hideSwim !== undefined) show = show && !expSwimOn();
+        if (d.hideSwim !== undefined) show = show && (!expSwimOn() || expTabsOn());   // tabs: only the last tabs get lanes
         el.hidden = !show;
       });
     }
@@ -9627,7 +9693,7 @@
       });
       exportModal.querySelectorAll('.exp-seg[data-key]').forEach(seg => {
         // Swimlanes always write one file per process
-        let cur = seg.dataset.key === 'files' && expSwimOn() ? 'each' : String(expGet(seg.dataset.key));
+        let cur = seg.dataset.key === 'files' ? (expSwimOn() && !expTabsOn() ? 'each' : expFilesMode()) : String(expGet(seg.dataset.key));
         if (seg.dataset.key === 'files' && cur === 'parent' && expStart() === 1) cur = 'each';   // L1 has no parent
         seg.querySelectorAll('button[data-v]').forEach(b => {
           b.classList.toggle('active', b.dataset.v === cur);
@@ -9773,7 +9839,7 @@
           ok = true; what = 'Image';
         } catch (_) { ok = false; }
       } else if (fmt === 'svg')    { ok = await expCopyText(expSvgFile(expOut.fr)); what = 'SVG'; }
-      else if (fmt === 'drawio')   { ok = await expCopyText(buildDrawioXml(expOut.fr, expOut.title)); what = 'draw.io XML'; }
+      else if (fmt === 'drawio')   { ok = await expCopyText(expTabsOn() ? expDrawioTabsXml() : buildDrawioXml(expOut.fr, expOut.title)); what = 'draw.io XML'; }
       else if (fmt === 'html')     { ok = await expCopyText(expOut.html); what = 'HTML'; }
       showExportToast(ok ? what + ' copied' : 'Copy failed: use Download instead');
       if (ok) {
@@ -9787,7 +9853,7 @@
       const fmt = expFmt();
       if (fmt === 'svg')    return new Blob([expSvgFile(fr)], { type: 'image/svg+xml' });
       if (fmt === 'png')    return expPngBlob(fr);
-      if (fmt === 'drawio') return new Blob([buildDrawioXml(fr, title)], { type: 'application/xml' });
+      if (fmt === 'drawio') return new Blob([expTabsOn() ? expDrawioTabsXml() : buildDrawioXml(fr, title)], { type: 'application/xml' });
       if (fmt === 'vsdx')   return buildVsdxBlob(fr, title);
       return null;
     }
@@ -10139,6 +10205,7 @@
           const path = (item.nodeObj && item.nodeObj._path) || parentPath.concat(item.key);
           const code = codeFor(item.nodeObj, parentCode, item.csvIdx != null ? item.csvIdx : idx, path);
           const shapeIdx = drawNode(nodeX, nodeY, nodeW, nodeH, cx, (item.nodeObj && item.nodeObj._name) || item.key, absLevelBase, item.nodeObj, code);
+          parts.shapes[shapeIdx].path = path;   // the process it shows (draw.io tab links)
           placed.push({ shapeIdx, x: nodeX, y: nodeY, w: nodeW, subtreeH: item.subtreeH,
                         hasKids: item.child.items.length > 0 });
 
@@ -10347,7 +10414,7 @@
         const p = path.concat(k), code = opts.showCodes ? codeOf(p) : '';
         const x = TB ? ln.x + M : ln.x + HEAD + M + slotOf[k] * (NW + GAP);
         const y = TB ? ln.y + HEAD + M + slotOf[k] * (NH + GAP) : ln.y + M;
-        shapes.push({ x, y, w: NW, h: NH, name: k, level: stepAbs, lane: li,
+        shapes.push({ x, y, w: NW, h: NH, name: k, level: stepAbs, lane: li, path: p,
           text: code ? code + (opts.codeOwnLine ? '\n' : ' ') + k : k,
           fill: EXP_FILLS[ci], stroke: EXP_STROKES[ci], color: EXP_TEXTS[ci],
           code, desc: steps[k]._desc || '', meta: steps[k]._meta || null });
@@ -10692,6 +10759,13 @@
     // stored as shape properties (Edit Data in draw.io). The XML can be pasted
     // straight onto a draw.io canvas or saved as a .drawio file.
     function buildDrawioXml(result, pageName) {
+      return '<mxfile host="Nexus" type="device">\n' + buildDrawioDiagram(result, pageName) + '</mxfile>\n';
+    }
+    // One page (<diagram>) of a draw.io file. opts (all tabs in one file):
+    // id: the page id; linkOf(shape): the page id its block jumps to, or
+    // null; back: { id, text }, a link to the page one up, top left.
+    function buildDrawioDiagram(result, pageName, opts) {
+      opts = opts || {};
       const r1 = n => String(Math.round(n * 10) / 10);
       const geo = (o) => '<mxGeometry x="' + r1(o.x) + '" y="' + r1(o.y) + '" width="' + r1(o.w) +
         '" height="' + r1(o.h) + '" as="geometry"/>';
@@ -10727,7 +10801,9 @@
         const attrs = exportDataRows(sh)
           .filter(([k]) => k !== 'Name')
           .map(([k, , v]) => ' ' + k.replace(/[^A-Za-z0-9_]/g, '_') + '="' + vsdxEsc(String(v).trim()) + '"').join('');
-        cells.push('<object id="s' + i + '" label="' + label(sh.text) + '"' + attrs + '>' +
+        const to = opts.linkOf ? opts.linkOf(sh) : null;
+        const link = to ? ' link="data:page/id,' + vsdxEsc(to) + '" tooltip="Open the tab with its steps"' : '';
+        cells.push('<object id="s' + i + '" label="' + label(sh.text) + '"' + link + attrs + '>' +
           '<mxCell style="' + shapeStyle + 'whiteSpace=wrap;html=1;' +
           'fillColor=' + sh.fill + ';strokeColor=' + sh.stroke + ';strokeWidth=1.5;fontColor=' + sh.color +
           ';fontSize=' + SVG_LAYOUT.FONT + ';spacing=10;" vertex="1" parent="' + parentOf(sh) + '">' + geo(relGeo(sh)) + '</mxCell></object>');
@@ -10759,13 +10835,30 @@
           ports + 'strokeColor=' + EXP_ARROW_COLOR + ';strokeWidth=1.5;" edge="1" parent="1" source="s' + a.from +
           '" target="s' + a.to + '"><mxGeometry relative="1" as="geometry"/></mxCell>');
       });
+      if (opts.back) {
+        cells.push('<object id="back" label="' + label(opts.back.text) + '" link="data:page/id,' + vsdxEsc(opts.back.id) + '">' +
+          '<mxCell style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=4;fontColor=#2563eb;" vertex="1" parent="1">' +
+          geo({ x: 16, y: 8, w: 420, h: 24 }) + '</mxCell></object>');
+      }
       const name = vsdxEsc(pageName || 'Process');
-      return '<mxfile host="Nexus" type="device">\n' +
-        '<diagram id="nexus-process" name="' + name + '">\n' +
+      return '<diagram id="' + vsdxEsc(opts.id || 'nexus-process') + '" name="' + name + '">\n' +
         '<mxGraphModel grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" ' +
         'pageScale="1" pageWidth="' + Math.ceil(result.svgW) + '" pageHeight="' + Math.ceil(result.svgH) + '" math="0" shadow="0">\n' +
         '<root>\n<mxCell id="0"/>\n<mxCell id="1" parent="0"/>\n' + cells.join('\n') + '\n</root>\n' +
-        '</mxGraphModel>\n</diagram>\n</mxfile>\n';
+        '</mxGraphModel>\n</diagram>\n';
+    }
+    // All tabs in one file: every tab of expTabSpecs as a page, linked
+    function expDrawioTabsXml() {
+      const { items } = expBuildItems();
+      const pages = items.map(it => {
+        const sp = it.spec;
+        return buildDrawioDiagram(expFramed(it.result), it.title, {
+          id: sp.id,
+          linkOf: sh => { const to = sh.path && sp.links.get(expKey(sh.path)); return to && to !== sp.id ? to : null; },
+          back: sp.parentId ? { id: sp.parentId, text: '\u2190 ' + sp.parentName } : null,
+        });
+      });
+      return '<mxfile host="Nexus" type="device" pages="' + pages.length + '">\n' + pages.join('') + '</mxfile>\n';
     }
 
     // Minimal ZIP writer (store, no compression) — enough for an OPC package.
