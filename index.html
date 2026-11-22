@@ -3392,7 +3392,9 @@
     // Returns { routes: [{ from, to, back, points: [[x, y], ...] }], above, below }
     // where above / below is the extra room the loop and bypass tracks need.
     // clear: extra room kept free above the boxes (icons) before the first loop track.
-    function flowRoutes(flow, boxes, gap, track, clear) {
+    // loopTop: a loop comes down into the top of its target (exports) instead
+    // of into its left side (app view, where the type icon sits on top).
+    function flowRoutes(flow, boxes, gap, track, clear, loopTop) {
       track = track || 14;
       clear = clear || 0;
       const all = Array.from(boxes.values());
@@ -3408,7 +3410,9 @@
         if (e.back || bx <= ax) {
           const ty = top - clear - track * (++nAbove);
           const o = gap / 3;
-          pts = [[ax, ay], [ax + o, ay], [ax + o, ty], [bx - o, ty], [bx - o, by], [bx, by]];
+          pts = loopTop
+            ? [[ax, ay], [ax + o, ay], [ax + o, ty], [bx + b.w / 2, ty], [bx + b.w / 2, b.y]]
+            : [[ax, ay], [ax + o, ay], [ax + o, ty], [bx - o, ty], [bx - o, by], [bx, by]];
         } else if (Math.abs(ay - by) < 0.5 && clearAt(ay, ax, bx)) {
           pts = [[ax, ay], [bx, by]];
         } else if (bx - ax <= gap + 1) {
@@ -8842,6 +8846,7 @@
       const grow = (x, y, w, h) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x + w); y1 = Math.max(y1, y + h); };
       (result.shapes || []).forEach(sh => grow(sh.x, sh.y, sh.w, sh.h));
       (result.levelTags || []).forEach(t => grow(t.x, t.y, t.w, t.h));
+      (result.arrows || []).forEach(a => (a.points || []).forEach(p => grow(p[0], p[1], 0, 0)));
       if (result.swim) grow(result.swim.pool.x, result.swim.pool.y, result.swim.pool.w, result.swim.pool.h);
       if (!Number.isFinite(x0)) { x0 = 0; y0 = 0; x1 = result.svgW; y1 = result.svgH; }
       return { x0, y0, w: x1 - x0, h: y1 - y0 };
@@ -8864,7 +8869,8 @@
         inner, dx, dy, svgW: W, svgH: H,
         shapes: (result.shapes || []).map(sh => Object.assign({}, sh, { x: sh.x + dx, y: sh.y + dy })),
         levelTags: (result.levelTags || []).map(t => Object.assign({}, t, { x: t.x + dx, y: t.y + dy })),
-        arrows: (result.arrows || []).map(a => Object.assign({}, a, { x1: a.x1 + dx, y1: a.y1 + dy, x2: a.x2 + dx, y2: a.y2 + dy })),
+        arrows: (result.arrows || []).map(a => Object.assign({}, a, { x1: a.x1 + dx, y1: a.y1 + dy, x2: a.x2 + dx, y2: a.y2 + dy },
+          a.points ? { points: a.points.map(p => [p[0] + dx, p[1] + dy]) } : {})),
         swim: result.swim ? Object.assign({}, result.swim, {
           pool: Object.assign({}, result.swim.pool, { x: result.swim.pool.x + dx, y: result.swim.pool.y + dy }),
           lanes: result.swim.lanes.map(l => Object.assign({}, l, { x: l.x + dx, y: l.y + dy })),
@@ -9835,6 +9841,7 @@
 
     // ── SVG EXPORT ─────────────────────────────────────────────────────────
     const SVG_LAYOUT = { NW: 240, NH: 110, HGAP: 28, VGAP: 28, VLEAF: 28, PAD: 60, FONT: 13, SMALL_FONT: 11, CORNER: 8 };
+    const SVG_FLOW_GAP = 64;   // space between flow columns (room for the arrow bends)
     // Level colours L0–L5
     const EXP_FILLS   = ['#3E603D','#619A60','#88D17F','#B0E3A5','#D7F5CB','#EBFFDF'];
     const EXP_STROKES = ['#2d4a2c','#4d7a4c','#6ab062','#8dc882','#b3dfa4','#c5eaae'];
@@ -9854,6 +9861,15 @@
 
     // opts (all optional): { arrowLevels: [abs,...], showCodes, codeMode: 'auto'|'data',
     //                        codeStart: number }
+    // SVG for a flow arrow (points along its route); loops are dashed
+    function expFlowPolyline(a) {
+      const pts = a.points.map(p => p.slice());
+      const n = pts.length - 1, dx = Math.sign(pts[n][0] - pts[n - 1][0]), dy = Math.sign(pts[n][1] - pts[n - 1][1]);
+      pts[n] = [pts[n][0] - dx, pts[n][1] - dy];   // stop 1px short so the arrowhead sits on the border
+      return '<polyline points="' + pts.map(p => p[0] + ',' + p[1]).join(' ') + '" fill="none" stroke="' + EXP_ARROW_COLOR +
+        '" stroke-width="1.5"' + (a.back ? ' stroke-dasharray="6 4"' : '') + ' marker-end="url(#expArrow)"/>';
+    }
+
     function buildSvgString(exportPath, maxAbsLevel, leafHorizontalOrOrientations, opts) {
       opts = opts || {};
       const arrowLevels = new Set(opts.arrowLevels || []);
@@ -9911,6 +9927,25 @@
         if (depth >= maxExportLevel) return { totalW: 0, totalH: 0, items: [] };
         const keys = Object.keys(nodes);
         if (!keys.length) return { totalW: 0, totalH: 0, items: [] };
+
+        // Steps linked with Previous / Next (and nothing shown below them): a flow graph
+        const flow = keys.length > 1 ? flowOf(nodes) : null;
+        if (flow) {
+          const kids = keys.map(k => measure(nodes[k]._children, depth + 1));
+          if (kids.every(c => !c.items.length)) {
+            const FG = SVG_FLOW_GAP, RH = S.NH + S.VLEAF;
+            const boxes = new Map(keys.map(k => [k, { x: flow.col.get(k) * (S.NW + FG), y: flow.y.get(k) * RH, w: S.NW, h: S.NH }]));
+            const r = flowRoutes(flow, boxes, FG, 14, 0, true);
+            const items = flow.order.map(k => {
+              const b = boxes.get(k), i = keys.indexOf(k);
+              return { key: k, nodeObj: nodes[k], child: kids[i], csvIdx: i, subtreeW: S.NW, subtreeH: S.NH, x: b.x, y: b.y + r.above };
+            });
+            items.flow = flow;
+            items.flowGap = FG;
+            const maxY = Math.max(...flow.y.values());
+            return { totalW: flow.cols * S.NW + (flow.cols - 1) * FG, totalH: r.above + maxY * RH + S.NH + r.below, items };
+          }
+        }
 
         if (isVertical(depth)) {
           // Stack siblings top-to-bottom
@@ -10042,7 +10077,7 @@
           }
 
           const path = (item.nodeObj && item.nodeObj._path) || parentPath.concat(item.key);
-          const code = codeFor(item.nodeObj, parentCode, idx, path);
+          const code = codeFor(item.nodeObj, parentCode, item.csvIdx != null ? item.csvIdx : idx, path);
           const shapeIdx = drawNode(nodeX, nodeY, nodeW, nodeH, cx, (item.nodeObj && item.nodeObj._name) || item.key, absLevelBase, item.nodeObj, code);
           placed.push({ shapeIdx, x: nodeX, y: nodeY, w: nodeW, subtreeH: item.subtreeH,
                         hasKids: item.child.items.length > 0 });
@@ -10055,8 +10090,19 @@
           }
         });
 
+        // Steps linked with Previous / Next: arrows along the links
+        if (items.flow && arrowLevels.has(absLevelBase)) {
+          const boxes = new Map(items.map((it, i) => [it.key, { x: placed[i].x, y: placed[i].y, w: placed[i].w, h: S.NH }]));
+          const shapeOf = new Map(items.map((it, i) => [it.key, placed[i].shapeIdx]));
+          flowRoutes(items.flow, boxes, items.flowGap, 14, 0, true).routes.forEach(rt => {
+            const pts = TB ? rt.points.map(([x, y]) => [y, x]) : rt.points;
+            const last = pts[pts.length - 1];
+            parts.arrows.push({ from: shapeOf.get(rt.from), to: shapeOf.get(rt.to), points: pts, back: rt.back, tb: TB, vertical: TB,
+              x1: pts[0][0], y1: pts[0][1], x2: last[0], y2: last[1] });
+          });
+        }
         // Flow arrows between consecutive siblings at this level
-        if (arrowLevels.has(absLevelBase)) {
+        else if (arrowLevels.has(absLevelBase)) {
           const vertical = isVertical(depth);
           for (let k = 0; k + 1 < placed.length; k++) {
             const a = placed[k], b = placed[k + 1];
@@ -10091,6 +10137,7 @@
       renderLevel(measured.items, 0, S.PAD, S.PAD + chainH, '', usePath.slice(0, -1));
 
       const arrowSvg = parts.arrows.map(a => {
+        if (a.points) return expFlowPolyline(a);
         if (a.tb && a.y1 === a.y2) {
           return '<line x1="' + a.x1 + '" y1="' + a.y1 + '" x2="' + (a.x2 - 1) + '" y2="' + a.y2 + '" stroke="' + EXP_ARROW_COLOR +
             '" stroke-width="1.5" marker-end="url(#expArrow)"/>';
@@ -10200,8 +10247,30 @@
       const chain = (opts.parentChain || []).map(p => p.key);
       const poolTitle = chain.concat((procCode ? procCode + ' ' : '') + procName).join(' › ');
 
+      // Place along the flow: one slot per step in CSV order, or with Previous /
+      // Next links the step's flow column, with an extra slot where two steps
+      // of one column fall in the same lane
+      const flow = keys.length > 1 ? flowOf(steps) : null;
+      const slotOf = {};
+      let n = keys.length;
+      if (flow) {
+        let base = 0;
+        for (let c = 0; c < flow.cols; c++) {
+          const used = {};
+          let width = 1;
+          flow.order.filter(k => flow.col.get(k) === c).forEach(k => {
+            const l = laneOfKey[k];
+            used[l] = used[l] || 0;
+            slotOf[k] = base + used[l];
+            used[l]++;
+            width = Math.max(width, used[l]);
+          });
+          base += width;
+        }
+        n = base;
+      } else keys.forEach((k, i) => { slotOf[k] = i; });
+
       // Geometry: "along" runs with the flow, "across" over the lanes
-      const n = keys.length;
       const laneAcross = (TB ? NW : NH) + 2 * M;                  // lane thickness
       const laneAlong  = HEAD + M + n * ((TB ? NH : NW) + GAP) - GAP + M;
       const pool = TB
@@ -10215,14 +10284,25 @@
       keys.forEach((k, i) => {
         const li = laneNames.indexOf(laneOfKey[k]), ln = lanes[li];
         const p = path.concat(k), code = opts.showCodes ? codeOf(p) : '';
-        const x = TB ? ln.x + M : ln.x + HEAD + M + i * (NW + GAP);
-        const y = TB ? ln.y + HEAD + M + i * (NH + GAP) : ln.y + M;
+        const x = TB ? ln.x + M : ln.x + HEAD + M + slotOf[k] * (NW + GAP);
+        const y = TB ? ln.y + HEAD + M + slotOf[k] * (NH + GAP) : ln.y + M;
         shapes.push({ x, y, w: NW, h: NH, name: k, level: stepAbs, lane: li,
           text: code ? code + (opts.codeOwnLine ? '\n' : ' ') + k : k,
           fill: EXP_FILLS[ci], stroke: EXP_STROKES[ci], color: EXP_TEXTS[ci],
           code, desc: steps[k]._desc || '', meta: steps[k]._meta || null });
       });
-      for (let i = 0; i + 1 < shapes.length; i++) {
+      if (flow) {
+        // Route in left-to-right space (top to bottom is mirrored on the diagonal)
+        const sw = TB ? (b => ({ x: b.y, y: b.x, w: b.h, h: b.w })) : (b => b);
+        const boxes = new Map(keys.map((k, i) => [k, sw(shapes[i])]));
+        flowRoutes(flow, boxes, GAP, 14, 0, true).routes.forEach(rt => {
+          const pts = TB ? rt.points.map(([x, y]) => [y, x]) : rt.points;
+          const last = pts[pts.length - 1];
+          arrows.push({ from: keys.indexOf(rt.from), to: keys.indexOf(rt.to), points: pts, back: rt.back, tb: TB, vertical: TB,
+            x1: pts[0][0], y1: pts[0][1], x2: last[0], y2: last[1] });
+        });
+      }
+      for (let i = 0; !flow && i + 1 < shapes.length; i++) {
         const a = shapes[i], b = shapes[i + 1];
         arrows.push(TB
           ? { x1: a.x + NW / 2, y1: a.y + NH, x2: b.x + NW / 2, y2: b.y, from: i, to: i + 1, tb: true, vertical: true }
@@ -10256,6 +10336,7 @@
           '" font-size="' + FONT + '" font-family="' + FF + '">' + escHtml(ln) + '</text>'));
       });
       arrows.forEach(a => {
+        if (a.points) { out.push(expFlowPolyline(a)); return; }
         const end = TB ? [a.x2, a.y2 - 1] : [a.x2 - 1, a.y2];
         let pts;
         if (TB) { const my = (a.y1 + a.y2) / 2; pts = a.x1 === a.x2 ? [[a.x1, a.y1], end] : [[a.x1, a.y1], [a.x1, my], [a.x2, my], end]; }
@@ -10306,10 +10387,12 @@
       ];
       const m = sh.meta;
       if (m) {
+        rows.push(['RowID', 'ID', m.ID]);
         [['Type','Type'],['Frequency','Frequency'],['Time_UoM','Time unit'],['Start','Start'],['End','End'],
          ['R','Responsible'],['A','Accountable'],['S','Support'],['C','Consulted'],['I','Informed'],
          ['BPO','BPO'],['BPE','BPE'],['SME','SME'],
          ['Supplier','Supplier'],['Input','Input'],['Output','Output'],['Customer','Customer'],
+         ['Previous','Previous'],['Next','Next'],
          ['KPI','KPI'],['Goal','Goal'],['Tool','Tool'],['Tool_function','Tool function'],['Tool_desc','Tool description'],
          ['Documentation','Documentation'],['Tool_link','Tool link'],['TestScript_link','Test script link']]
           .forEach(([k, label]) => rows.push([k, label, m[k]]));
@@ -10405,13 +10488,18 @@
         '<Cell N="BegTrigger" V="2" F="_XFTRIGGER(Sheet.' + fromId + '!EventXFMod)"/>' +
         '<Cell N="EndTrigger" V="2" F="_XFTRIGGER(Sheet.' + toId + '!EventXFMod)"/>' +
         '<Cell N="ObjType" V="2"/><Cell N="ShapeRouteStyle" V="' + (a.vertical ? 2 : 1) + '"/>' +
-        '<Cell N="LineColor" V="' + EXP_ARROW_COLOR + '"/><Cell N="LinePattern" V="1"/>' +
+        (a.points ? '<Cell N="ConLineRouteExt" V="1"/>' : '') +
+        '<Cell N="LineColor" V="' + EXP_ARROW_COLOR + '"/><Cell N="LinePattern" V="' + (a.back ? 2 : 1) + '"/>' +
         '<Cell N="LineWeight" V="' + vsdxNum(1.5 / VSDX_DPI) + '" U="PT"/>' +
         '<Cell N="EndArrow" V="4"/><Cell N="EndArrowSize" V="1"/><Cell N="BeginArrow" V="0"/>' +
         '<Cell N="FillPattern" V="0"/>' +
         '<Section N="Geometry" IX="0"><Cell N="NoFill" V="1"/><Cell N="NoLine" V="0"/><Cell N="NoShow" V="0"/><Cell N="NoSnap" V="0"/>' +
         '<Row T="MoveTo" IX="1"><Cell N="X" V="0"/><Cell N="Y" V="0"/></Row>' +
-        '<Row T="LineTo" IX="2"><Cell N="X" V="' + vsdxNum(w) + '" F="Width"/><Cell N="Y" V="' + vsdxNum(h) + '" F="Height"/></Row>' +
+        (a.points
+          // Flow arrow: one line per segment of its route, relative to the begin point
+          ? a.points.slice(1).map((p, k) => '<Row T="LineTo" IX="' + (k + 2) + '"><Cell N="X" V="' + vsdxNum(p[0] / VSDX_DPI - bx) +
+              '"/><Cell N="Y" V="' + vsdxNum((pageH - p[1]) / VSDX_DPI - by) + '"/></Row>').join('')
+          : '<Row T="LineTo" IX="2"><Cell N="X" V="' + vsdxNum(w) + '" F="Width"/><Cell N="Y" V="' + vsdxNum(h) + '" F="Height"/></Row>') +
         '</Section></Shape>';
     }
 
@@ -10584,6 +10672,18 @@
           ';fontSize=' + SVG_LAYOUT.FONT + ';spacing=10;" vertex="1" parent="' + parentOf(sh) + '">' + geo(relGeo(sh)) + '</mxCell></object>');
       });
       (result.arrows || []).forEach((a, i) => {
+        if (a.points) {
+          // Flow arrow: fixed ports and the route's bends as waypoints
+          const ports = a.tb
+            ? 'exitX=0.5;exitY=1;' + (a.back ? 'entryX=0;entryY=0.5;' : 'entryX=0.5;entryY=0;')
+            : 'exitX=1;exitY=0.5;' + (a.back ? 'entryX=0.5;entryY=0;' : 'entryX=0;entryY=0.5;');
+          const way = a.points.slice(1, -1).map(p => '<mxPoint x="' + r1(p[0]) + '" y="' + r1(p[1]) + '"/>').join('');
+          cells.push('<mxCell id="e' + i + '" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;' +
+            ports + (a.back ? 'dashed=1;' : '') + 'strokeColor=' + EXP_ARROW_COLOR + ';strokeWidth=1.5;" edge="1" parent="1" source="s' + a.from +
+            '" target="s' + a.to + '"><mxGeometry relative="1" as="geometry">' + (way ? '<Array as="points">' + way + '</Array>' : '') +
+            '</mxGeometry></mxCell>');
+          return;
+        }
         // Vertical arrow from a block with children goes round the left side
         // Top to bottom: steps flow downwards; a sideways arrow from a block with children goes over the top
         const ports = swim
