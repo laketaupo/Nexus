@@ -9634,7 +9634,7 @@
     function expUpdateActions() {
       const fmt = expFmt(), a = EXP_ACTIONS[fmt], go = $('btnExpGo'), cp = $('btnExpCopy');
       const n = expOut ? expOut.total : 0, blocked = !expOut;
-      go.textContent = n > 1 ? 'Download all ' + n + ' files' : a.dl;
+      go.textContent = n > 1 ? 'Download all ' + n + ' files (.zip)' : a.dl;
       go.disabled = blocked || n === 0;
       cp.hidden = !a.copy || n > 1;
       cp.textContent = a.copy || '';
@@ -10107,7 +10107,8 @@
       const fmt = expFmt();
       if (expOut.total > 1) {
         const ext = expItemExt();
-        await saveFiles(expFileEntries().map((e, i) => ({ name: e.base + ext, make: () => expItemBlob(i) })));
+        await saveFiles(expFileEntries().map((e, i) => ({ name: e.base + ext, make: () => expItemBlob(i) })),
+                        'Nexus export ' + new Date().toISOString().slice(0, 10));
         return;
       }
       if (fmt === 'html') {
@@ -10160,30 +10161,26 @@
       return svgToRasterBlob(svgStr, svgW, svgH, fmt === 'png' ? 'image/png' : 'image/jpeg');
     }
 
-    // Several files: into a folder the user picks (Chromium), else one download each
-    async function saveFiles(files) {
-      let count = 0;
-      if (window.showDirectoryPicker) {
-        let dir;
-        try { dir = await window.showDirectoryPicker({ mode: 'readwrite' }); } catch (_) { return; }
-        showExportToast('Exporting ' + files.length + ' files…');
-        for (const f of files) {
-          const blob = await f.make();
-          if (!blob) continue;
-          const fh = await dir.getFileHandle(f.name, { create: true });
-          const w  = await fh.createWritable();
-          await w.write(blob); await w.close();
-          count++;
-        }
-      } else {
-        for (const f of files) {
-          const blob = await f.make();
-          if (!blob) continue;
-          saveBlob(blob, f.name); count++;
-          await new Promise(r => setTimeout(r, 300));
-        }
+    // Several files: all in one .zip download
+    async function saveFiles(files, zipName) {
+      showExportToast('Exporting ' + files.length + ' files…');
+      const entries = [], used = new Set();
+      for (const f of files) {
+        const blob = await f.make();
+        if (!blob) continue;
+        // Keep names unique inside the zip: "name.ext", "name (2).ext", …
+        let name = f.name, n = 1;
+        const dot = name.lastIndexOf('.');
+        const stem = dot > 0 ? name.slice(0, dot) : name, ext = dot > 0 ? name.slice(dot) : '';
+        while (used.has(name.toLowerCase())) name = stem + ' (' + (++n) + ')' + ext;
+        used.add(name.toLowerCase());
+        entries.push([name, new Uint8Array(await blob.arrayBuffer())]);
       }
-      showExportToast('Exported ' + count + ' file' + (count === 1 ? '' : 's'));
+      if (!entries.length) { showExportToast('Export failed: nothing could be built'); return; }
+      saveBlob(new Blob([zipStore(entries)], { type: 'application/zip' }), sanitizeFileName(zipName || 'Nexus export') + '.zip');
+      const skipped = files.length - entries.length;
+      showExportToast('Exported ' + entries.length + ' file' + (entries.length === 1 ? '' : 's') + ' as .zip' +
+                      (skipped ? ' (' + skipped + ' skipped: too large)' : ''));
     }
 
     // Gantt / Timeline: one format choice (JPEG / PNG / SVG), remembered
