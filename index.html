@@ -407,6 +407,19 @@
     .flow-level.enter-from-right { opacity: 0; transform: translateX(36px); }
     .flow-level.enter-from-left  { opacity: 0; transform: translateX(-36px); }
 
+    /* ── FLOW GRAPH (steps linked with Previous / Next) ────────────────── */
+    .flow-level.flow-graph {
+      display: grid; position: relative; align-items: center; justify-items: center;
+      column-gap: calc(var(--cw) * 2); row-gap: 40px;
+      --fg-cell: var(--nh);
+    }
+    .flow-level.flow-graph.flow-graph-erp { --fg-cell: calc(var(--nh) * 1.82 + 28px); row-gap: 56px; }
+    .flow-cell { display: flex; flex-direction: column; align-items: center; }
+    .flow-graph-arrows { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; z-index: 0; }
+    .flow-graph-arrows .fg-edge { fill: none; stroke: var(--conn); stroke-width: 2; stroke-linejoin: round; }
+    .flow-graph-arrows .fg-edge-back { stroke-dasharray: 6 4; }
+    .flow-cell .node { z-index: 1; }
+
     /* ── SWIM-LANE WRAPPER (business + ERP lanes) ───────────────────────── */
     .flow-lanes {
       display: grid; grid-template-columns: 130px auto; gap: 0;
@@ -3378,8 +3391,10 @@
     // boxes: Map key -> { x, y, w, h }; gap: horizontal space between columns.
     // Returns { routes: [{ from, to, back, points: [[x, y], ...] }], above, below }
     // where above / below is the extra room the loop and bypass tracks need.
-    function flowRoutes(flow, boxes, gap, track) {
+    // clear: extra room kept free above the boxes (icons) before the first loop track.
+    function flowRoutes(flow, boxes, gap, track, clear) {
       track = track || 14;
+      clear = clear || 0;
       const all = Array.from(boxes.values());
       const top = Math.min(...all.map(b => b.y)), bottom = Math.max(...all.map(b => b.y + b.h));
       const cy = b => b.y + b.h / 2;
@@ -3391,7 +3406,7 @@
         const ax = a.x + a.w, ay = cy(a), bx = b.x, by = cy(b);
         let pts;
         if (e.back || bx <= ax) {
-          const ty = top - track * (++nAbove);
+          const ty = top - clear - track * (++nAbove);
           const o = gap / 3;
           pts = [[ax, ay], [ax + o, ay], [ax + o, ty], [bx - o, ty], [bx - o, by], [bx, by]];
         } else if (Math.abs(ay - by) < 0.5 && clearAt(ay, ax, bx)) {
@@ -3411,7 +3426,7 @@
         }
         return { from: e.from, to: e.to, back: !!e.back, points: pts };
       }).filter(Boolean);
-      return { routes, above: nAbove ? nAbove * track + track : 0, below: nBelow ? nBelow * track + track : 0 };
+      return { routes, above: nAbove ? clear + nAbove * track + track : 0, below: nBelow ? nBelow * track + track : 0 };
     }
 
     // Problems with ID / Previous / Next in the data, for the import preview
@@ -3678,6 +3693,22 @@
       const keys  = Object.keys(nodes);
       const isL5  = (levelOffset + currentPath.length) === 4 && erpLaneVisible; // viewing L4 nodes (drilled into L3)
 
+      // ── Steps with Previous / Next links: drawn as a flow graph ──
+      const flow = keys.length > 1 ? flowOf(nodes) : null;
+      if (flow) {
+        const graphEl = buildFlowGraph(nodes, flow, isL5);
+        clearInfoPanel();
+        lastFocusedIdx = 0;
+        selectedKey = '';
+        flowContainer.classList.toggle('system-lane-on', isL5);
+        animateTransition(graphEl, direction);
+        updateNav();
+        updateLevelInfo(keys.length);
+        requestAnimationFrame(applyRoleHighlights);
+        requestAnimationFrame(applyToolHighlights);
+        return;
+      }
+
       // ── Business process lane ──
       const newLevel = document.createElement('div');
       newLevel.className = 'flow-level';
@@ -3786,85 +3817,7 @@
           erpLane.className = 'flow-level';
 
           keys.forEach((key, i) => {
-            const meta = nodes[key]._meta || {};
-            const toolVal = String(meta.Tool || '').trim();
-            const toolIsNA = toolVal.toLowerCase() === 'n/a';
-            const erpStep = !toolIsNA && meta.Tool_function ? String(meta.Tool_function).trim() : '';
-
-            const erpEl = document.createElement('div');
-            const isSysCalcErpType = String(meta.Type || '').trim().toLowerCase();
-            const isSysCalcErp = isSysCalcErpType === 'system' || isSysCalcErpType === 'system activity';
-            erpEl.className = 'erp-node' + (erpStep ? '' : ' erp-empty') + (isSysCalcErp ? ' erp-syscalc' : '');
-            erpEl.setAttribute('data-key', key);
-            erpEl.setAttribute('data-erp', '1');
-            erpEl.setAttribute('tabindex', '-1');
-
-            if (erpStep) {
-              const nameDiv = document.createElement('div');
-              nameDiv.className = 'erp-node-name';
-              nameDiv.textContent = erpStep;
-              erpEl.appendChild(nameDiv);
-
-              const toolLink = parseErpLink(meta.Tool_link);
-              const testLink = parseErpLink(meta.TestScript_link);
-
-              if (toolLink || testLink) {
-                const linksDiv = document.createElement('div');
-                linksDiv.className = 'erp-node-links';
-
-                if (toolLink) {
-                  const a = document.createElement('a');
-                  a.className = 'erp-node-link-btn';
-                  a.href = toolLink.url;
-                  a.title = toolLink.label;
-                  a.target = '_blank';
-                  a.rel = 'noopener noreferrer';
-                  // External link / tool icon
-                  a.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3H3a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V9"/><path d="M10 2h4v4"/><line x1="14" y1="2" x2="7" y2="9"/></svg>';
-                  a.addEventListener('click', e => e.stopPropagation());
-                  linksDiv.appendChild(a);
-                }
-
-                if (testLink) {
-                  const a = document.createElement('a');
-                  a.className = 'erp-node-link-btn erp-node-link-btn-text';
-                  a.href = testLink.url;
-                  a.title = testLink.label;
-                  a.target = '_blank';
-                  a.rel = 'noopener noreferrer';
-                  // Test script label
-                  a.innerHTML = 'TS';
-                  a.addEventListener('click', e => e.stopPropagation());
-                  linksDiv.appendChild(a);
-                }
-
-                erpEl.appendChild(linksDiv);
-              }
-
-              erpEl.addEventListener('click', () => {
-                // Toggle selection and show ERP detail in info panel
-                const wasSelected = erpEl.classList.contains('erp-selected');
-                erpLane.querySelectorAll('.erp-node').forEach(n => n.classList.remove('erp-selected'));
-                // Clear business node selection
-                selectedKey = '';
-                flowContainer.querySelectorAll('.node').forEach(n => n.classList.remove('node-selected'));
-                if (!wasSelected) {
-                  erpEl.classList.add('erp-selected');
-                  updateErpPanel(key, meta);
-                } else {
-                  clearInfoPanel();
-                }
-              });
-
-              erpEl.addEventListener('focus', () => {
-                erpLane.querySelectorAll('.erp-node').forEach(n => n.classList.remove('erp-selected'));
-                selectedKey = '';
-                flowContainer.querySelectorAll('.node').forEach(n => n.classList.remove('node-selected'));
-                erpEl.classList.add('erp-selected');
-                updateErpPanel(key, meta);
-              });
-            }
-
+            const erpEl = buildErpEl(key, nodes[key]);
             erpLane.appendChild(erpEl);
             if (i < keys.length - 1) {
               const conn = document.createElement('div');
@@ -3889,6 +3842,165 @@
       // Apply lookup highlights after each render
       requestAnimationFrame(applyRoleHighlights);
       requestAnimationFrame(applyToolHighlights);
+    }
+
+    // ── FLOW GRAPH (app view for steps with Previous / Next links) ─────────
+    // Columns follow the flow, parallel steps sit under each other on a grid
+    // of half rows, and the arrows are an SVG drawn over the grid from the
+    // real box positions, so they follow zoom and resizing.
+    let _fgSeq = 0;
+    function buildFlowGraph(nodes, flow, withErpLane) {
+      const hasErp = withErpLane && flow.keys.some(k => {
+        const m = nodes[k]._meta;
+        return m && m.Tool_function && String(m.Tool_function).trim();
+      });
+      const el = document.createElement('div');
+      el.className = 'flow-level flow-graph' + (hasErp ? ' flow-graph-erp' : '');
+      el.style.gridTemplateColumns = 'repeat(' + flow.cols + ', var(--nw))';
+      el.style.gridTemplateRows = 'repeat(' + Math.round(flow.rows * 2) + ', calc(var(--fg-cell) / 2))';
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'flow-graph-arrows');
+      svg.setAttribute('aria-hidden', 'true');
+      el.appendChild(svg);
+      flow.order.forEach((key, i) => {
+        const cell = document.createElement('div');
+        cell.className = 'flow-cell';
+        cell.style.gridColumn = String(flow.col.get(key) + 1);
+        cell.style.gridRow = (Math.round(flow.y.get(key) * 2) + 1) + ' / span 2';
+        cell.appendChild(buildNodeEl(key, nodes[key], i, currentPath.length, flow.order));
+        if (hasErp) {
+          const m = nodes[key]._meta || {};
+          const vert = document.createElement('div');
+          vert.className = 'lane-vert';
+          if (m.Tool_function && String(m.Tool_function).trim() && String(m.Tool || '').trim().toLowerCase() !== 'n/a') {
+            const line = document.createElement('div');
+            line.className = 'lane-vert-line';
+            vert.appendChild(line);
+          }
+          cell.appendChild(vert);
+          cell.appendChild(buildErpEl(key, nodes[key]));
+        }
+        el.appendChild(cell);
+      });
+      const markerId = 'fgArrow' + (++_fgSeq);
+      const draw = () => drawFlowGraphArrows(el, svg, flow, markerId);
+      if (window.ResizeObserver) new ResizeObserver(draw).observe(el);
+      requestAnimationFrame(draw);
+      return el;
+    }
+
+    function drawFlowGraphArrows(el, svg, flow, markerId) {
+      if (!el.isConnected) return;
+      const measure = () => {
+        const boxes = new Map();
+        el.querySelectorAll('.flow-cell > .node').forEach(n => {
+          boxes.set(n.getAttribute('data-key'), { x: n.offsetLeft, y: n.offsetTop, w: n.offsetWidth, h: n.offsetHeight });
+        });
+        const gap = parseFloat(getComputedStyle(el).columnGap) || 80;
+        return flowRoutes(flow, boxes, gap, 14, 34);
+      };
+      let r = measure();
+      // Room for the loop tracks above and the bypass tracks below the steps
+      const pt = (r.above + 8) + 'px', pb = (r.below + 8) + 'px';
+      if (el.style.paddingTop !== pt || el.style.paddingBottom !== pb) {
+        el.style.paddingTop = pt;
+        el.style.paddingBottom = pb;
+        r = measure();
+      }
+      const w = el.scrollWidth, h = el.scrollHeight;
+      svg.setAttribute('width', w);
+      svg.setAttribute('height', h);
+      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+      svg.innerHTML =
+        '<defs><marker id="' + markerId + '" viewBox="0 0 7 8" refX="7" refY="4" markerWidth="7" markerHeight="8"' +
+        ' markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L7,4 L0,8 z" style="fill:var(--conn)"/></marker></defs>' +
+        r.routes.map(rt =>
+          '<polyline class="fg-edge' + (rt.back ? ' fg-edge-back' : '') + '" data-from="' + escHtml(rt.from) + '" data-to="' + escHtml(rt.to) +
+          '" points="' + rt.points.map(p => p[0] + ',' + p[1]).join(' ') + '" marker-end="url(#' + markerId + ')"/>'
+        ).join('');
+    }
+
+    // System-lane box for one step (Tool_function), or an invisible placeholder
+    function buildErpEl(key, nodeObj) {
+      const meta = nodeObj._meta || {};
+      const toolVal = String(meta.Tool || '').trim();
+      const toolIsNA = toolVal.toLowerCase() === 'n/a';
+      const erpStep = !toolIsNA && meta.Tool_function ? String(meta.Tool_function).trim() : '';
+
+      const erpEl = document.createElement('div');
+      const isSysCalcErpType = String(meta.Type || '').trim().toLowerCase();
+      const isSysCalcErp = isSysCalcErpType === 'system' || isSysCalcErpType === 'system activity';
+      erpEl.className = 'erp-node' + (erpStep ? '' : ' erp-empty') + (isSysCalcErp ? ' erp-syscalc' : '');
+      erpEl.setAttribute('data-key', key);
+      erpEl.setAttribute('data-erp', '1');
+      erpEl.setAttribute('tabindex', '-1');
+
+      if (erpStep) {
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'erp-node-name';
+        nameDiv.textContent = erpStep;
+        erpEl.appendChild(nameDiv);
+
+        const toolLink = parseErpLink(meta.Tool_link);
+        const testLink = parseErpLink(meta.TestScript_link);
+
+        if (toolLink || testLink) {
+          const linksDiv = document.createElement('div');
+          linksDiv.className = 'erp-node-links';
+
+          if (toolLink) {
+            const a = document.createElement('a');
+            a.className = 'erp-node-link-btn';
+            a.href = toolLink.url;
+            a.title = toolLink.label;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            // External link / tool icon
+            a.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3H3a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V9"/><path d="M10 2h4v4"/><line x1="14" y1="2" x2="7" y2="9"/></svg>';
+            a.addEventListener('click', e => e.stopPropagation());
+            linksDiv.appendChild(a);
+          }
+
+          if (testLink) {
+            const a = document.createElement('a');
+            a.className = 'erp-node-link-btn erp-node-link-btn-text';
+            a.href = testLink.url;
+            a.title = testLink.label;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            // Test script label
+            a.innerHTML = 'TS';
+            a.addEventListener('click', e => e.stopPropagation());
+            linksDiv.appendChild(a);
+          }
+
+          erpEl.appendChild(linksDiv);
+        }
+
+        erpEl.addEventListener('click', () => {
+          // Toggle selection and show ERP detail in info panel
+          const wasSelected = erpEl.classList.contains('erp-selected');
+          flowContainer.querySelectorAll('.erp-node').forEach(n => n.classList.remove('erp-selected'));
+          // Clear business node selection
+          selectedKey = '';
+          flowContainer.querySelectorAll('.node').forEach(n => n.classList.remove('node-selected'));
+          if (!wasSelected) {
+            erpEl.classList.add('erp-selected');
+            updateErpPanel(key, meta);
+          } else {
+            clearInfoPanel();
+          }
+        });
+
+        erpEl.addEventListener('focus', () => {
+          flowContainer.querySelectorAll('.erp-node').forEach(n => n.classList.remove('erp-selected'));
+          selectedKey = '';
+          flowContainer.querySelectorAll('.node').forEach(n => n.classList.remove('node-selected'));
+          erpEl.classList.add('erp-selected');
+          updateErpPanel(key, meta);
+        });
+      }
+      return erpEl;
     }
 
     function buildNodeEl(key, nodeObj, index, level, siblings) {
