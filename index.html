@@ -3288,8 +3288,10 @@
         if (id && !byId.has(id.toLowerCase())) byId.set(id.toLowerCase(), k);
       });
       const edges = [], seen = new Set();
+      // Virtual export nodes (_path) can mix parents: only link steps of one parent
+      const parentOf = k => children[k] && children[k]._path ? children[k]._path.slice(0, -1).join('\u0001') : '';
       const add = (a, b) => {
-        if (!a || !b || a === b) return;
+        if (!a || !b || a === b || parentOf(a) !== parentOf(b)) return;
         const sig = a + '\u0000' + b;
         if (seen.has(sig)) return;
         seen.add(sig);
@@ -8746,7 +8748,7 @@
     // processes, and their real steps below down to `deepest`.
     function expVirtualTree(paths) {
       const keep = expParentLvls(), start = expStart(), deepest = expDeepest();
-      const wrap = (n, p) => ({ _children: n._children, _meta: n._meta, _desc: n._desc, _code: n._code, _path: p, _name: p[p.length - 1] });
+      const wrap = (n, p) => ({ _children: n._children, _meta: n._meta, _desc: n._desc, _code: n._code, _rowId: n._rowId, _path: p, _name: p[p.length - 1] });
       const root = {};
       paths.forEach(p => {
         let nodes = root;
@@ -10128,8 +10130,9 @@
           }
         });
 
-        // Steps linked with Previous / Next: arrows along the links
-        if (items.flow && arrowLevels.has(absLevelBase)) {
+        // Steps linked with Previous / Next: arrows along the links, always
+        // (the links are what shows the parallel steps, branches and loops)
+        if (items.flow) {
           const boxes = new Map(items.map((it, i) => [it.key, { x: placed[i].x, y: placed[i].y, w: placed[i].w, h: S.NH }]));
           const shapeOf = new Map(items.map((it, i) => [it.key, placed[i].shapeIdx]));
           flowRoutes(items.flow, boxes, items.flowGap, 14, 0, true).routes.forEach(rt => {
