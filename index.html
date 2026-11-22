@@ -8595,7 +8595,7 @@
       if (o.id) card.id = o.id;
       document.body.appendChild(card);
       var on = null, pend = null, timer = 0, held = false, touch = false, keyboard = false;
-      var delay = o.delay == null ? 400 : o.delay;
+      var delay = o.delay == null ? 1000 : o.delay;
       function inside(box, n) { return !!(n && box && box.contains(n)); }
       function place(el) {
         var r = el.getBoundingClientRect(), m = 8, w = card.offsetWidth, h = card.offsetHeight,
@@ -10104,7 +10104,7 @@
       style.textContent = hoverCardCss(true);
       document.head.appendChild(style);
       hoverKit = hoverCardKit({
-        root: flowContainer, id: 'pfHoverCard', delay: 400,
+        root: flowContainer, id: 'pfHoverCard', delay: 1000,
         tap: simpleView ? 'open' : 'none', clickShows: simpleView,
         find: t => (t && t.closest) ? t.closest('.node, .erp-node:not(.erp-empty)') : null,
         opens: el => el.classList.contains('has-children'),
