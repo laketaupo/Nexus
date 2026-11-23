@@ -2946,7 +2946,7 @@
               </div>
               <div class="exp-section" id="expFilesBox">
                 <div class="exp-sublabel">Files</div>
-                <div class="exp-seg" data-key="files" title="One file with everything, a file per process, a file per parent with its processes, or (draw.io) one file with a tab per process"><button type="button" data-v="one">All in one file</button><button type="button" data-v="each">One file per process</button><button type="button" data-v="parent" id="expFilesParent">One file per parent</button><button type="button" data-v="tabs" id="expFilesTabs" title="draw.io: one file with several tabs, built from your tab rules">All tabs in one file</button></div>
+                <div class="exp-seg" data-key="files" title="One file with everything, a file per process, a file per parent with its processes, or (draw.io, HTML) one file with a tab per process"><button type="button" data-v="one">All in one file</button><button type="button" data-v="each">One file per process</button><button type="button" data-v="parent" id="expFilesParent">One file per parent</button><button type="button" data-v="tabs" id="expFilesTabs" title="draw.io and HTML: one file with several tabs, built from your tab rules">All tabs in one file</button></div>
                 <div class="exp-hint" id="expFilesHint"></div>
                 <div class="exp-tabs" id="expTabsBox" hidden>
                   <div class="exp-sub-head">
@@ -8816,8 +8816,9 @@
     // Swimlanes: SVG, PNG, HTML and draw.io (not Visio, not the dashboard)
     const EXP_SWIM_FORMATS = ['svg', 'png', 'html', 'drawio'];
     const expSwimOn = () => expSettings.layout === 'swimlane' && expType() !== 'dashboard' && EXP_SWIM_FORMATS.includes(expFmt());
-    // draw.io only: all tabs in one file (an overview tab and a tab per process)
-    const expTabsOn = () => expSettings.files === 'tabs' && expType() === 'flowchart' && expFmt() === 'drawio';
+    // draw.io and HTML: all tabs in one file (built from the tab rules)
+    const expTabsCan = () => (expType() === 'flowchart' && expFmt() === 'drawio') || (expType() === 'code' && expFmt() === 'html');
+    const expTabsOn = () => expSettings.files === 'tabs' && expTabsCan();
     // The Files choice in effect ('tabs' falls back to one file for other formats)
     const expFilesMode = () => expSettings.files === 'tabs' && !expTabsOn() ? 'one' : expSettings.files;
 
@@ -9383,6 +9384,94 @@
         '})();\n</' + 'script>\n</body>\n</html>\n';
     }
 
+    // All tabs in one HTML file: a tab bar on top and a diagram per tab, in
+    // the order of the tab rules. Hovering (or tapping) a process shows its
+    // card. With navigation on, a block with its own tab opens it (small
+    // arrow in its corner) and a tab opened that way gets a ↑ Back button;
+    // the browser's Back button works too. `start`: the tab shown first.
+    function expHtmlTabsDoc(title, start) {
+      const { items, linkOf, backOf } = expTabLinks();
+      if (!items.length) return null;
+      const at = new Map(items.map((it, i) => [it.spec.id, i]));
+      const frs = items.map(it => expFramed(it.result));
+      const sizes = frs.map(fr => expCodeSize(expCodeRatio(fr)));
+      const fixed = sizes[0].fixed;
+      const T = items.map((it, i) => {
+        const back = backOf(it.spec);
+        return {
+          id: it.spec.id, n: it.title, b: back ? at.get(back.id) : -1,
+          d: frs[i].shapes.map(sh => {
+            const to = linkOf(i, sh);
+            return { t: sh.name || sh.text, f: hoverCardRows(sh), g: to ? at.get(to.id) : -1 };
+          }),
+        };
+      });
+      const sections = items.map((it, i) => {
+        const fr = frs[i], sz = sizes[i];
+        // Small arrow in the top right corner of a block that opens a tab
+        const arrows = fr.shapes.map((sh, k) => T[i].d[k].g < 0 ? '' :
+          '<text x="' + Math.round(sh.x + sh.w - 12) + '" y="' + Math.round(sh.y + 13) + '" class="go" fill="' + sh.stroke +
+          '" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="central">↗</text>').join('');
+        const svg = expSvgMarkup(fr, 1, '#ffffff', ' preserveAspectRatio="xMidYMid meet" role="img" aria-label="' + escHtml(it.title) + '"')
+          .replace('<g id="d"', '<g class="d"').replace(/<\/svg>\s*$/, arrows + '</svg>');
+        return '<section class="tab" id="' + escHtml(it.spec.id) + '" role="tabpanel" aria-label="' + escHtml(it.title) + '" hidden>' +
+          '<div class="frame"' + (fixed ? ' style="width:' + sz.w + 'px;height:' + sz.h + 'px"' : '') + '>\n' + svg + '</div></section>\n';
+      }).join('');
+      const tabs = items.map((it, i) => '<button type="button" role="tab" data-i="' + i + '">' + escHtml(it.title) + '</button>').join('');
+      const html = '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n' +
+        '<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
+        '<title>' + escHtml(title) + '</title>\n<style>\n' +
+        'html,body{margin:0;height:100%;background:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}\n' +
+        'body{display:flex;flex-direction:column}\n' +
+        '.bar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #e2e8e0;background:#f7f9f6;flex:none}\n' +
+        '.tabs{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:thin}\n' +
+        '.tabs button,.back{font:inherit;font-size:13px;white-space:nowrap;border:1px solid transparent;border-radius:7px;padding:5px 11px;background:none;color:#475569;cursor:pointer}\n' +
+        '.tabs button:hover{background:#eef2ec}\n' +
+        '.tabs button[aria-selected="true"]{background:#fff;border-color:#cbd5e1;color:#1c3620;font-weight:600}\n' +
+        '.back{border-color:#cbd5e1;background:#fff;flex:none}\n.back:hover{background:#eef2ec}\n' +
+        'main{flex:1;min-height:0;overflow:auto}\n' +
+        (fixed ? '.frame{margin:0 auto}\n' : '.tab{height:100%}\n.frame{width:100%;height:100%}\n') +
+        '.frame svg{display:block;width:100%;height:100%}\n' +
+        '.d rect:not(.sl){cursor:pointer;transition:filter .12s}\n.d rect:not(.sl):hover,.d rect.hc-on{filter:brightness(.93)}\n' +
+        '.d text,text.go{pointer-events:none}\n' +
+        hoverCardCss(false) +
+        '</style>\n</head>\n<body>\n' +
+        '<header class="bar"><button type="button" class="back" id="back" hidden>↑ Back</button>' +
+        '<nav class="tabs" role="tablist" aria-label="Tabs">' + tabs + '</nav></header>\n<main>\n' + sections + '</main>\n' +
+        '<script>\n(function () {\n' +
+        '  var T = ' + expJsonForScript(T) + ';\n' +
+        '  var START = ' + (Math.max(0, Math.min(items.length - 1, start || 0))) + ';\n' +
+        '  var secs = document.querySelectorAll("section.tab"), btns = document.querySelectorAll(".tabs button"), back = document.getElementById("back"), cur = -1;\n' +
+        '  Array.prototype.forEach.call(secs, function (s, ti) {\n' +
+        '    Array.prototype.forEach.call(s.querySelectorAll(".d rect:not(.sl)"), function (r, ri) { r.setAttribute("data-t", ti); r.setAttribute("data-r", ri); });\n' +
+        '  });\n' +
+        '  function show(i, push) {\n' +
+        '    if (i < 0 || i >= T.length) return;\n' +
+        '    cur = i;\n' +
+        '    Array.prototype.forEach.call(secs, function (s, k) { s.hidden = k !== i; });\n' +
+        '    Array.prototype.forEach.call(btns, function (b, k) { b.setAttribute("aria-selected", k === i ? "true" : "false"); if (k === i && b.scrollIntoView) b.scrollIntoView({ block: "nearest", inline: "nearest" }); });\n' +
+        '    var b = T[i].b; back.hidden = b < 0; back.title = b < 0 ? "" : "Back to " + T[b].n;\n' +
+        '    document.querySelector("main").scrollTop = 0;\n' +
+        '    if (push) { try { history.pushState({ t: i }, "", "#" + T[i].id); } catch (e) {} }\n' +
+        '  }\n' +
+        '  function fromHash() { var h = decodeURIComponent(location.hash.slice(1)); for (var i = 0; i < T.length; i++) if (T[i].id === h) return i; return -1; }\n' +
+        '  window.addEventListener("popstate", function (e) { var i = e.state && typeof e.state.t === "number" ? e.state.t : fromHash(); show(i < 0 ? START : i); });\n' +
+        '  Array.prototype.forEach.call(btns, function (b, k) { b.addEventListener("click", function () { if (k !== cur) show(k, true); }); });\n' +
+        '  back.addEventListener("click", function () { if (cur >= 0 && T[cur].b >= 0) show(T[cur].b, true); });\n' +
+        '  function node(r) { var t = T[+r.getAttribute("data-t")]; return t && t.d[+r.getAttribute("data-r")]; }\n' +
+        '  function find(t) { var r = t && t.closest ? t.closest(".d rect:not(.sl)") : null; return r && node(r) ? r : null; }\n' +
+        '  ' + hoverCardFill.toString() + '\n' +
+        '  ' + hoverCardKit.toString() + '\n' +
+        '  hoverCardKit({ root: document, tap: "open", clickShows: true, find: find,\n' +
+        '    data: function (r, touch) { var n = node(r); return { t: n.t, f: n.f, hint: n.g < 0 ? "" : (touch ? "Tap again to open " : "Click to open ") + T[n.g].n }; },\n' +
+        '    opens: function (r) { return node(r).g >= 0; },\n' +
+        '    open: function (r) { show(node(r).g, true); } });\n' +
+        '  document.addEventListener("click", function (e) { var r = find(e.target); if (r && node(r).g >= 0) show(node(r).g, true); });\n' +
+        '  var h = fromHash(); show(h < 0 ? START : h);\n' +
+        '})();\n</' + 'script>\n</body>\n</html>\n';
+      return { html, frs, sizes };
+    }
+
     // The whole Nexus page with the data built in (as "Save" does)
     // opts.simple: the simplified view (only the process, details in a large hover card)
     function buildStandaloneHtml(opts) {
@@ -9454,6 +9543,16 @@
         // One file with several tabs: the preview shows the chosen tab
         const it = items[0];
         const base = expSpecName({ paths: expChecked() }, expCodeOfNow()).base;
+        if (t === 'code') {
+          // The whole page; the preview opens on the chosen tab, the file on the first
+          const doc = expHtmlTabsDoc(base, 0), at = Math.min(expPvIndex, doc.frs.length - 1);
+          const pvHtml = doc.html.replace('  var START = 0;\n', '  var START = ' + at + ';\n');
+          const fr = doc.frs[at], size = Object.assign({}, doc.sizes[at]);
+          const BAR = 46;
+          if (size.fixed) size.view = { w: size.w, h: size.h + BAR };
+          else size.view = { w: 960, h: Math.round(960 / size.ratio) + BAR };
+          return { kind: 'html', total: 1, tabs: total, html: pvHtml, size, fr, base: base + ' (tabs)', title: base, text: doc.html, file: doc.html };
+        }
         return { kind: t, total: 1, tabs: total, fr: expFramed(it.result), base: base + ' (tabs)', title: it.title };
       }
       if (!items.length) return { empty: expSwimOn() ? 'The ticked processes have no steps to put in lanes' : 'Nothing to export' };
@@ -9616,7 +9715,7 @@
         const kb = Math.round(out.html.length / 1024);
         const sizeTxt = out.size.fixed ? out.size.w + ' × ' + out.size.h + ' px' : '100% width';
         meta.classList.remove('is-warn');
-        meta.textContent = 'HTML · ' + sizeTxt + (out.fr && out.fr.sameSize ? ' · same size for all files' : '') + (out.total > 1 ? ' · file ' + (expPvIndex + 1) + ' of ' + out.total + ', ' : ' · one file, ') + kb + ' KB' +
+        meta.textContent = 'HTML · ' + sizeTxt + (out.fr && out.fr.sameSize ? ' · same size for all files' : '') + (out.tabs ? ' · tab ' + (expPvIndex + 1) + ' of ' + out.tabs + ' in one file, ' : out.total > 1 ? ' · file ' + (expPvIndex + 1) + ' of ' + out.total + ', ' : ' · one file, ') + kb + ' KB' +
           (expType() === 'dashboard' && expSettings.dashView !== 'simple' ? '' : ' · hover a process for its details');
         const MAX = 20000;
         box.value = out.text.length > MAX
@@ -9749,7 +9848,7 @@
       }
     }
 
-    // ── Tab rules (draw.io, all tabs in one file) ──
+    // ── Tab rules (draw.io and HTML, all tabs in one file) ──
     function expBuildTabRules() {
       const box = $('expTabRules'), rules = expSettings.tabRules;
       const specs = expDiagramSpecs();
@@ -9838,17 +9937,17 @@
 
     function expBuildFilesBox() {
       const n = expChecked().length, swim = expSwimOn();
-      const drawio = expType() === 'flowchart' && expFmt() === 'drawio', tabs = expTabsOn();
-      $('expFilesBox').hidden = n <= 1 && !drawio;
+      const canTabs = expTabsCan(), tabs = expTabsOn();
+      $('expFilesBox').hidden = n <= 1 && !canTabs;
       const seg = $('expFilesBox').querySelector('.exp-seg');
       seg.querySelectorAll('button').forEach(b => { b.disabled = swim && b.dataset.v !== 'tabs'; });
       $('expFilesParent').hidden = expStart() === 1;
-      $('expFilesTabs').hidden = !drawio;
+      $('expFilesTabs').hidden = !canTabs;
       $('expTabsBox').hidden = !tabs;
       if (tabs) expBuildTabRules();
       const files = expSpecCount();
       $('expFilesHint').textContent = tabs
-        ? files + ' tab' + (files === 1 ? '' : 's') + ' in one .drawio file, in the order of the rules below. Only ticked processes get tabs.'
+        ? files + ' tab' + (files === 1 ? '' : 's') + ' in one ' + (expFmt() === 'html' ? 'HTML' : '.drawio') + ' file, in the order of the rules below. Only ticked processes get tabs.'
         : swim
         ? 'Swimlanes always give one file per process' + (files ? ' (' + files + ' files).' : '.')
         : expFilesMode() === 'parent' && expStart() > 1
@@ -10086,7 +10185,7 @@
         } catch (_) { ok = false; }
       } else if (fmt === 'svg')    { ok = await expCopyText(expSvgFile(expOut.fr)); what = 'SVG'; }
       else if (fmt === 'drawio')   { ok = await expCopyText(expTabsOn() ? expDrawioTabsXml() : buildDrawioXml(expOut.fr, expOut.title)); what = 'draw.io XML'; }
-      else if (fmt === 'html')     { ok = await expCopyText(expOut.html); what = 'HTML'; }
+      else if (fmt === 'html')     { ok = await expCopyText(expOut.file || expOut.html); what = 'HTML'; }
       showExportToast(ok ? what + ' copied' : 'Copy failed: use Download instead');
       if (ok) {
         const cp = $('btnExpCopy'), label = cp.textContent;
@@ -10114,7 +10213,7 @@
         return;
       }
       if (fmt === 'html') {
-        saveBlob(new Blob([expOut.html], { type: 'text/html' }), sanitizeFileName(expOut.base) + '.html');
+        saveBlob(new Blob([expOut.file || expOut.html], { type: 'text/html' }), sanitizeFileName(expOut.base) + '.html');
         showExportToast('Exported HTML');
         return;
       }
@@ -11103,11 +11202,13 @@
         '<root>\n<mxCell id="0"/>\n<mxCell id="1" parent="0"/>\n' + cells.join('\n') + '\n</root>\n' +
         '</mxGraphModel>\n</diagram>\n';
     }
-    // All tabs in one file: every tab of expTabSpecs as a page. With
-    // navigation on, a block opens the next deeper tab of that process (the
-    // one that shows the most levels below it, the shallowest of those
-    // first), and each tab gets a back button to the first tab that opens it.
-    function expDrawioTabsXml() {
+    // All tabs in one file (draw.io and HTML): the tabs as laid out, with,
+    // when navigation is on, the tab each block opens and the tab each tab's
+    // back button returns to. A block opens the next deeper tab of that
+    // process (the one that shows the most levels below it, the shallowest of
+    // those first); a tab's back button goes to the first tab that opens it.
+    // Returns { items, linkOf(i, shape) -> spec|null, backOf(spec) -> spec|null }.
+    function expTabLinks() {
       const { items } = expBuildItems();
       const nav = !!expSettings.tabNav;
       const byPath = new Map();
@@ -11134,11 +11235,20 @@
         });
         return m;
       });
+      return {
+        items, nav,
+        linkOf: (i, sh) => nav && sh.path ? linkMaps[i].get(expKey(sh.path)) || null : null,
+        backOf: sp => backOf.get(sp.id) || null,
+      };
+    }
+    // All tabs in one .drawio file: every tab as a page
+    function expDrawioTabsXml() {
+      const { items, nav, linkOf, backOf } = expTabLinks();
       const pages = items.map((it, i) => {
-        const sp = it.spec, back = backOf.get(sp.id);
+        const sp = it.spec, back = backOf(sp);
         return buildDrawioDiagram(expFramed(it.result), it.title, {
           id: sp.id,
-          linkOf: nav ? sh => (sh.path && linkMaps[i].get(expKey(sh.path))) || null : null,
+          linkOf: nav ? sh => linkOf(i, sh) : null,
           back: back ? { id: back.id, name: back.name } : null,
         });
       });
