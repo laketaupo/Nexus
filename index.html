@@ -2292,6 +2292,126 @@
       overflow: hidden;
     }
 
+    /* ── MY ROLE SCREEN ─────────────────────────────────────────────────── */
+    #myroleScreen {
+      position: fixed; top: 56px; left: 0; right: 0; bottom: 0;
+      background: var(--bg); z-index: 95;
+      display: flex; flex-direction: column;
+      --mr-R: #2f7fd6; --mr-A: #c2410c; --mr-S: #15803d; --mr-C: #a16207; --mr-I: #6b7280;
+    }
+    #myroleScreen.hidden { display: none; }
+    .mr-toolbar-spacer { flex: 1; }
+    .mr-role-select {
+      background: var(--surf); border: 1px solid var(--bdr); border-radius: 6px;
+      color: var(--txt); font-size: .78rem; padding: .3rem .55rem; max-width: 260px; cursor: pointer;
+    }
+    .mr-role-select:focus { outline: 2px solid var(--acc-30); border-color: var(--acc); }
+    .mr-seg { display: inline-flex; border: 1px solid var(--bdr); border-radius: 6px; overflow: hidden; }
+    .mr-seg button {
+      background: var(--surf); border: 0; color: var(--txt3); font-size: .74rem;
+      padding: .3rem .7rem; cursor: pointer; white-space: nowrap;
+    }
+    .mr-seg button + button { border-left: 1px solid var(--bdr); }
+    .mr-seg button.active { background: var(--acc-15); color: var(--acc-t); font-weight: 600; }
+    .mr-seg button:hover:not(.active) { background: var(--acc-10); color: var(--txt); }
+    #mrScroll { flex: 1; overflow: auto; }
+    .mr-wrap { max-width: 980px; margin: 0 auto; padding: 1.4rem 1.25rem 3rem; }
+    /* Hero: role name, step count and the letter chips (which double as a filter) */
+    .mr-hero {
+      display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+      padding-bottom: 1rem; margin-bottom: .9rem; border-bottom: 1px solid var(--bdr-s);
+    }
+    .mr-hero-kicker { font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--txt4); font-weight: 600; }
+    .mr-hero-name { font-size: 1.45rem; font-weight: 700; color: var(--txt); line-height: 1.2; margin-top: .15rem; }
+    .mr-hero-sub { font-size: .8rem; color: var(--txt3); margin-top: .25rem; }
+    .mr-chips { display: flex; gap: .4rem; flex-wrap: wrap; }
+    .mr-chip {
+      display: inline-flex; align-items: center; gap: .45rem;
+      background: var(--surf); border: 1px solid var(--bdr); border-radius: 999px;
+      padding: .22rem .7rem .22rem .25rem; font-size: .74rem; color: var(--txt2); cursor: pointer;
+      transition: border-color .15s, background .15s, opacity .15s;
+    }
+    .mr-chip:hover { border-color: var(--acc); }
+    .mr-chip .mr-chip-n { font-weight: 700; color: var(--txt); font-variant-numeric: tabular-nums; }
+    .mr-chip.zero { opacity: .45; }
+    .mr-chips.filtering .mr-chip:not(.on) { opacity: .4; }
+    .mr-chip.on { border-color: var(--acc); background: var(--acc-10); opacity: 1; }
+    .mr-chip-clear { font-size: .72rem; color: var(--acc-t); background: none; border: 0; cursor: pointer; padding: .2rem .3rem; }
+    .mr-chip-clear:hover { text-decoration: underline; }
+    /* Round RASCI letter badges */
+    .mr-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+      font-size: .68rem; font-weight: 700; color: #fff; letter-spacing: 0;
+    }
+    .mr-badge[data-l="R"] { background: var(--mr-R); }
+    .mr-badge[data-l="A"] { background: var(--mr-A); }
+    .mr-badge[data-l="S"] { background: var(--mr-S); }
+    .mr-badge[data-l="C"] { background: var(--mr-C); }
+    .mr-badge[data-l="I"] { background: var(--mr-I); }
+    /* Tree */
+    .mr-tree, .mr-tree ul { list-style: none; margin: 0; padding: 0; }
+    .mr-tree ul { margin-left: .85rem; padding-left: .95rem; border-left: 1px solid var(--bdr-s); }
+    .mr-tree li { margin: 0; }
+    .mr-row {
+      display: flex; align-items: center; gap: .55rem; width: 100%;
+      background: none; border: 0; text-align: left; color: var(--txt);
+      font: inherit; font-size: .86rem; padding: .38rem .35rem; border-radius: 6px; cursor: pointer;
+    }
+    .mr-row:hover { background: var(--acc-10); }
+    .mr-row:focus-visible { outline: 2px solid var(--acc); outline-offset: 1px; }
+    .mr-caret { width: 14px; height: 14px; flex-shrink: 0; color: var(--txt4); transition: transform .15s; }
+    .mr-open > .mr-row .mr-caret { transform: rotate(90deg); }
+    .mr-caret-sp { width: 14px; flex-shrink: 0; }
+    .mr-code { font-variant-numeric: tabular-nums; color: var(--txt4); white-space: nowrap; }
+    .mr-name { flex: 1; min-width: 0; }
+    .mr-count { font-size: .72rem; color: var(--txt3); white-space: nowrap; }
+    .mr-lvl1 > .mr-row { font-size: 1rem; padding-top: .55rem; padding-bottom: .55rem; }
+    .mr-lvl1 + .mr-lvl1 { margin-top: .35rem; }
+    /* Involved parent rows (L1 to L3): coloured number, bold text, no frame */
+    .mr-hit > .mr-row .mr-code { color: var(--acc-t); font-weight: 700; }
+    .mr-hit > .mr-row .mr-name { font-weight: 650; }
+    .mr-hit > .mr-row .mr-count { color: var(--acc-t); font-weight: 600; }
+    /* Branches without the role: visible as context, dimmed */
+    .mr-dim > .mr-row { opacity: .42; }
+    .mr-dim > .mr-row:hover { opacity: .8; }
+    /* Steps (L4) */
+    .mr-step-li { margin: .3rem 0; }
+    .mr-step {
+      display: flex; align-items: center; gap: .65rem; width: 100%;
+      background: var(--surf); border: 1px solid var(--bdr-s); border-left: 4px solid var(--acc);
+      border-radius: 8px; padding: .5rem .7rem; text-align: left; color: var(--txt);
+      font: inherit; font-size: .86rem; cursor: pointer; box-shadow: 0 1px 2px var(--shd);
+      transition: border-color .15s, transform .15s, box-shadow .15s;
+    }
+    .mr-step:hover { border-color: var(--acc); transform: translateX(2px); }
+    .mr-step[data-l="R"] { border-left-color: var(--mr-R); }
+    .mr-step[data-l="A"] { border-left-color: var(--mr-A); }
+    .mr-step[data-l="S"] { border-left-color: var(--mr-S); }
+    .mr-step[data-l="C"] { border-left-color: var(--mr-C); }
+    .mr-step[data-l="I"] { border-left-color: var(--mr-I); }
+    .mr-step:focus-visible { outline: 2px solid var(--acc); outline-offset: 1px; }
+    .mr-step .mr-code { color: var(--acc-t); font-weight: 700; }
+    .mr-step .mr-name { font-weight: 600; }
+    .mr-step .mr-desc { display: block; font-weight: 400; font-size: .74rem; color: var(--txt3); margin-top: .1rem; }
+    .mr-badges { display: flex; gap: .25rem; flex-shrink: 0; }
+    .mr-go { color: var(--txt5); flex-shrink: 0; font-size: .9rem; }
+    .mr-step:hover .mr-go { color: var(--acc-t); }
+    .mr-step-plain { opacity: .42; font-size: .82rem; }
+    .mr-step-plain:hover { opacity: .8; }
+    .mr-empty { text-align: center; color: var(--txt3); font-size: .86rem; padding: 3rem 1rem; }
+    .mr-empty strong { display: block; color: var(--txt); font-size: 1rem; margin-bottom: .3rem; }
+    .node.myrole-flash { animation: mr-flash 2.4s ease forwards; }
+    @keyframes mr-flash {
+      0%, 60% { box-shadow: 0 0 0 3px var(--acc); }
+      100% { box-shadow: 0 0 0 0 transparent; }
+    }
+    @media (max-width: 640px) {
+      .mr-wrap { padding: 1rem .75rem 2rem; }
+      .mr-tree ul { margin-left: .4rem; padding-left: .6rem; }
+      .mr-step .mr-desc { display: none; }
+    }
+
     /* ── RESPONSIBLE OVERVIEW SCREEN ────────────────────────────────────── */
     #respoverviewScreen {
       position: fixed; top: 56px; left: 0; right: 0; bottom: 0;
@@ -2405,6 +2525,7 @@
           <button id="btnViewsTimeline">Timeline</button>
           <button id="btnViewsSysOverview">System Overview</button>
           <button id="btnViewsRespOverview">Responsible Overview</button>
+          <button id="btnViewsMyRole">My role</button>
         </div>
       </div>
       <div class="nav-dropdown" id="navLookupDrop">
@@ -2627,6 +2748,29 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- My Role Screen -->
+  <div id="myroleScreen" class="hidden">
+    <div class="sysov-toolbar">
+      <span class="sysov-toolbar-title">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="7" r="4"/><path d="M3 21v-2a7 7 0 0 1 14 0v2"/>
+        </svg>My role
+      </span>
+      <select id="mrRoleSelect" class="mr-role-select" aria-label="Role"></select>
+      <div class="mr-seg" id="mrModeSeg" role="group" aria-label="Show">
+        <button type="button" data-mode="all">Whole process</button>
+        <button type="button" data-mode="mine">Only my steps</button>
+      </div>
+      <span class="mr-toolbar-spacer"></span>
+      <button id="btnMyRoleClose" class="sysov-close-btn">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>Close
+      </button>
+    </div>
+    <div id="mrScroll"><div class="mr-wrap" id="mrContent"></div></div>
   </div>
 
   <!-- Process Detail Screen -->
@@ -4291,6 +4435,7 @@
       closeOverviewScreen();
       closeSysOverviewScreen();
       closeRespOverviewScreen();
+      closeMyRoleScreen();
       $('yearScreen').classList.add('hidden');
       $('ganttScreen').classList.add('hidden');
       $('detailScreen').classList.add('hidden');
@@ -4844,6 +4989,7 @@
       closeOverviewScreen();
       closeSysOverviewScreen();
       closeRespOverviewScreen();
+      closeMyRoleScreen();
       $('detailScreen').classList.add('hidden');
       $('ganttScreen').classList.remove('hidden');
 
@@ -4889,6 +5035,7 @@
       closeOverviewScreen();
       closeSysOverviewScreen();
       closeRespOverviewScreen();
+      closeMyRoleScreen();
       renderDetailScreen(key, meta, desc);
       $('detailScreen').classList.remove('hidden');
     }
@@ -5720,6 +5867,7 @@
       closeOverviewScreen();
       closeSysOverviewScreen();
       closeRespOverviewScreen();
+      closeMyRoleScreen();
       $('detailScreen').classList.add('hidden');
       yearExpandedPaths.clear();
       yearView = 'year';
@@ -5903,6 +6051,7 @@
       $('yearScreen').classList.add('hidden');
       closeSysOverviewScreen();
       closeRespOverviewScreen();
+      closeMyRoleScreen();
       $('detailScreen').classList.add('hidden');
       $('rolePanel').classList.remove('open');
       $('toolPanel').classList.remove('open');
@@ -5960,6 +6109,7 @@
       $('yearScreen').classList.add('hidden');
       closeOverviewScreen();
       closeRespOverviewScreen();
+      closeMyRoleScreen();
       $('detailScreen').classList.add('hidden');
       $('sysoverviewScreen').classList.remove('hidden');
 
@@ -6375,6 +6525,7 @@
       $('yearScreen').classList.add('hidden');
       closeOverviewScreen();
       closeSysOverviewScreen();
+      closeMyRoleScreen();
       $('detailScreen').classList.add('hidden');
       $('respoverviewScreen').classList.remove('hidden');
 
@@ -6810,12 +6961,14 @@
       const btnTl    = $('btnViewsTimeline');
       const btnSysOv  = $('btnViewsSysOverview');
       const btnRespOv = $('btnViewsRespOverview');
+      const btnMyRole = $('btnViewsMyRole');
 
       function updateViewsActive() {
         btnOv.classList.toggle('views-active', !$('overviewScreen').classList.contains('hidden'));
         btnTl.classList.toggle('views-active', !$('yearScreen').classList.contains('hidden'));
         btnSysOv.classList.toggle('views-active', !$('sysoverviewScreen').classList.contains('hidden'));
         btnRespOv.classList.toggle('views-active', !$('respoverviewScreen').classList.contains('hidden'));
+        btnMyRole.classList.toggle('views-active', !$('myroleScreen').classList.contains('hidden'));
       }
 
       btnViews.addEventListener('click', function (e) {
@@ -6850,6 +7003,12 @@
         closeViewsMenu();
         if ($('respoverviewScreen').classList.contains('hidden')) openRespOverviewScreen();
         else closeRespOverviewScreen();
+      });
+
+      btnMyRole.addEventListener('click', function () {
+        closeViewsMenu();
+        if ($('myroleScreen').classList.contains('hidden')) openMyRoleScreen();
+        else closeMyRoleScreen();
       });
 
       // ── Lookup ──
@@ -7261,6 +7420,306 @@
       document.addEventListener('mousemove', onMove);
       document.addEventListener('mouseup', onUp);
     });
+
+    // ── MY ROLE ────────────────────────────────────────────────────────────
+    // Shows the whole process tree for one role. Branches where the role has a
+    // RASCI letter are highlighted and open; the rest stay visible but dimmed
+    // and collapsed. RASCI letters are shown only on steps (rows with data).
+    // Role data comes from the existing R / A / S / C / I columns (names split on ";").
+    const MR_KEY = 'nexus.myrole.v1';
+    const MR_LETTERS = ['R','A','S','C','I'];
+    const MR_NAMES = { R:'Responsible', A:'Accountable', S:'Supportive', C:'Consulted', I:'Informed' };
+    let mrState = { role: '', mode: 'all', letters: [] };
+    let mrOpen = new Set();   // path keys of expanded parent rows
+    let mrOpenRole = null;    // role/filter the open set was built for
+
+    (function () {
+      try {
+        const v = JSON.parse(localStorage.getItem(MR_KEY));
+        if (v && typeof v === 'object') {
+          if (typeof v.role === 'string') mrState.role = v.role;
+          if (v.mode === 'all' || v.mode === 'mine') mrState.mode = v.mode;
+          if (Array.isArray(v.letters)) mrState.letters = v.letters.filter(l => MR_LETTERS.includes(l));
+        }
+      } catch (_) {}
+    })();
+    function mrSave() {
+      if (window.__PF_EMBED__) return;
+      try { localStorage.setItem(MR_KEY, JSON.stringify(mrState)); } catch (_) {}
+    }
+
+    /** All role names in R/A/S/C/I across the tree, with the number of steps each appears on. */
+    function mrCollectRoles() {
+      const counts = new Map();
+      (function walk(level) {
+        for (const n of Object.values(level)) {
+          if (n._meta) {
+            const seen = new Set();
+            for (const l of MR_LETTERS) for (const name of splitSemicolon(n._meta[l] || '')) {
+              const k = name.toLowerCase();
+              if (seen.has(k)) continue;
+              seen.add(k);
+              const cur = counts.get(k);
+              if (cur) cur.n++; else counts.set(k, { name, n: 1 });
+            }
+          }
+          walk(n._children);
+        }
+      })(tree);
+      return Array.from(counts.values()).sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    /** Letters the role holds on one node (all five, ignoring the filter). */
+    function mrLettersFor(node, role) {
+      if (!node._meta || !role) return [];
+      const r = role.toLowerCase();
+      return MR_LETTERS.filter(l => splitSemicolon(node._meta[l] || '').some(n => n.toLowerCase() === r));
+    }
+    /** Letters that count, given the letter filter (empty filter = all letters). */
+    function mrShownLetters(node, role) {
+      const all = mrLettersFor(node, role);
+      return mrState.letters.length ? all.filter(l => mrState.letters.includes(l)) : all;
+    }
+    /** Number of steps in this subtree where the role counts (including the node itself). */
+    function mrCountSteps(node, role) {
+      let c = node._meta && !Object.keys(node._children).length && mrShownLetters(node, role).length ? 1 : 0;
+      for (const ch of Object.values(node._children)) c += mrCountSteps(ch, role);
+      return c;
+    }
+
+    function openMyRoleScreen() {
+      closeCtrlPanel();
+      closeRolePanel();
+      closeToolPanel();
+      $('ganttScreen').classList.add('hidden');
+      $('yearScreen').classList.add('hidden');
+      closeOverviewScreen();
+      closeSysOverviewScreen();
+      closeRespOverviewScreen();
+      $('detailScreen').classList.add('hidden');
+      $('myroleScreen').classList.remove('hidden');
+      mrOpenRole = null;
+      renderMyRole();
+    }
+    function closeMyRoleScreen() { $('myroleScreen').classList.add('hidden'); }
+
+    function renderMyRole() {
+      const roles = mrCollectRoles();
+      const sel = $('mrRoleSelect');
+      const known = roles.find(r => r.name.toLowerCase() === mrState.role.toLowerCase());
+      const role = known ? known.name : '';
+      sel.innerHTML = '';
+      const ph = document.createElement('option');
+      ph.value = ''; ph.textContent = roles.length ? '— Select your role —' : 'No roles in data';
+      sel.appendChild(ph);
+      roles.forEach(r => {
+        const o = document.createElement('option');
+        o.value = r.name; o.textContent = r.name + '  (' + r.n + ')';
+        if (r.name === role) o.selected = true;
+        sel.appendChild(o);
+      });
+      sel.disabled = !roles.length;
+      $('mrModeSeg').querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.mode === mrState.mode));
+
+      const out = $('mrContent');
+      out.innerHTML = '';
+      if (!Object.keys(tree).length) { out.innerHTML = '<div class="mr-empty"><strong>No data loaded</strong>Import a file first.</div>'; return; }
+      if (!role) {
+        out.innerHTML = '<div class="mr-empty"><strong>Pick your role</strong>Choose a role above to see where it takes part in the process.</div>';
+        return;
+      }
+
+      // Per-letter totals (always over all letters, so the chips keep their counts while filtering)
+      const totals = { R:0, A:0, S:0, C:0, I:0 };
+      let anyStep = 0;
+      (function walk(level) {
+        for (const n of Object.values(level)) {
+          if (n._meta && !Object.keys(n._children).length) {
+            const ls = mrLettersFor(n, role);
+            ls.forEach(l => totals[l]++);
+            if (ls.length) anyStep++;
+          }
+          walk(n._children);
+        }
+      })(tree);
+      let rootCount = 0;
+      for (const n of Object.values(tree)) rootCount += mrCountSteps(n, role);
+
+      // Hero
+      const hero = document.createElement('div');
+      hero.className = 'mr-hero';
+      const left = document.createElement('div');
+      left.innerHTML = '<div class="mr-hero-kicker">My role</div><div class="mr-hero-name"></div><div class="mr-hero-sub"></div>';
+      left.querySelector('.mr-hero-name').textContent = role;
+      left.querySelector('.mr-hero-sub').textContent = mrState.letters.length
+        ? rootCount + ' of ' + anyStep + ' step' + (anyStep === 1 ? '' : 's') + ' as ' + mrState.letters.map(l => MR_NAMES[l]).join(' or ')
+        : 'Involved in ' + anyStep + ' step' + (anyStep === 1 ? '' : 's');
+      hero.appendChild(left);
+      const chips = document.createElement('div');
+      chips.className = 'mr-chips' + (mrState.letters.length ? ' filtering' : '');
+      MR_LETTERS.forEach(l => {
+        const c = document.createElement('button');
+        c.type = 'button';
+        c.className = 'mr-chip' + (mrState.letters.includes(l) ? ' on' : '') + (totals[l] ? '' : ' zero');
+        c.title = 'Show only steps where you are ' + MR_NAMES[l];
+        c.setAttribute('aria-pressed', String(mrState.letters.includes(l)));
+        c.innerHTML = '<span class="mr-badge" data-l="' + l + '">' + l + '</span><span>' + MR_NAMES[l] + '</span><span class="mr-chip-n">' + totals[l] + '</span>';
+        c.addEventListener('click', () => {
+          const i = mrState.letters.indexOf(l);
+          if (i >= 0) mrState.letters.splice(i, 1); else mrState.letters.push(l);
+          mrState.letters.sort((a, b) => MR_LETTERS.indexOf(a) - MR_LETTERS.indexOf(b));
+          mrSave(); mrOpenRole = null; renderMyRole();
+        });
+        chips.appendChild(c);
+      });
+      if (mrState.letters.length) {
+        const clr = document.createElement('button');
+        clr.type = 'button'; clr.className = 'mr-chip-clear'; clr.textContent = 'Show all letters';
+        clr.addEventListener('click', () => { mrState.letters = []; mrSave(); mrOpenRole = null; renderMyRole(); });
+        chips.appendChild(clr);
+      }
+      hero.appendChild(chips);
+      out.appendChild(hero);
+
+      if (!rootCount) {
+        const e = document.createElement('div');
+        e.className = 'mr-empty';
+        e.innerHTML = '<strong>No steps match</strong>This role has none of the selected letters.';
+        out.appendChild(e);
+        if (mrState.mode === 'mine') return;
+      }
+
+      // Default open state: every branch that contains the role is open, the rest closed.
+      const sig = role + '|' + mrState.letters.join('');
+      if (mrOpenRole !== sig) {
+        mrOpen = new Set();
+        (function walk(level, path) {
+          for (const [k, n] of Object.entries(level)) {
+            const p = path.concat(k);
+            if (Object.keys(n._children).length && mrCountSteps(n, role)) mrOpen.add(p.join('\x00'));
+            walk(n._children, p);
+          }
+        })(tree, []);
+        mrOpenRole = sig;
+      }
+
+      const ul = document.createElement('ul');
+      ul.className = 'mr-tree';
+      mrBuildLevel(ul, tree, [], role);
+      out.appendChild(ul);
+    }
+
+    function mrBuildLevel(ul, level, path, role) {
+      for (const [key, n] of Object.entries(level)) {
+        const p = path.concat(key);
+        const depth = p.length;
+        const hasKids = Object.keys(n._children).length > 0;
+        const count = mrCountSteps(n, role);
+        if (mrState.mode === 'mine' && !count) continue;
+        const li = document.createElement('li');
+        const codeTxt = n._code ? n._code + ' –' : '';
+
+        if (!hasKids) {
+          // A step: card with letter badges when the role takes part, plain dimmed row otherwise
+          const letters = mrShownLetters(n, role);
+          li.className = 'mr-step-li';
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          if (letters.length) {
+            btn.className = 'mr-step';
+            // Accent bar takes the colour of the heaviest letter: A, then R, S, C, I
+            btn.dataset.l = ['A','R','S','C','I'].find(l => letters.includes(l));
+            btn.title = letters.map(l => MR_NAMES[l]).join(', ') + ' · open in the process';
+            const desc = n._meta && n._meta.L4_Desc ? String(n._meta.L4_Desc).trim() : '';
+            btn.innerHTML = '<span class="mr-code"></span><span class="mr-name"><span class="mr-n"></span>' + (desc ? '<span class="mr-desc"></span>' : '') + '</span><span class="mr-badges"></span><span class="mr-go">›</span>';
+            btn.querySelector('.mr-n').textContent = key;
+            if (desc) btn.querySelector('.mr-desc').textContent = desc;
+            const bw = btn.querySelector('.mr-badges');
+            letters.forEach(l => {
+              const b = document.createElement('span');
+              b.className = 'mr-badge'; b.dataset.l = l; b.textContent = l; b.title = MR_NAMES[l];
+              bw.appendChild(b);
+            });
+          } else {
+            btn.className = 'mr-row mr-step-plain';
+            btn.title = 'Open in the process';
+            btn.innerHTML = '<span class="mr-caret-sp"></span><span class="mr-code"></span><span class="mr-name"></span>';
+            btn.querySelector('.mr-name').textContent = key;
+          }
+          btn.querySelector('.mr-code').textContent = codeTxt;
+          btn.addEventListener('click', () => mrOpenInProcess(p));
+          li.appendChild(btn);
+          ul.appendChild(li);
+          continue;
+        }
+
+        // A parent (L1 to L3): no frame, coloured number and bold text when involved
+        const key0 = p.join('\x00');
+        const open = mrOpen.has(key0);
+        li.className = 'mr-lvl' + depth + (count ? ' mr-hit' : ' mr-dim') + (open ? ' mr-open' : '');
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'mr-row';
+        row.setAttribute('aria-expanded', String(open));
+        row.innerHTML = '<svg class="mr-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg><span class="mr-code"></span><span class="mr-name"></span>' + (count ? '<span class="mr-count"></span>' : '');
+        row.querySelector('.mr-code').textContent = codeTxt;
+        row.querySelector('.mr-name').textContent = key;
+        if (count) row.querySelector('.mr-count').textContent = count + ' step' + (count === 1 ? '' : 's');
+        row.addEventListener('click', () => {
+          const sc = $('mrScroll').scrollTop;
+          if (mrOpen.has(key0)) mrOpen.delete(key0); else mrOpen.add(key0);
+          renderMyRole();
+          $('mrScroll').scrollTop = sc;
+          const again = Array.from($('mrContent').querySelectorAll('.mr-row')).find(r => r.__mrKey === key0);
+          if (again) again.focus({ preventScroll: true });
+        });
+        row.__mrKey = key0;
+        li.appendChild(row);
+        if (open) {
+          const sub = document.createElement('ul');
+          mrBuildLevel(sub, n._children, p, role);
+          li.appendChild(sub);
+        }
+        ul.appendChild(li);
+      }
+    }
+
+    /** Close My role and show the step in the normal process view, briefly highlighted. */
+    function mrOpenInProcess(path) {
+      closeMyRoleScreen();
+      const target = path[path.length - 1];
+      const parentPath = path.slice(0, -1);
+      history.pushState(null, '', pathToHash(parentPath));
+      currentPath = parentPath;
+      render('none');
+      updateNav();
+      requestAnimationFrame(() => {
+        for (const el of flowContainer.querySelectorAll('.node')) {
+          if (el.getAttribute('data-key') === target) {
+            el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            el.focus({ preventScroll: true });
+            el.classList.remove('myrole-flash'); void el.offsetWidth;
+            el.classList.add('myrole-flash');
+            setTimeout(() => el.classList.remove('myrole-flash'), 2600);
+            break;
+          }
+        }
+      });
+    }
+
+    $('mrRoleSelect').addEventListener('change', e => {
+      mrState.role = e.target.value;
+      mrSave(); mrOpenRole = null;
+      renderMyRole();
+      $('mrScroll').scrollTop = 0;
+    });
+    $('mrModeSeg').addEventListener('click', e => {
+      const b = e.target.closest('button[data-mode]');
+      if (!b || b.dataset.mode === mrState.mode) return;
+      mrState.mode = b.dataset.mode;
+      mrSave(); renderMyRole();
+    });
+    $('btnMyRoleClose').addEventListener('click', closeMyRoleScreen);
 
     // ── ROLE LOOKUP ────────────────────────────────────────────────────────
     let activeRoleFilter = null; // { l1Key, roleName, selectedPath } | null
@@ -8440,6 +8899,10 @@
     document.addEventListener('keydown', e => {
       if (e.target === searchInput || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
       if (!exportModal.classList.contains('hidden')) return;
+      if (!$('myroleScreen').classList.contains('hidden')) {
+        if (e.key === 'Escape') { e.preventDefault(); closeMyRoleScreen(); }
+        return;
+      }
 
       // ── L4 detail screen prev/next arrow-key navigation ──────────────
       if (!$('detailScreen').classList.contains('hidden')) {
