@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S&OP – L1 swimlanes</title>
+<style>
+:root{
+  --bg:#2c2c32;--nav:#34343b;--surf:#3d3d45;--surf2:#34343b;--panel:#303037;
+  --bdr:#52525c;--bdr-s:#44444e;--bdr-xs:#3a3a42;--conn:#7a7a86;
+  --txt:#f0f0f4;--txt2:#c8c8d0;--txt3:#a0a0aa;--txt4:#72727c;
+  --acc:#4a90d9;--acc-t:#7db3e8;--acc-10:rgba(74,144,217,.10);--acc-20:rgba(74,144,217,.20);
+  --shd:rgba(0,0,0,.55);--sb-thumb:var(--acc);--sb-track:var(--bg);
+}
+html.light{
+  --bg:#f0f2f5;--nav:#ffffff;--surf:#ffffff;--surf2:#f8f9fa;--panel:#f0f2f5;
+  --bdr:#c8c8c8;--bdr-s:#e0e0e0;--bdr-xs:#ebebeb;--conn:#8a8a94;
+  --txt:#1a1a1a;--txt2:#333;--txt3:#666;--txt4:#888;
+  --acc:#1a6bb5;--acc-t:#1a6bb5;--acc-10:rgba(26,107,181,.08);--acc-20:rgba(26,107,181,.18);
+  --shd:rgba(0,0,0,.12);--sb-thumb:var(--bdr);--sb-track:transparent;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh;transition:background .2s,color .2s}
+#nav{position:fixed;top:0;left:0;right:0;height:56px;background:var(--nav);border-bottom:1px solid var(--bdr-s);display:flex;align-items:center;justify-content:space-between;padding:0 1rem;z-index:100;gap:.5rem}
+.crumbs{display:flex;align-items:center;gap:.35rem;font-size:.75rem;color:var(--txt4);min-width:0}
+.crumbs .cur{color:var(--txt2);font-weight:500}
+.crumbs .sep{color:var(--bdr)}
+.nav-right{display:flex;gap:.5rem;align-items:center}
+button.nb{background:var(--surf);border:1px solid var(--bdr);border-radius:6px;color:var(--txt);font-size:.78rem;padding:.3rem .75rem;cursor:pointer;transition:background .15s,border-color .15s}
+button.nb:hover{background:var(--bdr);border-color:var(--acc)}
+#main{position:fixed;top:56px;left:0;right:0;bottom:0;display:flex}
+#scroll{flex:1;overflow:auto;position:relative}
+#scroll::-webkit-scrollbar{width:10px;height:10px}
+#scroll::-webkit-scrollbar-thumb{background:var(--sb-thumb);border-radius:5px}
+#scroll::-webkit-scrollbar-track{background:var(--sb-track)}
+.head{position:sticky;left:0;padding:1.1rem 1.25rem .6rem;z-index:6;width:max-content;max-width:100vw}
+.head h1{font-size:1.05rem;font-weight:600}
+.head p{font-size:.78rem;color:var(--txt3);margin-top:.25rem;max-width:760px;line-height:1.45}
+.legend{display:flex;gap:1rem;margin-top:.6rem;font-size:.7rem;color:var(--txt3);flex-wrap:wrap}
+.legend i{display:inline-block;width:16px;height:10px;border-radius:3px;margin-right:.35rem;vertical-align:-1px;border:1.5px solid var(--acc);background:var(--acc-10)}
+.legend i.sys{border-style:dashed}
+.legend i.g3{background:none;border:1px dashed var(--bdr)}
+#board{position:relative;margin:0 0 2rem}
+.lane{position:absolute;left:0;border-top:1px solid var(--bdr-s);border-bottom:1px solid var(--bdr-s);background:color-mix(in srgb,var(--lc) 5%,transparent)}
+.lane-label{position:sticky;left:0;z-index:5;width:var(--lw);height:100%;background:var(--bg);border-right:1px solid var(--bdr-s);display:flex;align-items:center;padding:.5rem .5rem}
+.lane-label .in{width:100%;border:1px solid var(--lc);background:color-mix(in srgb,var(--lc) 14%,var(--bg));border-radius:6px;padding:.55rem .7rem}
+.lane-label .code{font-size:.62rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--lc)}
+.lane-label .name{font-size:.82rem;font-weight:600;margin-top:.15rem;line-height:1.25}
+.lane-label .goal{font-size:.66rem;color:var(--txt3);margin-top:.3rem;line-height:1.35}
+.grp{position:absolute;border:1px dashed var(--bdr);border-radius:8px;pointer-events:none}
+.grp span{position:absolute;top:-1px;left:10px;transform:translateY(-50%);background:var(--bg);padding:0 .35rem;font-size:.62rem;font-weight:600;color:var(--txt4);white-space:nowrap}
+.node{position:absolute;border:1.5px solid var(--lc);background:color-mix(in srgb,var(--lc) 14%,var(--surf));border-radius:8px;padding:.35rem .6rem;cursor:pointer;display:flex;flex-direction:column;justify-content:center;gap:.15rem;transition:box-shadow .15s,transform .15s,border-color .15s;z-index:2}
+.node.sys{border-style:dashed}
+.node:hover{box-shadow:0 4px 14px var(--shd);transform:translateY(-1px)}
+.node.sel{box-shadow:0 0 0 2px var(--acc),0 4px 14px var(--shd)}
+.node.dim{opacity:.35}
+.node .c{font-size:.58rem;font-weight:700;letter-spacing:.05em;color:var(--lc)}
+.node .n{font-size:.74rem;font-weight:600;line-height:1.25}
+.node .r{font-size:.62rem;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+svg#arrows{position:absolute;top:0;left:0;pointer-events:none;z-index:3;overflow:visible}
+svg#arrows path{fill:none;stroke:var(--conn);stroke-width:1.5}
+svg#arrows path.hl{stroke:var(--acc);stroke-width:2}
+svg#arrows path.x{stroke-dasharray:5 4}
+svg#arrows polygon{fill:var(--conn)}
+svg#arrows polygon.hl{fill:var(--acc)}
+#detail{width:340px;flex-shrink:0;background:var(--panel);border-left:1px solid var(--bdr-s);overflow:auto;padding:1rem 1.1rem;display:none}
+#detail.open{display:block}
+#detail .x{float:right;background:none;border:none;color:var(--txt3);font-size:1.1rem;cursor:pointer}
+#detail .crumb{font-size:.65rem;color:var(--txt4);margin-bottom:.35rem;line-height:1.4}
+#detail h2{font-size:1rem;font-weight:600;margin-bottom:.2rem}
+#detail .desc{font-size:.76rem;color:var(--txt2);line-height:1.45;margin:.4rem 0 .8rem}
+.tag{display:inline-block;font-size:.62rem;font-weight:600;padding:.12rem .5rem;border-radius:10px;border:1px solid var(--acc);color:var(--acc-t);background:var(--acc-10);margin-right:.3rem}
+.sec{font-size:.62rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--txt4);margin:.9rem 0 .35rem}
+.kv{display:grid;grid-template-columns:90px 1fr;gap:.25rem .6rem;font-size:.74rem}
+.kv dt{color:var(--txt4)} .kv dd{color:var(--txt)}
+.rasci{display:flex;gap:.4rem;flex-wrap:wrap}
+.rasci div{flex:1 1 90px;background:var(--surf);border:1px solid var(--bdr-s);border-radius:6px;padding:.3rem .5rem}
+.rasci b{display:block;font-size:.58rem;color:var(--acc-t);letter-spacing:.06em}
+.rasci span{font-size:.72rem}
+@media(max-width:700px){#detail{position:fixed;inset:56px 0 0 0;width:auto;z-index:50}}
+</style>
+</head>
+<body>
+<div id="nav">
+  <div class="crumbs"><span>Business Process</span><span class="sep">›</span><span class="cur" id="crL1"></span><span class="sep">›</span><span>Swimlanes</span></div>
+  <div class="nav-right"><button class="nb" id="tgl">☀ Light</button></div>
+</div>
+<div id="main">
+  <div id="scroll">
+    <div class="head">
+      <h1 id="title"></h1><p id="sub"></p>
+      <div class="legend"><span><i></i>Human activity</span><span><i class="sys"></i>System activity</span><span><i class="g3"></i>L3 process</span><span>Klik op een stap voor detail</span></div>
+    </div>
+    <div id="board"><svg id="arrows"></svg></div>
+  </div>
+  <aside id="detail"></aside>
+</div>
+<script>
+const DATA = [{"ID": "101", "L2_code": "1.1", "L2": "1. Prepare data", "L2_goal": "Start the cycle on clean, complete data", "L3_code": "1.1.1", "L3": "Close the previous period", "L4_code": "1.1.1.1", "L4": "Load sales and shipment actuals", "R": "Demand Planner", "A": "S&OP Manager", "S": "Data Analyst", "C": "", "I": "Sales Manager", "Supplier": "ERP", "Input": "Sales orders; Shipments", "Output": "Actuals dataset", "Customer": "Demand Planner", "Type": "System activity", "KPI": "Data load on time", "Goal": "Actuals available on day 1", "Tool": "Planning platform", "Tool_function": "Data integration", "Tool_desc": "Automated nightly import from ERP into the planning platform.", "L4_Desc": "Import last month's orders, shipments and returns from ERP.", "BPO": "S&OP Manager", "L1_Desc": "Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.", "L1": "S&OP"}, {"ID": "102", "L2_code": "1.1", "L2": "1. Prepare data", "L2_goal": "Start the cycle on clean, complete data", "L3_code": "1.1.1", "L3": "Close the previous period", "L4_code": "1.1.1.2", "L4": "Validate data quality", "R": "Data Analyst", "A": "S&OP Manager", "S": "Demand Planner", "C": "IT Support", "I": "", "Supplier": "Planning platform", "Input": "Actuals dataset; Master data", "Output": "Validated dataset; Data issue log", "Customer": "Demand Planner; Supply Planner", "Type": "Human activity", "KPI": "% records without errors", "Goal": "Fewer than 1% data issues", "Tool": "BI dashboard", "Tool_function": "Data quality report", "Tool_desc": "Dashboard showing missing and outlier records.", "L4_Desc": "Check actuals and master data for gaps and outliers.", "BPO": "S&OP Manager", "L1_Desc": "Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.", "L1": "S&OP"}, {"ID": "103", "L2_code": "1.1", "L2": "1. Prepare data", "L2_goal": "Start the cycle on clean, complete data", "L3_code": "1.1.2", "L3": "Refresh master data", "L4_code": "1.1.2.1", "L4": "Update product portfolio", "R": "Product Manager", "A": "S&OP Manager", "S": "Demand Planner", "C": "Marketing", "I": "Supply Planner", "Supplier": "Product management", "Input": "Launch and phase-out list", "Output": "Updated product portfolio", "Customer": "Demand Planner; Supply Planner", "Type": "Human activity", "KPI": "Portfolio changes processed", "Goal": "No forecasts on obsolete items", "Tool": "Planning platform", "Tool_function": "Item maintenance", "Tool_desc": "Maintain item status and lifecycle dates.", "L4_Desc": "Add new models, phase out discontinued ones.", "BPO": "S&OP Manager", "L1_Desc": "Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.", "L1": "S&OP"}, {"ID": "104", "L2_code": "1.1", "L2": "1. Prepare data", "L2_goal": "Start the cycle on clean, complete data", "L3_code": "1.1.2", "L3": "Refresh master data", "L4_code": "1.1.2.2", "L4": "Update lead times and capacities", "R": "Supply Planner", "A": "Supply Chain Director", "S": "Procurement", "C": "Production Manager", "I": "", "Supplier": "Procurement; Production", "Input": "Supplier confirmations; Line rates", "Output": "Updated lead times; Capacity profile", "Customer": "Supply Planner", "Type": "Human activity", "KPI": "Lead time accuracy", "Goal": "Lead times within 10% of actuals", "Tool": "Planning platform", "Tool_function": "Resource maintenance", "Tool_desc": "Maintain capacities per assembly line.", "L4_Desc": "Refresh supplier lead times and line capacities.", "BPO": "S&OP Manager", "L1_Desc": "Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.", "L1": "S&OP"}, {"ID": "105", "L2_code": "1.2", "L2": "2. Demand review", "L2_goal": "Agree one unconstrained demand plan", "L3_code": "1.2.1", "L3": "Generate baseline forecast", "L4_code": "1.2.1.1", "L4": "Run statistical forecast", "R": "Demand Planner", "A": "S&OP Manager", "S": "Data Analyst", "C": "", "I": "Sales Manager", "Supplier": "Planning platform", "Input": "Validated dataset", "Output": "Baseline forecast", "Customer": "Demand Planner", "Type": "System activity", "KPI": "Forecast accuracy (MAPE)", "Goal": "MAPE below 25% at model level", "Tool": "Planning platform", "Tool_function": "Statistical forecasting", "Tool_desc": "Best-fit model selection with seasonality for spring peak.", "L4_Desc": "Generate an 18-month baseline per model and sales channel.", "BPO": "S&OP Manager", "L1_Desc": "Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.", "L1": "S&OP"}, {"ID": "106", "L2_code": "1.2", "L2": "2. Demand review", "L2_goal": "Agree one unconstrained demand plan", "L3_code": "1.2.1", "L3": "Generate baseline forecast", "L4_code": "1.2.1.2", "L4": "Review forecast exceptions", "R": "Demand Planner", "A": "S&OP Manager", "S": "Data Analyst", "C": "Sales Manager", "I": "", "Supplier": "Planning platform", "Input": "Baseline forecast; Exception list", "Output": "Reviewed baseline forecast", "Customer": "Sales Manager", "Type": "Human activity", "KPI": "Bias", "Goal": "Bias within ±5%", "Tool": "BI dashboard", "Tool_function": "Exception report", "Tool_desc": "Ranks models by forecast error and bias.", "L4_Desc": "Investigate models with high error or bias.", "BPO": "S&OP Manager", "L1_Desc": "Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.", "L1": "S&OP"}, {"ID": "107", "L2_code": "1.2", "L2": "2. Demand review", "L2_goal": "Agree one unconstrained demand plan", "L3_code": "1.2.2", "L3": "Enrich with market intelligence", "L4_code": "1.2.2.1", "L4": "Collect sales input", "R": "Sales Manager", "A": "Commercial Director", "S": "Demand Planner", "C": "Key Account Manager", "I": "", "Supplier": "Sales", "Input": "Reviewed baseline forecast; Promotion calendar", "Output": "Sales input", "Customer": "Demand Planner", "Type": "Human activity", "KPI": "Input submitted on time", "Goal": "All regions submit before week 2", "Tool": "Spreadsheet", "Tool_function": "Input template", "Tool_desc": "Structured template per region.", "L4_Desc": "Capture dealer promotions, tenders and key account changes.", "BPO": "S&OP Manager", "L1_Desc": "Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.", "L1": "S&OP"}, {"ID": "108", "L2_code": "1.2", "L2": "2. Demand review", "L2_goal": "Agree one unconstrained demand plan", "L3_code": "1.2.2", "L3": "Enrich with market intelligence", "L4_code": "1.2.2.2", "L4": "Add marketing events", "R": "Marketing Manager", "A": "Commercial Director", "S": "Demand Planner", "C": "Product Manager", "I": "", "Supplier": "Marketing", "Input": "Campaign plan", "Output": "Event uplift", "Customer": "Demand Planner", "Type": "Human activity", "KPI": "Uplift accuracy", "Goal": "Event uplift within 20%", "Tool": "Planning platform", "Tool_function": "Event planning", "Tool_desc": "Overlay campaign uplift on the baseline.", "L4_Desc": "Include launches, campaigns and trade fairs.", "BPO": "S&OP Manager", "L1_Desc": "Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.", "L1": "S&OP"}, {"ID": "109", "L2_code": "1.2", "L2": "2. Demand review", "L2_goal": "Agree one unconstrained demand plan", "L3_code": "1.2.2", "L3": "Enrich with market intelligence", "L4_code": "1.2.2.3", "L4": "Consolidate demand plan", "R": "Demand Planner", "A": "S&OP Manager", "S": "", "C": "Sales Manager; Marketing Manager", "I": "Supply Planner", "Supplier": "Sales; Marketing", "Input": "Reviewed baseline forecast; Sales input; Event uplift", "Output": "Consensus demand plan (draft)", "Customer": "Demand review meeting", "Type": "Human activity", "KPI": "Forecast value add", "Goal": "Consensus beats baseline accuracy", "Tool": "Planning platform", "Tool_function": "Consensus forecasting", "Tool_desc": "Layered forecast with audit trail per contributor.", "L4_Desc": "Merge baseline, sales and marketing input into one plan.", "BPO": "S&OP Manager", "L1_Desc": "Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.", "L1": "S&OP"}, {"ID": "110", "L2_code": "1.2", "L2": "2. Demand review", "L2_goal": "Agree one unconstrained demand plan", "L3_code": "1.2.3", "L3": "Hold demand review", "L4_code": "1.2.3.1", "L4": "Demand review meeting", "R": "S&OP Manager", "A": "Commercial Director", "S": "Demand Planner", "C": "Sales Manager; Marketing Manager; Finance Controller", "I": "Supply Planner", "Supplier": "Demand Planner", "Input": "Consensus demand plan (draft)", "Output": "Approved demand plan", "Customer": "Supply Planner", "Type": "Meeting", "KPI": "Decisions documented", "Goal": "Demand plan approved in week 3", "Tool": "N/A", "Tool_function": "", "Tool_desc": "", "L4_Desc": "Challenge assumptions and agree the demand plan.", "BPO": "S&OP Manager", "L1_Desc": "Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.", "L1": "S&OP"}, {"ID": "111", "L2_code": "1.3", "L2": "3. Supply review", "L2_goal": "Find a feasible supply plan and its constraints", "L3_code": "1.3.1", "L3": "Plan supply", "L4_code": "1.3.1.1", "L4": "Run supply plan", "R": "Supply Planner", "A": "Supply Chain Director", "S": "", "C": "Production Manager", "I": "Procurement", "Supplier": "Demand Planner", "Input": "Approved demand plan; Capacity profile; Updated lead times", "Output": "Constrained supply plan", "Customer": "Supply Planner", "Type": "System activity", "KPI": "Plan run on time", "Goal": "Plan available within 1 day", "Tool": "Planning platform", "Tool_function": "Supply optimisation", "Tool_desc": "Constraint-based planning across lines and suppliers.", "L4_Desc": "Calculate assembly, frame and battery requirements against constraints.", "BPO": "S&OP Manager", "L1_Desc": "Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.", "L1": "S&OP"}, {"ID": "112", "L2_code": "1.3", "L2": "3. Supply review", "L2_goal": "Find a feasible supply plan and its constraints", "L3_code": "1.3.1", "L3": "Plan supply", "L4_code": "1.3.1.2", "L4": "Analyse capacity bottlenecks", "R": "Supply Planner", "A": "Supply Chain Director", "S": "Production Manager", "C": "Procurement", "I": "", "Supplier": "Planning platform", "Input": "Constrained supply plan", "Output": "Bottleneck overview", "Customer": "Supply review meeting", "Type": "Human activity", "KPI": "Capacity utilisation", "Goal": "No line above 95% for more than 2 weeks", "Tool": "BI dashboard", "Tool_function": "Capacity heatmap", "Tool_desc": "Utilisation per line per week.", "L4_Desc": "Identify overloaded lines and critical components.", "BPO": "S&OP Manager", "L1_Desc": "Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.", "L1": "S&OP"}, {"ID": "113", "L2_code": "1.3", "L2": "3. Supply review", "L2_goal": "Find a feasible supply plan and its constraints", "L3_code": "1.3.1", "L3": "Plan supply", "L4_code": "1.3.1.3", "L4": "Align critical components", "R": "Procurement", "A": "Supply Chain Director", "S": "Supply Planner", "C": "Supplier", "I": "", "Supplier": "Supplier", "Input": "Bottleneck overview; Component requirements", "Output": "Supplier commitments", "Customer": "Supply Planner", "Type": "Human activity", "KPI": "Supplier confirmation rate", "Goal": "95% of critical volume confirmed", "Tool": "Supplier portal", "Tool_function": "Collaboration", "Tool_desc": "Share forecasts and collect confirmations.", "L4_Desc": "Confirm battery and motor availability with suppliers.", "BPO": "S&OP Manager", "L1_Desc": "Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.", "L1": "S&OP"}, {"ID": "114", "L2_code": "1.3", "L2": "3. Supply review", "L2_goal": "Find a feasible supply plan and its constraints", "L3_code": "1.3.2", "L3": "Hold supply review", "L4_code": "1.3.2.1", "L4": "Supply review meeting", "R": "Supply Planner", "A": "Supply Chain Director", "S": "Production Manager", "C": "Procurement; Finance Controller", "I": "S&OP Manager", "Supplier": "Supply Planner", "Input": "Constrained supply plan; Supplier commitments", "Output": "Approved supply plan; Gap list", "Customer": "S&OP Manager", "Type": "Meeting", "KPI": "Gaps with owner", "Goal": "Every gap has an owner and option", "Tool": "N/A", "Tool_function": "", "Tool_desc": "", "L4_Desc": "Agree the supply plan and escalate unresolved gaps.", "BPO": "S&OP Manager", "L1_Desc": "Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.", "L1": "S&OP"}, {"ID": "115", "L2_code": "1.4", "L2": "4. Integrated reconciliation", "L2_goal": "Translate gaps into decisions with financial impact", "L3_code": "1.4.1", "L3": "Build scenarios", "L4_code": "1.4.1.1", "L4": "Create gap-closing scenarios", "R": "S&OP Manager", "A": "Supply Chain Director", "S": "Supply Planner; Demand Planner", "C": "Finance Controller", "I": "", "Supplier": "S&OP Manager", "Input": "Gap list; Approved demand plan; Approved supply plan", "Output": "Scenario set", "Customer": "Finance Controller", "Type": "Human activity", "KPI": "Scenarios per gap", "Goal": "At least 2 options per major gap", "Tool": "Planning platform", "Tool_function": "Scenario planning", "Tool_desc": "Copy the plan into scenarios and compare side by side.", "L4_Desc": "Model options such as overtime, extra supplier or allocation.", "BPO": "S&OP Manager", "L1_Desc": "Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.", "L1": "S&OP"}, {"ID": "116", "L2_code": "1.4", "L2": "4. Integrated reconciliation", "L2_goal": "Translate gaps into decisions with financial impact", "L3_code": "1.4.1", "L3": "Build scenarios", "L4_code": "1.4.1.2", "L4": "Assess financial impact", "R": "Finance Controller", "A": "CFO", "S": "S&OP Manager", "C": "", "I": "Commercial Director", "Supplier": "S&OP Manager", "Input": "Scenario set", "Output": "Scenario financials", "Customer": "Executive S&OP meeting", "Type": "Human activity", "KPI": "Plan-to-budget gap", "Goal": "Gap explained per scenario", "Tool": "BI dashboard", "Tool_function": "Financial bridge", "Tool_desc": "Volume-to-value bridge per scenario.", "L4_Desc": "Value each scenario in revenue, margin and working capital.", "BPO": "S&OP Manager", "L1_Desc": "Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.", "L1": "S&OP"}, {"ID": "117", "L2_code": "1.5", "L2": "5. Executive S&OP", "L2_goal": "Take and communicate decisions", "L3_code": "1.5.1", "L3": "Decide and release", "L4_code": "1.5.1.1", "L4": "Executive S&OP meeting", "R": "S&OP Manager", "A": "CEO", "S": "Finance Controller", "C": "Commercial Director; Supply Chain Director; CFO", "I": "All planners", "Supplier": "S&OP Manager", "Input": "Scenario set; Scenario financials", "Output": "Decisions; Released S&OP plan", "Customer": "Planners; Operations", "Type": "Meeting", "KPI": "Decisions taken on time", "Goal": "All open decisions closed", "Tool": "N/A", "Tool_function": "", "Tool_desc": "", "L4_Desc": "Decide on scenarios and confirm the plan.", "BPO": "S&OP Manager", "L1_Desc": "Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.", "L1": "S&OP"}, {"ID": "118", "L2_code": "1.5", "L2": "5. Executive S&OP", "L2_goal": "Take and communicate decisions", "L3_code": "1.5.1", "L3": "Decide and release", "L4_code": "1.5.1.2", "L4": "Release plan and communicate", "R": "S&OP Manager", "A": "Supply Chain Director", "S": "Demand Planner; Supply Planner", "C": "", "I": "Sales; Production; Procurement", "Supplier": "Executive S&OP meeting", "Input": "Released S&OP plan; Decisions", "Output": "Published plan; Decision log", "Customer": "S&OE", "Type": "Human activity", "KPI": "Plan published within 1 day", "Goal": "Everyone works from the same numbers", "Tool": "Planning platform", "Tool_function": "Plan publishing", "Tool_desc": "Promote the approved scenario to the official plan.", "L4_Desc": "Publish the plan and decisions to all stakeholders.", "BPO": "S&OP Manager", "L1_Desc": "Monthly Sales & Operations Planning cycle at Harbour Cycles, a fictional e-bike manufacturer. Aligns demand, supply and finance on one plan for the next 18 months.", "L1": "S&OP"}];
+
+// ── Layout ───────────────────────────────────────────────
+const LW=210, COL=186, NW=156, NH=60, TOP=34, ROWGAP=14, PADX=24, PADB=22;
+const COLORS=['#4a90d9','#2e9e7a','#d9954a','#a56bd9','#d96b8a'];
+// Stappen die parallel lopen delen een kolom (volgorde = kolomvolgorde)
+const PAR={'1.2.2.1':0,'1.2.2.2':1};
+const lanes=[...new Set(DATA.map(d=>d.L2_code))].map((c,i)=>{
+  const s=DATA.filter(d=>d.L2_code===c);
+  return {code:c,name:s[0].L2,goal:s[0].L2_goal,steps:s,color:COLORS[i%COLORS.length],idx:i};
+});
+// kolom + subrij per stap
+let col=0; const pos={};
+DATA.forEach((d,i)=>{
+  const code=d.L4_code;
+  if(code in PAR){ if(PAR[code]===0){pos[code]={col:col,sub:0}} else {pos[code]={col:col,sub:1}; col++} }
+  else {pos[code]={col:col,sub:0}; col++}
+});
+const nCols=col;
+// subrijen per lane
+lanes.forEach(l=>{ l.rows=1+Math.max(...l.steps.map(s=>pos[s.L4_code].sub)); l.h=TOP+l.rows*NH+(l.rows-1)*ROWGAP+PADB; });
+let y=0; lanes.forEach(l=>{l.y=y;y+=l.h});
+const boardW=LW+PADX*2+nCols*COL, boardH=y;
+const board=document.getElementById('board'); board.style.width=boardW+'px'; board.style.height=boardH+'px';
+
+const byCode={}; const nodes={};
+DATA.forEach(d=>byCode[d.L4_code]=d);
+const esc=s=>String(s??'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+
+lanes.forEach(l=>{
+  const el=document.createElement('div'); el.className='lane';
+  el.style.cssText=`top:${l.y}px;height:${l.h}px;width:${boardW}px;--lc:${l.color};--lw:${LW}px`;
+  el.innerHTML=`<div class="lane-label"><div class="in"><div class="code">L2 · ${esc(l.code)}</div><div class="name">${esc(l.name)}</div><div class="goal">${esc(l.goal)}</div></div></div>`;
+  board.appendChild(el);
+  // L3 groepen
+  [...new Set(l.steps.map(s=>s.L3_code))].forEach(c3=>{
+    const ss=l.steps.filter(s=>s.L3_code===c3);
+    const cs=ss.map(s=>pos[s.L4_code].col), mn=Math.min(...cs), mx=Math.max(...cs);
+    const g=document.createElement('div'); g.className='grp';
+    g.style.cssText=`left:${LW+PADX+mn*COL-10}px;top:${l.y+TOP-14}px;width:${(mx-mn)*COL+NW+20}px;height:${l.h-TOP+14-8}px`;
+    g.innerHTML=`<span>${esc(c3)} ${esc(ss[0].L3)}</span>`; board.appendChild(g);
+  });
+  l.steps.forEach(s=>{
+    const p=pos[s.L4_code];
+    const n=document.createElement('div'); n.className='node'+(s.Type.toLowerCase().startsWith('system')?' sys':'');
+    n.style.cssText=`left:${LW+PADX+p.col*COL}px;top:${l.y+TOP+p.sub*(NH+ROWGAP)}px;width:${NW}px;height:${NH}px;--lc:${l.color}`;
+    n.innerHTML=`<div class="c">${esc(s.L4_code)}</div><div class="n">${esc(s.L4)}</div><div class="r">${esc(s.R)}</div>`;
+    n.onclick=()=>select(s.L4_code); n.dataset.code=s.L4_code;
+    board.appendChild(n);
+    nodes[s.L4_code]={el:n,x:LW+PADX+p.col*COL,y:l.y+TOP+p.sub*(NH+ROWGAP)};
+  });
+});
+
+// ── Flow (volgorde uit de data, met parallelle tak 1.2.2.1/.2 → 1.2.2.3) ──
+const codes=DATA.map(d=>d.L4_code);
+const edges=[];
+codes.forEach((c,i)=>{
+  if(i===0)return;
+  if(c==='1.2.2.2'){edges.push(['1.2.1.2',c]);return}      // parallel tak
+  if(c==='1.2.2.1'){edges.push(['1.2.1.2',c]);return}
+  if(c==='1.2.2.3'){edges.push(['1.2.2.1',c],['1.2.2.2',c]);return}
+  edges.push([codes[i-1],c]);
+});
+const svg=document.getElementById('arrows'); svg.setAttribute('width',boardW); svg.setAttribute('height',boardH);
+const drawn=[];
+edges.forEach(([a,b])=>{
+  const A=nodes[a],B=nodes[b];
+  const x1=A.x+NW,y1=A.y+NH/2,x2=B.x,y2=B.y+NH/2;
+  const cross=lanes.find(l=>l.steps.some(s=>s.L4_code===a))!==lanes.find(l=>l.steps.some(s=>s.L4_code===b));
+  let d;
+  if(Math.abs(y1-y2)<1) d=`M${x1},${y1}H${x2-6}`;
+  else{
+    const mx=x1+(x2-x1)/2, r=8, dir=y2>y1?1:-1;
+    d=`M${x1},${y1}H${mx-r}Q${mx},${y1} ${mx},${y1+dir*r}V${y2-dir*r}Q${mx},${y2} ${mx+r},${y2}H${x2-6}`;
+  }
+  const p=document.createElementNS('http://www.w3.org/2000/svg','path'); p.setAttribute('d',d); if(cross)p.classList.add('x'); svg.appendChild(p);
+  const t=document.createElementNS('http://www.w3.org/2000/svg','polygon'); t.setAttribute('points',`${x2},${y2} ${x2-7},${y2-4} ${x2-7},${y2+4}`); svg.appendChild(t);
+  drawn.push({a,b,p,t});
+});
+
+// ── Detail ────────────────────────────────────────────────
+const det=document.getElementById('detail'); let selCode=null;
+function select(code){
+  selCode=code===selCode?null:code;
+  Object.entries(nodes).forEach(([c,n])=>{
+    const rel=selCode&&(c===selCode||drawn.some(e=>(e.a===selCode&&e.b===c)||(e.b===selCode&&e.a===c)));
+    n.el.classList.toggle('sel',c===selCode); n.el.classList.toggle('dim',!!selCode&&!rel);
+  });
+  drawn.forEach(e=>{const on=selCode&&(e.a===selCode||e.b===selCode);e.p.classList.toggle('hl',!!on);e.t.classList.toggle('hl',!!on)});
+  if(!selCode){det.classList.remove('open');return}
+  const s=byCode[code];
+  const row=(k,v)=>v?`<dt>${k}</dt><dd>${esc(v)}</dd>`:'';
+  det.innerHTML=`<button class="x" onclick="select('${code}')">✕</button>
+  <div class="crumb">${esc(s.L1)} › ${esc(s.L2)} › ${esc(s.L3_code)} ${esc(s.L3)}</div>
+  <h2>${esc(s.L4_code)} ${esc(s.L4)}</h2>
+  <div><span class="tag">${esc(s.Type)}</span>${s.Tool&&s.Tool!=='N/A'?`<span class="tag">${esc(s.Tool)}</span>`:''}</div>
+  <p class="desc">${esc(s.L4_Desc)}</p>
+  <div class="sec">RASCI</div>
+  <div class="rasci"><div><b>R</b><span>${esc(s.R)||'–'}</span></div><div><b>A</b><span>${esc(s.A)||'–'}</span></div><div><b>S</b><span>${esc(s.S)||'–'}</span></div><div><b>C</b><span>${esc(s.C)||'–'}</span></div><div><b>I</b><span>${esc(s.I)||'–'}</span></div></div>
+  <div class="sec">Flow</div>
+  <dl class="kv">${row('Supplier',s.Supplier)}${row('Input',s.Input)}${row('Output',s.Output)}${row('Customer',s.Customer)}</dl>
+  <div class="sec">Performance</div>
+  <dl class="kv">${row('KPI',s.KPI)}${row('Goal',s.Goal)}</dl>
+  <div class="sec">Tool</div>
+  <dl class="kv">${row('Tool',s.Tool)}${row('Function',s.Tool_function)}${row('Beschrijving',s.Tool_desc)}</dl>`;
+  det.classList.add('open');
+}
+document.getElementById('crL1').textContent='1 '+DATA[0].L1;
+document.getElementById('title').textContent='1 '+DATA[0].L1+' – swimlane overzicht';
+document.getElementById('sub').textContent=DATA[0].L1_Desc;
+const tgl=document.getElementById('tgl');
+tgl.onclick=()=>{const l=document.documentElement.classList.toggle('light');tgl.textContent=l?'☾ Dark':'☀ Light'};
+</script>
+</body>
+</html>
